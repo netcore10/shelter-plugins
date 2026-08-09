@@ -89,12 +89,29 @@ export default function ColorPicker(props) {
     props.onChange(hex);
   };
 
-  const dragging = (compute) => (e) => {
+  /**
+   * `getEl` is a ref accessor, not e.currentTarget.
+   *
+   * On the modal's first open the element can still measure 0x0 — shelter
+   * animates a new modal in from transform: scale(0) — and dividing by a zero
+   * width produced NaN, so the first drag set no colour at all and it only
+   * appeared to work the second time you opened the picker. Reading the live
+   * element each move, and skipping while it has no size, fixes that.
+   */
+  const dragging = (getEl, compute) => (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const element = e.currentTarget;
-    const apply = (event) => compute(event, element.getBoundingClientRect());
+    const apply = (event) => {
+      const element = getEl();
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      compute(event, rect);
+    };
+
     apply(e);
 
     const stop = () => {
@@ -107,16 +124,23 @@ export default function ColorPicker(props) {
     onCleanup(stop);
   };
 
-  const onSquare = dragging((event, rect) =>
-    commit({
-      ...hsv(),
-      s: clamp01((event.clientX - rect.left) / rect.width),
-      v: 1 - clamp01((event.clientY - rect.top) / rect.height),
-    }),
+  let squareEl;
+  let hueEl;
+
+  const onSquare = dragging(
+    () => squareEl,
+    (event, rect) =>
+      commit({
+        ...hsv(),
+        s: clamp01((event.clientX - rect.left) / rect.width),
+        v: 1 - clamp01((event.clientY - rect.top) / rect.height),
+      }),
   );
 
-  const onHue = dragging((event, rect) =>
-    commit({ ...hsv(), h: clamp01((event.clientX - rect.left) / rect.width) * 360 }),
+  const onHue = dragging(
+    () => hueEl,
+    (event, rect) =>
+      commit({ ...hsv(), h: clamp01((event.clientX - rect.left) / rect.width) * 360 }),
   );
 
   const onHexInput = (value) => {
@@ -141,6 +165,7 @@ export default function ColorPicker(props) {
   return (
     <div class="ftags-picker">
       <div
+        ref={squareEl}
         class="ftags-picker-sv"
         style={{ "background-color": hsvToHex({ h: hsv().h, s: 1, v: 1 }) }}
         onPointerDown={onSquare}
@@ -151,7 +176,7 @@ export default function ColorPicker(props) {
         />
       </div>
 
-      <div class="ftags-picker-hue" onPointerDown={onHue}>
+      <div ref={hueEl} class="ftags-picker-hue" onPointerDown={onHue}>
         <div class="ftags-picker-thumb" style={{ left: `${(hsv().h / 360) * 100}%`, top: "50%" }} />
       </div>
 

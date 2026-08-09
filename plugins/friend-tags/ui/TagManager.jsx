@@ -1,13 +1,12 @@
 import Chip from "./Chip";
 import { openTagEditor } from "./TagRow";
 import { openStyler } from "./openStyler";
-import { allTags, clearUser, deleteTag, renameTag } from "../data";
+import { allTags, allUserTags, clearUser, deleteTag, renameTag } from "../data";
 
 const {
   flux: {
     storesFlat: { UserStore },
   },
-  plugin: { store },
   ui: {
     Button,
     ButtonColors,
@@ -108,7 +107,10 @@ export default function TagManager(props) {
   const users = createMemo(() => {
     const query = filter().toLowerCase();
 
-    return Object.entries(store.tags)
+    // allUserTags(), not store.tags: the raw store is the wrong source once
+    // per-account tags are on, and it sidesteps the memo everything else reads
+    // from — which is how a cleared user could still be listed here.
+    return Object.entries(allUserTags())
       .map(([userId, userTags]) => {
         const user = UserStore.getUser(userId);
         return {
