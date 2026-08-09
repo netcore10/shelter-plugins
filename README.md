@@ -2,6 +2,21 @@
 
 My plugins for [shelter](https://shelter.uwu.network).
 
+## Install
+
+Add this URL in shelter's plugin list:
+
+```
+https://netcore10.github.io/shelter-plugins/friend-tags
+```
+
+> **Don't run day-to-day off `lune dev`.** Dev mode stores plugin data under a
+> throwaway ID and shelter *deletes it* when dev mode stops — see
+> [`plugins.tsx:280`](https://github.com/uwu/shelter/blob/main/packages/shelter/src/plugins.tsx#L280),
+> where `removePlugin` drops the storage for the devmode plugin, and
+> `stopDevmode` is wired to the dev websocket's `onclose`. Install from the URL
+> above and your tags persist properly.
+
 ## Friend Tags
 
 Add custom tags to people from your friends list, then see those tags everywhere
