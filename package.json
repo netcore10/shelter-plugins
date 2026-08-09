@@ -1,0 +1,14 @@
+{
+  "name": "shelter-plugins",
+  "private": true,
+  "type": "module",
+  "workspaces": ["plugins/*"],
+  "scripts": {
+    "dev": "lune dev plugins/friend-tags",
+    "build": "lune ci"
+  },
+  "devDependencies": {
+    "@uwu/lune": "^1.6.2",
+    "@uwu/shelter-defs": "^1.4.1"
+  }
+}
