@@ -3,6 +3,7 @@ import { DEFAULT_STYLE, DURATIONS, LEGACY_ANIMATION_TRACK } from "./presets";
 const {
   plugin: { store },
   flux: { storesFlat },
+  solid: { createMemo, createRoot },
 } = shelter;
 
 // ---------------------------------------------------------------------------
@@ -65,10 +66,58 @@ export function currentAccountId() {
  */
 const scopedId = () => (store.multiAccount ? currentAccountId() : undefined);
 
-const readMap = (name) => {
+const rawMap = (name) => {
   const id = scopedId();
   return (id ? store.accounts[id]?.[name] : store[name]) ?? {};
 };
+
+/**
+ * Deep-copy a store value into plain JS.
+ *
+ * Everything read off shelter's store comes back as a proxy whose get trap
+ * creates a Solid signal AND a valtio subscription *per property read*. Handing
+ * those proxies to components means every chip builds its own subscriptions,
+ * and every write then notifies all of them. Detaching once, inside a memo,
+ * means consumers touch ordinary objects.
+ */
+function detach(value) {
+  if (Array.isArray(value)) return value.map(detach);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const key in value) out[key] = detach(value[key]);
+    return out;
+  }
+  return value;
+}
+
+// One shared reactive root for the whole plugin. Six memos subscribe to the
+// store; every chip reads the memos instead of the store, so adding chips costs
+// nothing in subscriptions. Disposed on unload.
+let disposeMemos;
+
+const memos = createRoot((dispose) => {
+  disposeMemos = dispose;
+
+  return {
+    tags: createMemo(() => detach(rawMap("tags"))),
+    colors: createMemo(() => detach(rawMap("colors"))),
+    styles: createMemo(() => detach(rawMap("styles"))),
+    uppercase: createMemo(() => store.uppercase),
+    maxShown: createMemo(() => store.maxShown),
+    animate: createMemo(() => store.animate),
+  };
+});
+
+const readMap = (name) => memos[name]();
+
+/** Display options, memoised so chips don't each subscribe to the store. */
+export const display = {
+  uppercase: () => memos.uppercase(),
+  maxShown: () => memos.maxShown(),
+  animate: () => memos.animate(),
+};
+
+export const disposeStoreMemos = () => disposeMemos?.();
 
 function writeMap(name, value) {
   const id = scopedId();
@@ -214,7 +263,7 @@ export function deleteTag(tag) {
 
 // Mid-tone hues that stay legible against both Discord themes once we pick a
 // black/white foreground for them.
-const PALETTE = [
+export const PALETTE = [
   "#5865F2", "#3BA55D", "#FAA81A", "#ED4245", "#EB459E",
   "#00A8FC", "#F47B67", "#9B59B6", "#1ABC9C", "#E67E22",
   "#7289DA", "#43B581", "#C77DFF", "#F0B232",

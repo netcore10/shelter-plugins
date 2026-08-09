@@ -78,7 +78,31 @@ const UNICODE = {
  * on the guild argument. Each is wrapped: this is internal API, and the picker
  * should degrade to unicode-only rather than throw.
  */
+// Rebuilding the list means walking every emoji in every guild — for someone in
+// 30+ servers that's thousands of objects, and it was happening on every
+// shortcode lookup and every keystroke in the picker. Cached, with a name index
+// so lookups are O(1), and refreshed on a timer so newly added emoji show up.
+const CACHE_MS = 30_000;
+let cache;
+let cacheIndex;
+let cachedAt = 0;
+let generation = 0;
+
+/** Bumped whenever the emoji list is rebuilt, so callers can drop derived caches. */
+export const emojiGeneration = () => generation;
+
 function customEmoji() {
+  if (cache && Date.now() - cachedAt < CACHE_MS) return cache;
+
+  cache = buildCustomEmoji();
+  cacheIndex = new Map(cache.map((emoji) => [emoji.key.toLowerCase(), emoji]));
+  cachedAt = Date.now();
+  generation++;
+
+  return cache;
+}
+
+function buildCustomEmoji() {
   const out = [];
   const seen = new Set();
 
@@ -144,8 +168,8 @@ function customEmoji() {
  * that, not 👋.
  */
 export function customEmojiByName(name) {
-  const wanted = String(name ?? "").toLowerCase();
-  return customEmoji().find((emoji) => emoji.key.toLowerCase() === wanted);
+  customEmoji(); // ensures the index is built and fresh
+  return cacheIndex?.get(String(name ?? "").toLowerCase());
 }
 
 /** How many custom emoji we can see — surfaced in settings for diagnosis. */

@@ -1,9 +1,9 @@
 import { showEmojiPreview } from "./EmojiPreview";
-import { customEmojiByName, unicodeFor } from "../emoji";
+import { customEmojiByName, emojiGeneration, unicodeFor } from "../emoji";
 
 const {
   flux: { storesFlat },
-  solid: { For },
+  solid: { For, createMemo },
 } = shelter;
 
 // ---------------------------------------------------------------------------
@@ -236,8 +236,30 @@ export const plainText = (text) =>
     .replace(CUSTOM_EMOJI_ALL, (_, __, name) => `:${name}:`)
     .replace(/\*\*\*|\*\*|__|~~|`|\*|_|~/g, "");
 
+// The same tag is rendered on every message, member and DM row that carries it,
+// and parsing is pure — so parse each distinct string once rather than once per
+// chip. Keyed by emoji generation too, so a shortcode that couldn't resolve
+// before Discord's emoji loaded isn't cached as literal text forever.
+const parseCache = new Map();
+const PARSE_CACHE_LIMIT = 400;
+
+function parseCached(text) {
+  const hit = parseCache.get(text);
+  const gen = emojiGeneration();
+  if (hit && hit.gen === gen) return hit.nodes;
+
+  // Bounded: the styler previews arbitrary text as you type, so this must not
+  // grow without limit.
+  if (parseCache.size >= PARSE_CACHE_LIMIT) parseCache.clear();
+
+  const nodes = parseMarkdown(text);
+  parseCache.set(text, { gen, nodes });
+  return nodes;
+}
+
 export default function RichText(props) {
-  const nodes = () => parseMarkdown(String(props.text ?? ""));
+  // Stable array identity for unchanged text, so <For> doesn't re-reconcile.
+  const nodes = createMemo(() => parseCached(String(props.text ?? "")));
 
   return <For each={nodes()}>{(node) => <Node node={node} />}</For>;
 }

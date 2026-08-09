@@ -1,9 +1,8 @@
 import Chip from "./Chip";
 import TagEditor from "./TagEditor";
-import { getTags } from "../data";
+import { display, getTags } from "../data";
 
 const {
-  plugin: { store },
   ui: { openModal },
   solid: { For, Show, createMemo },
 } = shelter;
@@ -21,7 +20,7 @@ export default function TagRow(props) {
   const tags = createMemo(() => getTags(props.userId));
 
   const shown = createMemo(() => {
-    const limit = store.maxShown;
+    const limit = display.maxShown();
     return limit > 0 ? tags().slice(0, limit) : tags();
   });
   const overflow = createMemo(() => tags().length - shown().length);

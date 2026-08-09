@@ -1,6 +1,6 @@
 // Imported first and for its side effects: evaluating ./data fills in the store
 // defaults, which everything else reads.
-import "./data";
+import { disposeStoreMemos } from "./data";
 import css from "./styles";
 import { removeInjections, startInjection } from "./inject";
 
@@ -16,8 +16,10 @@ export function onLoad() {
 
 export function onUnload() {
   // The scoped API tears down the observers, subscriptions and CSS for us; the
-  // chips already on the page are ours to clean up.
+  // chips already on the page are ours to clean up, as is the reactive root the
+  // store memos live in.
   removeInjections();
+  disposeStoreMemos();
 }
 
 export { default as settings } from "./ui";

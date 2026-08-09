@@ -1,4 +1,5 @@
 import Chip from "./Chip";
+import { openColorPicker } from "./openColorPicker";
 import EmojiAutocomplete, { createEmojiAutocomplete } from "./EmojiAutocomplete";
 import { normalise, renameTag, resetStyle, setStyle, styleOf } from "../data";
 import { COLOR_ANIMS, FONTS, GRADIENT_PRESETS, MOTIONS } from "../presets";
@@ -31,6 +32,7 @@ export default function TagStyler(props) {
   // Edited locally so the preview updates instantly and Cancel can walk away.
   const [draft, setDraft] = createSignal(styleOf(props.tag));
   const [name, setName] = createSignal(props.tag);
+  const [activeStop, setActiveStop] = createSignal(0);
   const autocomplete = createEmojiAutocomplete(name, setName);
 
   const patch = (changes) => setDraft({ ...draft(), ...changes });
@@ -105,48 +107,88 @@ export default function TagStyler(props) {
           </Button>
         </div>
 
-        <Show when={draft().fill === "solid"}>
-          <div class="ftags-field">
-            <span style={label}>Colour</span>
-            <input
-              type="color"
-              class="ftags-swatch"
-              aria-label="Tag colour"
-              value={draft().color}
-              onInput={(e) => patch({ color: e.currentTarget.value })}
-            />
-          </div>
-        </Show>
+        <div class="ftags-field">
+          <span style={label}>
+            {draft().fill === "gradient" ? `Colour — stop ${activeStop() + 1}` : "Colour"}
+          </span>
+          {/* The swatch IS the control: it's a shelter Button (the only thing
+              that reliably receives clicks in this modal) painted with the
+              current colour, so clicking the colour opens the picker. */}
+          <Button
+            size={ButtonSizes.NONE}
+            class="ftags-swatch-trigger"
+            aria-label="Choose colour"
+            style={{
+              background:
+                draft().fill === "gradient"
+                  ? (draft().colors[activeStop()] ?? draft().colors[0])
+                  : draft().color,
+            }}
+            onClick={() =>
+              openColorPicker({
+                label: draft().fill === "gradient" ? `Gradient stop ${activeStop() + 1}` : "Tag colour",
+                value: () =>
+                  draft().fill === "gradient"
+                    ? (draft().colors[activeStop()] ?? draft().colors[0])
+                    : draft().color,
+                onChange: (colour) =>
+                  draft().fill === "gradient"
+                    ? setStop(activeStop(), colour)
+                    : patch({ color: colour }),
+              })
+            }
+          />
+        </div>
 
         <Show when={draft().fill === "gradient"}>
           <div class="ftags-field">
             <span style={label}>Stops</span>
-            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap">
+            <div class="ftags-stops">
               <For each={draft().colors}>
                 {(stop, i) => (
-                  <span style="display: inline-flex; gap: 2px; align-items: center">
-                    <input
-                      type="color"
-                      class="ftags-swatch"
-                      aria-label={`Gradient stop ${i() + 1}`}
-                      value={stop}
-                      onInput={(e) => setStop(i(), e.currentTarget.value)}
-                    />
-                    <Show when={draft().colors.length > 2}>
-                      <button
-                        class="ftags-stop-remove"
-                        aria-label={`Remove stop ${i() + 1}`}
-                        onClick={() => removeStop(i())}
-                      >
-                        ×
-                      </button>
-                    </Show>
-                  </span>
+                  <Button
+                    size={ButtonSizes.NONE}
+                    class={`ftags-swatch-trigger ftags-swatch-trigger--stop${
+                      i() === activeStop() ? " ftags-swatch-trigger--on" : ""
+                    }`}
+                    style={{ background: stop }}
+                    aria-label={`Edit gradient stop ${i() + 1}`}
+                    onClick={() => {
+                      setActiveStop(i());
+                      openColorPicker({
+                        label: `Gradient stop ${i() + 1}`,
+                        value: () => draft().colors[i()],
+                        onChange: (colour) => setStop(i(), colour),
+                      });
+                    }}
+                  />
                 )}
               </For>
+
+              <Show when={draft().colors.length > 2}>
+                <Button
+                  size={ButtonSizes.TINY}
+                  look={ButtonLooks.OUTLINED}
+                  color={ButtonColors.RED}
+                  onClick={() => {
+                    removeStop(activeStop());
+                    setActiveStop((a) => Math.max(0, a - 1));
+                  }}
+                >
+                  Remove
+                </Button>
+              </Show>
+
               <Show when={draft().colors.length < 5}>
-                <Button size={ButtonSizes.TINY} look={ButtonLooks.OUTLINED} onClick={addStop}>
-                  + Stop
+                <Button
+                  size={ButtonSizes.TINY}
+                  look={ButtonLooks.OUTLINED}
+                  onClick={() => {
+                    addStop();
+                    setActiveStop(draft().colors.length - 1);
+                  }}
+                >
+                  + Add
                 </Button>
               </Show>
             </div>
@@ -188,25 +230,45 @@ export default function TagStyler(props) {
 
         <div class="ftags-field">
           <span style={label}>Colour</span>
-          <div style="display: flex; gap: 8px; align-items: center">
+          <div style="display: flex; gap: 8px; margin-bottom: 8px">
             <Button
-              size={ButtonSizes.TINY}
+              size={ButtonSizes.SMALL}
               look={draft().text === "auto" ? ButtonLooks.FILLED : ButtonLooks.OUTLINED}
               onClick={() => patch({ text: "auto" })}
             >
               Auto
             </Button>
-            <input
-              type="color"
-              class="ftags-swatch"
-              aria-label="Text colour"
-              value={draft().text === "auto" ? "#ffffff" : draft().text}
-              onInput={(e) => patch({ text: e.currentTarget.value })}
-            />
-            <Text style={{ color: "var(--text-muted)", "font-size": "12px" }}>
-              Auto picks black or white for contrast.
-            </Text>
+            <Button
+              size={ButtonSizes.SMALL}
+              look={draft().text === "auto" ? ButtonLooks.OUTLINED : ButtonLooks.FILLED}
+              onClick={() => patch({ text: draft().text === "auto" ? "#ffffff" : draft().text })}
+            >
+              Custom
+            </Button>
           </div>
+
+          <Show
+            when={draft().text !== "auto"}
+            fallback={
+              <Text style={{ color: "var(--text-muted)", "font-size": "12px" }}>
+                Black or white is chosen automatically for contrast.
+              </Text>
+            }
+          >
+            <Button
+              size={ButtonSizes.NONE}
+              class="ftags-swatch-trigger"
+              aria-label="Choose text colour"
+              style={{ background: draft().text }}
+              onClick={() =>
+                openColorPicker({
+                  label: "Text colour",
+                  value: () => draft().text,
+                  onChange: (text) => patch({ text }),
+                })
+              }
+            />
+          </Show>
         </div>
 
         <div class="ftags-field">

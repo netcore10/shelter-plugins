@@ -1,8 +1,8 @@
 import RichText, { plainText } from "./RichText";
-import { styleOf, styleToCss } from "../data";
+import { display, styleOf, styleToCss } from "../data";
 
 const {
-  plugin: { store },
+  solid: { createMemo },
 } = shelter;
 
 /**
@@ -13,14 +13,15 @@ const {
  * tag's saved style is looked up, which keeps chips reactive to edits.
  */
 export default function Chip(props) {
-  const config = () => props.style ?? styleOf(props.tag);
+  const config = createMemo(() => props.style ?? styleOf(props.tag));
 
-  const css = () =>
-    styleToCss(config(), { animate: props.animate ?? store.animate });
+  const css = createMemo(() =>
+    styleToCss(config(), { animate: props.animate ?? display.animate() }),
+  );
 
   return (
     <span
-      class={`ftags-chip${store.uppercase && !props.plain ? " ftags-chip--upper" : ""}${
+      class={`ftags-chip${display.uppercase() && !props.plain ? " ftags-chip--upper" : ""}${
         props.class ? ` ${props.class}` : ""
       }`}
       style={css()}

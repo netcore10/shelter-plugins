@@ -195,7 +195,11 @@ function inject(element, surface) {
     : resolveUser(element, surface.props, surface.depth ?? DEFAULT_DEPTH);
 
   if (!user?.id) {
-    if (store.debug) log(`[friend-tags] ${surface.id}: could not resolve a user`, "warn");
+    // The DM list legitimately contains non-user rows — Friends, Message
+    // Requests, Nitro, Shop, Quests — so "no user" is the expected answer there
+    // and isn't worth warning about.
+    if (store.debug && surface.id !== "dms")
+      log(`[friend-tags] ${surface.id}: could not resolve a user`, "warn");
     return;
   }
 
