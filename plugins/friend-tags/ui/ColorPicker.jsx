@@ -1,20 +1,15 @@
 const {
-  ui: { Button, ButtonSizes, TextBox },
-  solid: { For, createEffect, createSignal },
+  ui: { TextBox },
+  solid: { createEffect, createSignal, onCleanup },
 } = shelter;
 
 /**
- * Colour picker built entirely from shelter Buttons.
+ * Saturation/brightness square with a hue bar underneath.
  *
- * Confirmed the hard way: inside a shelter modal, ONLY shelter's own
- * components receive clicks. A drag square, bare buttons and clickable spans
- * all render and hover correctly but never fire, whether wired with Solid's
- * delegated handlers, lowercase direct props, or addEventListener on a ref.
- * <input type="color"> is out too — its Chromium popup closes onto shelter's
- * modal backdrop, which pops the modal.
- *
- * So the picker is a grid: hues across, shades down, every cell a Button.
- * Same job as a drag square, made of the one thing that works.
+ * Lives inside its own modal window (see openColorPicker). Not
+ * <input type="color">: that opens Chromium's colour popup, and the click that
+ * closes it lands on shelter's modal backdrop, which is wired to popModal — so
+ * choosing a colour applied it and then dismissed the whole styler.
  */
 
 export function normaliseHex(input) {
@@ -24,8 +19,35 @@ export function normaliseHex(input) {
   return /^[0-9a-f]{6}$/i.test(full) ? `#${full.toLowerCase()}` : undefined;
 }
 
+const hexToRgb = (hex) => {
+  const value = parseInt(String(hex ?? "").replace("#", ""), 16) || 0;
+  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+};
+
 const rgbToHex = ({ r, g, b }) =>
   `#${[r, g, b].map((n) => Math.round(n).toString(16).padStart(2, "0")).join("")}`;
+
+function rgbToHsv({ r, g, b }) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  return { h, s: max ? d / max : 0, v: max };
+}
 
 function hsvToRgb({ h, s, v }) {
   const c = v * s;
@@ -44,66 +66,93 @@ function hsvToRgb({ h, s, v }) {
 }
 
 const hsvToHex = (hsv) => rgbToHex(hsvToRgb(hsv));
-
-// 14 hues across the spectrum, 6 shades each: bright and pale at the top,
-// deep and dark at the bottom.
-const HUES = Array.from({ length: 14 }, (_, i) => (i * 360) / 14);
-const SHADES = [
-  { s: 0.35, v: 1.0 },
-  { s: 0.6, v: 1.0 },
-  { s: 0.85, v: 1.0 },
-  { s: 1.0, v: 0.82 },
-  { s: 1.0, v: 0.6 },
-  { s: 1.0, v: 0.38 },
-];
-
-const GREYS = ["#ffffff", "#c9cdd4", "#9aa0a8", "#6b7079", "#3f434a", "#23262b", "#000000"];
-
-const ROWS = SHADES.map((shade) => HUES.map((h) => hsvToHex({ h, ...shade })));
+const hexToHsv = (hex) => rgbToHsv(hexToRgb(hex));
+const clamp01 = (n) => Math.min(1, Math.max(0, n));
 
 export default function ColorPicker(props) {
+  // HSV held locally so hue and saturation survive dragging into black or
+  // white; re-deriving from hex every frame would lose them there.
+  const [hsv, setHsv] = createSignal(hexToHsv(props.value ?? "#5865f2"));
   const [text, setText] = createSignal(props.value ?? "");
 
   createEffect(() => {
     const value = props.value;
-    if (value && normaliseHex(text()) !== value) setText(value);
+    if (!value) return;
+    if (hsvToHex(hsv()) !== value) setHsv(hexToHsv(value));
+    if (normaliseHex(text()) !== value) setText(value);
   });
+
+  const commit = (next) => {
+    setHsv(next);
+    const hex = hsvToHex(next);
+    setText(hex);
+    props.onChange(hex);
+  };
+
+  const dragging = (compute) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const element = e.currentTarget;
+    const apply = (event) => compute(event, element.getBoundingClientRect());
+    apply(e);
+
+    const stop = () => {
+      window.removeEventListener("pointermove", apply);
+      window.removeEventListener("pointerup", stop);
+    };
+
+    window.addEventListener("pointermove", apply);
+    window.addEventListener("pointerup", stop);
+    onCleanup(stop);
+  };
+
+  const onSquare = dragging((event, rect) =>
+    commit({
+      ...hsv(),
+      s: clamp01((event.clientX - rect.left) / rect.width),
+      v: 1 - clamp01((event.clientY - rect.top) / rect.height),
+    }),
+  );
+
+  const onHue = dragging((event, rect) =>
+    commit({ ...hsv(), h: clamp01((event.clientX - rect.left) / rect.width) * 360 }),
+  );
 
   const onHexInput = (value) => {
     setText(value);
     // Full values only: "#aab" is valid 3-digit hex, so committing while typing
     // would flash a wrong colour partway through a 6-digit one.
-    if (/^#?[0-9a-f]{6}$/i.test(value.trim())) props.onChange(normaliseHex(value));
+    if (/^#?[0-9a-f]{6}$/i.test(value.trim())) {
+      const hex = normaliseHex(value);
+      setHsv(hexToHsv(hex));
+      props.onChange(hex);
+    }
   };
 
   const onHexBlur = () => {
     const hex = normaliseHex(text());
-    if (hex) props.onChange(hex);
-    else setText(props.value ?? "");
+    if (hex) {
+      setHsv(hexToHsv(hex));
+      props.onChange(hex);
+    } else setText(props.value ?? "");
   };
-
-  const selected = () => String(props.value ?? "").toLowerCase();
-
-  const Cell = (cellProps) => (
-    <Button
-      size={ButtonSizes.NONE}
-      class={`ftags-cell${selected() === cellProps.colour.toLowerCase() ? " ftags-cell--on" : ""}`}
-      style={{ background: cellProps.colour }}
-      aria-label={cellProps.colour}
-      onClick={() => props.onChange(cellProps.colour)}
-    />
-  );
 
   return (
     <div class="ftags-picker">
-      <div class="ftags-grid">
-        <For each={ROWS}>
-          {(row) => <For each={row}>{(colour) => <Cell colour={colour} />}</For>}
-        </For>
+      <div
+        class="ftags-picker-sv"
+        style={{ "background-color": hsvToHex({ h: hsv().h, s: 1, v: 1 }) }}
+        onPointerDown={onSquare}
+      >
+        <div
+          class="ftags-picker-thumb"
+          style={{ left: `${hsv().s * 100}%`, top: `${(1 - hsv().v) * 100}%` }}
+        />
       </div>
 
-      <div class="ftags-grid ftags-grid--greys">
-        <For each={GREYS}>{(colour) => <Cell colour={colour} />}</For>
+      <div class="ftags-picker-hue" onPointerDown={onHue}>
+        <div class="ftags-picker-thumb" style={{ left: `${(hsv().h / 360) * 100}%`, top: "50%" }} />
       </div>
 
       <div class="ftags-picker-row">
@@ -112,7 +161,7 @@ export default function ColorPicker(props) {
           value={text()}
           onInput={onHexInput}
           onBlur={onHexBlur}
-          placeholder="#rrggbb — any colour"
+          placeholder="#rrggbb"
           maxlength={7}
           aria-label={props.label ?? "Hex colour"}
         />

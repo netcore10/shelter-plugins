@@ -320,31 +320,42 @@ html.theme-light .ftags-preview-pop {
   gap: 8px 10px;
 }
 
-/* --- colour picker: a grid of shelter Buttons --- */
+/* --- colour picker: saturation/brightness square + hue bar --- */
 
 .ftags-picker { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
-.ftags-grid {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  gap: 3px;
+/* Saturation left-to-right, brightness top-to-bottom, over the current hue.
+   Layer order matters: the black overlay sits on top of the white one. */
+.ftags-picker-sv {
+  position: relative;
+  height: 150px;
+  border-radius: 6px;
+  cursor: crosshair;
+  touch-action: none;
+  background-image:
+    linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
+    linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
 }
-.ftags-grid--greys { grid-template-columns: repeat(7, 1fr); }
 
-.ftags-cell {
-  width: 100%;
-  height: 26px;
-  min-width: 0;
-  padding: 0;
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3);
-  transition: transform .07s ease;
+.ftags-picker-hue {
+  position: relative;
+  height: 16px;
+  border-radius: 8px;
+  cursor: ew-resize;
+  touch-action: none;
+  background: linear-gradient(to right,
+    #f00 0%, #ff0 16.66%, #0f0 33.33%, #0ff 50%, #00f 66.66%, #f0f 83.33%, #f00 100%);
 }
-.ftags-cell:hover { transform: scale(1.14); z-index: 1; }
-.ftags-cell--on {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3), 0 0 0 2px #fff;
-  transform: scale(1.1);
+
+.ftags-picker-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(0, 0, 0, .35);
+  pointer-events: none;
 }
 
 .ftags-picker-row { display: flex; align-items: center; gap: 8px; }
