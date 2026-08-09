@@ -2,27 +2,34 @@ import { DEFAULT_STYLE, DURATIONS, LEGACY_ANIMATION_TRACK } from "./presets";
 
 const {
   plugin: { store },
+  flux: { storesFlat },
 } = shelter;
 
 // ---------------------------------------------------------------------------
 // store shape
 //
 // shelter only auto-saves *top level* property writes, so every option lives at
-// the top level, and the two nested maps are always replaced wholesale rather
-// than mutated in place. Replacing them is also what makes solid re-render the
+// the top level, and the nested maps are always replaced wholesale rather than
+// mutated in place. Replacing them is also what makes solid re-render the
 // injected chips.
 //
-//   store.tags   : { [userId]: string[] }   tags applied to each user
-//   store.colors : { [tagKey]: "#rrggbb" }  manual colour override per tag name
-//   store.styles : { [tagKey]: StyleConfig } gradient / font / animation
+//   store.tags     : { [userId]: string[] }    tags applied to each user
+//   store.colors   : { [tagKey]: "#rrggbb" }   manual colour override per tag
+//   store.styles   : { [tagKey]: StyleConfig } gradient / font / animation
+//   store.accounts : { [accountId]: { tags, colors, styles } }
 //
 // `colors` predates `styles` and is kept as the source of truth for a plain
 // solid colour, so older backups keep working untouched.
+//
+// When multiAccount is off (the default) everything lives in the top-level
+// maps. When it's on, reads and writes are routed into store.accounts[yourId]
+// instead — see scopedId().
 // ---------------------------------------------------------------------------
 
 store.tags ??= {};
 store.colors ??= {};
 store.styles ??= {};
+store.accounts ??= {};
 
 // display surfaces
 store.inFriends ??= true;
@@ -35,7 +42,62 @@ store.inProfiles ??= true;
 store.uppercase ??= true;
 store.maxShown ??= 3;
 store.animate ??= true;
+store.multiAccount ??= false;
 store.debug ??= false;
+
+// --- account scoping -------------------------------------------------------
+
+/** The logged-in account's ID, or undefined if Discord hasn't got there yet. */
+export function currentAccountId() {
+  try {
+    return storesFlat.UserStore?.getCurrentUser?.()?.id;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Which account bucket to use, or undefined for the shared top-level maps.
+ *
+ * Deliberately falls back to shared whenever the account ID isn't available:
+ * returning an empty bucket instead would make every tag look like it had been
+ * wiped, which is far worse than briefly showing the shared set.
+ */
+const scopedId = () => (store.multiAccount ? currentAccountId() : undefined);
+
+const readMap = (name) => {
+  const id = scopedId();
+  return (id ? store.accounts[id]?.[name] : store[name]) ?? {};
+};
+
+function writeMap(name, value) {
+  const id = scopedId();
+
+  if (!id) {
+    store[name] = value;
+    return;
+  }
+
+  store.accounts = {
+    ...store.accounts,
+    [id]: { ...(store.accounts[id] ?? {}), [name]: value },
+  };
+}
+
+/**
+ * Copy the shared data into this account's bucket, so switching multi-account
+ * on doesn't look like everything vanished. Only ever seeds an empty bucket.
+ */
+export function seedCurrentAccount() {
+  const id = currentAccountId();
+  if (!id || store.accounts[id]) return false;
+
+  store.accounts = {
+    ...store.accounts,
+    [id]: { tags: { ...store.tags }, colors: { ...store.colors }, styles: { ...store.styles } },
+  };
+  return true;
+}
 
 /** Collapse whitespace and trim, so " best  friend " and "best friend" match. */
 export const normalise = (tag) => String(tag ?? "").replace(/\s+/g, " ").trim();
@@ -43,7 +105,9 @@ export const normalise = (tag) => String(tag ?? "").replace(/\s+/g, " ").trim();
 /** Case-insensitive identity for a tag. Two tags are "the same" iff keys match. */
 export const tagKey = (tag) => normalise(tag).toLowerCase();
 
-export const getTags = (userId) => store.tags[userId] ?? [];
+export const allUserTags = () => readMap("tags");
+
+export const getTags = (userId) => readMap("tags")[userId] ?? [];
 
 export const hasTags = (userId) => getTags(userId).length > 0;
 
@@ -59,11 +123,11 @@ export function setTags(userId, tags) {
     clean.push(tag);
   }
 
-  const next = { ...store.tags };
+  const next = { ...readMap("tags") };
   if (clean.length) next[userId] = clean;
   else delete next[userId];
 
-  store.tags = next;
+  writeMap("tags", next);
 }
 
 export const addTag = (userId, tag) => setTags(userId, [...getTags(userId), tag]);
@@ -77,7 +141,7 @@ export const clearUser = (userId) => setTags(userId, []);
 export function allTags() {
   const counts = new Map();
 
-  for (const tags of Object.values(store.tags))
+  for (const tags of Object.values(readMap("tags")))
     for (const tag of tags) {
       const key = tagKey(tag);
       const entry = counts.get(key);
@@ -100,7 +164,7 @@ export function renameTag(from, to) {
   if (!target || normalise(from) === target) return;
 
   const nextTags = {};
-  for (const [userId, tags] of Object.entries(store.tags)) {
+  for (const [userId, tags] of Object.entries(readMap("tags"))) {
     const seen = new Set();
     const mapped = [];
 
@@ -113,37 +177,37 @@ export function renameTag(from, to) {
 
     if (mapped.length) nextTags[userId] = mapped;
   }
-  store.tags = nextTags;
+  writeMap("tags", nextTags);
 
-  const nextColors = { ...store.colors };
+  const nextColors = { ...readMap("colors") };
   const colour = nextColors[tagKey(from)];
   delete nextColors[tagKey(from)];
   if (colour) nextColors[tagKey(target)] = colour;
-  store.colors = nextColors;
+  writeMap("colors", nextColors);
 
-  const nextStyles = { ...store.styles };
+  const nextStyles = { ...readMap("styles") };
   const style = nextStyles[tagKey(from)];
   delete nextStyles[tagKey(from)];
   if (style) nextStyles[tagKey(target)] = style;
-  store.styles = nextStyles;
+  writeMap("styles", nextStyles);
 }
 
 /** Remove a tag from every user. */
 export function deleteTag(tag) {
   const nextTags = {};
-  for (const [userId, tags] of Object.entries(store.tags)) {
+  for (const [userId, tags] of Object.entries(readMap("tags"))) {
     const kept = tags.filter((t) => tagKey(t) !== tagKey(tag));
     if (kept.length) nextTags[userId] = kept;
   }
-  store.tags = nextTags;
+  writeMap("tags", nextTags);
 
-  const nextColors = { ...store.colors };
+  const nextColors = { ...readMap("colors") };
   delete nextColors[tagKey(tag)];
-  store.colors = nextColors;
+  writeMap("colors", nextColors);
 
-  const nextStyles = { ...store.styles };
+  const nextStyles = { ...readMap("styles") };
   delete nextStyles[tagKey(tag)];
-  store.styles = nextStyles;
+  writeMap("styles", nextStyles);
 }
 
 // --- colours ---------------------------------------------------------------
@@ -164,23 +228,36 @@ function hashString(str) {
 
 /** A tag's colour: the user's override if set, else a stable colour from its name. */
 export const colorOf = (tag) =>
-  store.colors[tagKey(tag)] ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
+  readMap("colors")[tagKey(tag)] ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
 
 export function setColor(tag, color) {
-  store.colors = { ...store.colors, [tagKey(tag)]: color };
+  writeMap("colors", { ...readMap("colors"), [tagKey(tag)]: color });
 }
 
 export function resetColor(tag) {
-  const next = { ...store.colors };
+  const next = { ...readMap("colors") };
   delete next[tagKey(tag)];
-  store.colors = next;
+  writeMap("colors", next);
+}
+
+/** Black or white, whichever stays readable on top of `hex`. */
+export function textOn(hex) {
+  const value = parseInt(String(hex).slice(1), 16);
+  if (!Number.isFinite(value)) return "#fff";
+
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+
+  // Perceived brightness, the cheap ITU-R BT.601 approximation.
+  return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? "#000" : "#fff";
 }
 
 // --- rich styles (gradient / font / animation) -----------------------------
 
 /** A tag's full style, with every unset field filled in from the defaults. */
 export function styleOf(tag) {
-  const saved = store.styles[tagKey(tag)] ?? {};
+  const saved = readMap("styles")[tagKey(tag)] ?? {};
   const style = { ...DEFAULT_STYLE, ...saved, color: saved.color ?? colorOf(tag) };
 
   // Styles saved before motion and colour became separate tracks carried a
@@ -201,17 +278,16 @@ export function styleOf(tag) {
 
 export function setStyle(tag, patch) {
   const key = tagKey(tag);
-  const next = { ...store.styles, [key]: { ...store.styles[key], ...patch } };
-  store.styles = next;
+  writeMap("styles", { ...readMap("styles"), [key]: { ...readMap("styles")[key], ...patch } });
 
   // Keep the legacy colour map in step so plain-colour data stays portable.
   if (patch.color) setColor(tag, patch.color);
 }
 
 export function resetStyle(tag) {
-  const next = { ...store.styles };
+  const next = { ...readMap("styles") };
   delete next[tagKey(tag)];
-  store.styles = next;
+  writeMap("styles", next);
   resetColor(tag);
 }
 
@@ -298,45 +374,48 @@ function averageColor(hexes) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-/** Black or white, whichever stays readable on top of `hex`. */
-export function textOn(hex) {
-  const value = parseInt(hex.slice(1), 16);
-  if (!Number.isFinite(value)) return "#fff";
-
-  const r = (value >> 16) & 255;
-  const g = (value >> 8) & 255;
-  const b = value & 255;
-
-  // Perceived brightness, the cheap ITU-R BT.601 approximation.
-  return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? "#000" : "#fff";
-}
-
 // --- import / export -------------------------------------------------------
 
 export const exportData = () =>
-  JSON.stringify({ tags: store.tags, colors: store.colors, styles: store.styles }, null, 2);
+  JSON.stringify(
+    { tags: readMap("tags"), colors: readMap("colors"), styles: readMap("styles") },
+    null,
+    2,
+  );
 
-/** Returns the number of users imported, or throws if the payload is unusable. */
+/**
+ * Returns { users, tags } counts, or throws if the payload is unusable.
+ *
+ * A payload that parses but contains nothing is reported rather than treated as
+ * a success — importing an empty backup used to look identical to a real one.
+ */
 export function importData(json, { merge = false } = {}) {
   const parsed = JSON.parse(json);
-  if (!parsed || typeof parsed !== "object" || typeof parsed.tags !== "object")
+  if (!parsed || typeof parsed !== "object" || typeof parsed.tags !== "object" || parsed.tags === null)
     throw new Error("Expected an object with a `tags` property.");
 
   const incoming = {};
+  let tagCount = 0;
+
   for (const [userId, tags] of Object.entries(parsed.tags)) {
     if (!Array.isArray(tags)) continue;
     const clean = tags.map(normalise).filter(Boolean);
-    if (clean.length) incoming[userId] = clean;
+    if (clean.length) {
+      incoming[userId] = clean;
+      tagCount += clean.length;
+    }
   }
+
+  const counts = { users: Object.keys(incoming).length, tags: tagCount };
 
   if (!merge) {
-    store.tags = incoming;
-    store.colors = parsed.colors && typeof parsed.colors === "object" ? { ...parsed.colors } : {};
-    store.styles = parsed.styles && typeof parsed.styles === "object" ? { ...parsed.styles } : {};
-    return Object.keys(incoming).length;
+    writeMap("tags", incoming);
+    writeMap("colors", parsed.colors && typeof parsed.colors === "object" ? { ...parsed.colors } : {});
+    writeMap("styles", parsed.styles && typeof parsed.styles === "object" ? { ...parsed.styles } : {});
+    return counts;
   }
 
-  const merged = { ...store.tags };
+  const merged = { ...readMap("tags") };
   for (const [userId, tags] of Object.entries(incoming)) {
     const seen = new Set();
     merged[userId] = [...(merged[userId] ?? []), ...tags].filter((tag) => {
@@ -345,13 +424,13 @@ export function importData(json, { merge = false } = {}) {
       return true;
     });
   }
-  store.tags = merged;
+  writeMap("tags", merged);
 
   if (parsed.colors && typeof parsed.colors === "object")
-    store.colors = { ...store.colors, ...parsed.colors };
+    writeMap("colors", { ...readMap("colors"), ...parsed.colors });
 
   if (parsed.styles && typeof parsed.styles === "object")
-    store.styles = { ...store.styles, ...parsed.styles };
+    writeMap("styles", { ...readMap("styles"), ...parsed.styles });
 
-  return Object.keys(incoming).length;
+  return counts;
 }

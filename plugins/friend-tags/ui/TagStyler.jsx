@@ -1,4 +1,5 @@
 import Chip from "./Chip";
+import EmojiAutocomplete, { createEmojiAutocomplete } from "./EmojiAutocomplete";
 import { normalise, renameTag, resetStyle, setStyle, styleOf } from "../data";
 import { COLOR_ANIMS, FONTS, GRADIENT_PRESETS, MOTIONS } from "../presets";
 
@@ -30,6 +31,7 @@ export default function TagStyler(props) {
   // Edited locally so the preview updates instantly and Cancel can walk away.
   const [draft, setDraft] = createSignal(styleOf(props.tag));
   const [name, setName] = createSignal(props.tag);
+  const autocomplete = createEmojiAutocomplete(name, setName);
 
   const patch = (changes) => setDraft({ ...draft(), ...changes });
 
@@ -67,14 +69,16 @@ export default function TagStyler(props) {
         </div>
 
         <Header tag={HeaderTags.H5}>Name</Header>
-        <div class="ftags-field">
+        <div class="ftags-field" ref={autocomplete.setAnchor}>
           <TextBox
             value={name()}
             onInput={setName}
-            maxlength={40}
+            maxlength={80}
             placeholder="Tag name"
             aria-label="Tag name"
+            onKeyDown={autocomplete.keydown}
           />
+          <EmojiAutocomplete controller={autocomplete} />
           <Show when={renamed()}>
             <Text style={{ color: "var(--text-muted)", "font-size": "12px" }}>
               Renaming on save — this updates the tag on everyone who has it.

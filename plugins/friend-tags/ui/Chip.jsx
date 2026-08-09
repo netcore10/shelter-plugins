@@ -1,3 +1,4 @@
+import RichText, { plainText } from "./RichText";
 import { styleOf, styleToCss } from "../data";
 
 const {
@@ -23,10 +24,15 @@ export default function Chip(props) {
         props.class ? ` ${props.class}` : ""
       }`}
       style={css()}
-      title={props.title ?? props.tag}
+      title={props.title ?? plainText(props.tag)}
       onClick={props.onClick}
     >
-      {props.tag}
+      {/* Inner span so the whole label is ONE flex item. Without it each run of
+          text is its own anonymous flex item and flex layout strips the spaces
+          around it, so "~a~ b" renders as "ab". */}
+      <span class="ftags-chip-text">
+        <RichText text={props.tag} />
+      </span>
     </span>
   );
 }

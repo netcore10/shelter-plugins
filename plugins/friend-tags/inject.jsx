@@ -323,3 +323,18 @@ export function removeInjections() {
   for (const mount of document.querySelectorAll(".ftags-mount")) mount.remove();
   for (const element of document.querySelectorAll(`[data-${MARK}]`)) delete element.dataset[MARK];
 }
+
+/**
+ * Tear down and rebuild every chip on screen.
+ *
+ * Chips are reactive, so this is belt-and-braces — but a bulk import rewrites
+ * whole maps at once, and "the data is right but the screen isn't" is a
+ * miserable thing to debug, so the import path just redraws unconditionally.
+ */
+export function refreshInjections() {
+  removeInjections();
+
+  for (const surface of SURFACES)
+    for (const element of document.querySelectorAll(unhandled(surface.selector)))
+      attach(element, surface);
+}

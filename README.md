@@ -36,6 +36,37 @@ menu.
 Tags are shared labels, not per-person notes: "close friend" looks identical on
 everyone who has it, and restyling it restyles it everywhere at once.
 
+### Tag text
+
+Tags render Discord emoji and inline markdown:
+
+| You type | You get |
+| --- | --- |
+| `:fire:` | 🔥 — type `:` for a Discord-style autocomplete |
+| `<:name:id>` | a custom server emoji |
+| `**bold**` `*italic*` `__underline__` | as written |
+| `~~strike~~` or `~strike~` | ~~struck through~~ |
+| `` `code` `` | inline code |
+
+Underscores only italicise at word boundaries, matching Discord, so a tag named
+`big_tiddy_goth_girl` stays intact. Unmatched markers stay literal, so `C++ ~ Rust`
+is safe. Unknown `:shortcodes:` are left exactly as typed.
+
+The autocomplete offers your server's custom emoji (via Discord's `EmojiStore`)
+plus a built-in unicode list. The built-in list is deliberate: `EmojiStore` is an
+internal API that moves between builds, and the picker should keep working when
+it does.
+
+### Multiple accounts
+
+**Separate tags per account** in settings gives each Discord account its own
+tags. Turning it on copies your current tags to the account you're logged into,
+and never touches the shared set — switch it off to get them back.
+
+If the account ID can't be read for any reason, it falls back to the shared set
+rather than showing an empty one, since "all my tags vanished" is a much worse
+failure than "briefly showing the wrong set".
+
 ### Styling
 
 Every tag gets its own look, via **Style** in the tag editor or tag manager:
@@ -73,6 +104,10 @@ store.styles // { [tagName]: StyleConfig } — gradients, fonts, animations
 npm install
 npm run dev            # or: npx lune dev plugins/friend-tags
 ```
+
+Publishing is just `npx lune ci` to check it builds, then a normal commit and
+push to `main` — GitHub Actions redeploys in about a minute. Reload Discord with
+Ctrl+R to pick up the new version.
 
 Enable **Lune Dev Mode** in shelter's settings first so lune can connect. The
 plugin hot-reloads on save.

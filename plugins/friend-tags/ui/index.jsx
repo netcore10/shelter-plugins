@@ -1,5 +1,14 @@
 import TagManager from "./TagManager";
-import { allTags, exportData, importData } from "../data";
+import { refreshInjections } from "../inject";
+import { customEmojiCount } from "../emoji";
+import {
+  allTags,
+  allUserTags,
+  currentAccountId,
+  exportData,
+  importData,
+  seedCurrentAccount,
+} from "../data";
 
 const {
   plugin: { store },
@@ -44,21 +53,40 @@ function Backup(props) {
   const [text, setText] = createSignal(exportData());
 
   const doImport = (merge) => {
+    let counts;
     try {
-      const count = importData(text(), { merge });
-      showToast({
-        title: "Friend Tags",
-        content: `Imported tags for ${count} ${count === 1 ? "person" : "people"}.`,
-        color: ToastColors.SUCCESS,
-      });
-      props.close();
+      counts = importData(text(), { merge });
     } catch (err) {
       showToast({
         title: "Import failed",
         content: String(err.message ?? err),
         color: ToastColors.CRITICAL,
       });
+      return;
     }
+
+    // A backup can parse perfectly and still contain nothing — which is exactly
+    // what a backup taken after dev mode wiped the store looks like. Saying
+    // "imported!" for that is how you lose an afternoon.
+    if (!counts.users) {
+      showToast({
+        title: "Nothing to import",
+        content: "That backup parsed fine but contains no tags.",
+        color: ToastColors.WARNING,
+        duration: 6000,
+      });
+      return;
+    }
+
+    refreshInjections();
+    showToast({
+      title: "Friend Tags",
+      content: `Imported ${counts.tags} ${counts.tags === 1 ? "tag" : "tags"} across ${counts.users} ${
+        counts.users === 1 ? "person" : "people"
+      }.`,
+      color: ToastColors.SUCCESS,
+    });
+    props.close();
   };
 
   return (
@@ -100,7 +128,7 @@ function Backup(props) {
 export default function Settings() {
   const summary = createMemo(() => {
     const tagCount = allTags().length;
-    const userCount = Object.keys(store.tags).length;
+    const userCount = Object.keys(allUserTags()).length;
     return `${tagCount} ${tagCount === 1 ? "tag" : "tags"} across ${userCount} ${
       userCount === 1 ? "person" : "people"
     }`;
@@ -192,6 +220,33 @@ export default function Settings() {
       </div>
 
       <Divider mt mb />
+
+      <Header tag={HeaderTags.H5}>Accounts</Header>
+      <Toggle
+        checked={store.multiAccount}
+        onChange={(v) => {
+          // Seed before switching on, so this account starts from what you can
+          // already see rather than from nothing.
+          if (v) seedCurrentAccount();
+          store.multiAccount = v;
+          refreshInjections();
+        }}
+        note={
+          currentAccountId()
+            ? "Give each Discord account its own tags. Turning this on copies your current tags to this account, and never deletes the shared set — switch it back off to get them again."
+            : "Give each Discord account its own tags. (Your account ID isn't readable right now, so the shared set is still in use.)"
+        }
+      >
+        Separate tags per account
+      </Toggle>
+
+      <Divider mt mb />
+
+      <Text style={{ color: "var(--text-muted)", "font-size": "13px" }}>
+        {customEmojiCount()
+          ? `${customEmojiCount()} custom emoji available to the picker.`
+          : "No custom emoji found — the picker will only offer unicode ones. Discord may have moved its emoji API; turn on debug logging and let me know."}
+      </Text>
 
       <Toggle
         checked={store.debug}

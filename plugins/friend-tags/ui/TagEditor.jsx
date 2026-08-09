@@ -1,4 +1,5 @@
 import Chip from "./Chip";
+import EmojiAutocomplete, { createEmojiAutocomplete } from "./EmojiAutocomplete";
 import { openStyler } from "./openStyler";
 import {
   addTag,
@@ -36,6 +37,7 @@ const {
 
 export default function TagEditor(props) {
   const [draft, setDraft] = createSignal("");
+  const autocomplete = createEmojiAutocomplete(draft, setDraft);
 
   const user = createMemo(() => UserStore.getUser(props.userId));
   const name = () => user()?.globalName ?? user()?.username ?? props.userId;
@@ -88,18 +90,31 @@ export default function TagEditor(props) {
           </Show>
         </div>
 
-        <div class="ftags-add-row">
+        <div class="ftags-add-row" ref={autocomplete.setAnchor}>
           <TextBox
             value={draft()}
-            placeholder="New tag…"
-            maxlength={40}
+            placeholder="New tag… try :fire: or ~strike~"
+            maxlength={80}
             aria-label="New tag"
             onInput={setDraft}
+            onKeyDown={(e) => {
+              autocomplete.keydown(e);
+              // Enter adds the tag, unless the autocomplete just consumed it.
+              if (e.key === "Enter" && !e.defaultPrevented) commit();
+            }}
           />
           <Button onClick={commit} disabled={!canAdd()} size={ButtonSizes.SMALL}>
             Add
           </Button>
+          <EmojiAutocomplete controller={autocomplete} />
         </div>
+
+        <Show when={draft()}>
+          <div class="ftags-live-preview">
+            <span class="ftags-live-label">Preview</span>
+            <Chip tag={draft()} />
+          </div>
+        </Show>
 
         <Show when={duplicate()}>
           <Text style={{ color: "var(--text-danger)", "font-size": "13px" }}>
