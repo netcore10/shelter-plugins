@@ -1,3 +1,4 @@
+import { loadSnapshot, saveSnapshot } from "./backup";
 import { DEFAULT_STYLE, DURATIONS, LEGACY_ANIMATION_TRACK } from "./presets";
 
 const {
@@ -124,14 +125,65 @@ function writeMap(name, value) {
 
   if (!id) {
     store[name] = value;
-    return;
+  } else {
+    store.accounts = {
+      ...store.accounts,
+      [id]: { ...(store.accounts[id] ?? {}), [name]: value },
+    };
   }
 
-  store.accounts = {
-    ...store.accounts,
-    [id]: { ...(store.accounts[id] ?? {}), [name]: value },
-  };
+  scheduleBackup();
 }
+
+// --- durable backup --------------------------------------------------------
+
+let backupTimer;
+
+/**
+ * Mirror everything to our own IndexedDB shortly after any change.
+ *
+ * Debounced because a rename touches three maps in a row and there's no point
+ * writing three times.
+ */
+function scheduleBackup() {
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(() => {
+    saveSnapshot({
+      tags: detach(store.tags),
+      colors: detach(store.colors),
+      styles: detach(store.styles),
+      accounts: detach(store.accounts),
+    });
+  }, 400);
+}
+
+/**
+ * Reload tags from the IndexedDB mirror when shelter's copy has been wiped.
+ *
+ * Only restores maps that are actually empty, so a live edit can never be
+ * clobbered by a stale snapshot. Returns how many users were recovered.
+ */
+export async function restoreFromBackup() {
+  const snapshot = await loadSnapshot();
+  if (!snapshot) return 0;
+
+  let recovered = 0;
+
+  const isEmpty = (value) => !value || Object.keys(value).length === 0;
+
+  if (isEmpty(store.tags) && !isEmpty(snapshot.tags)) {
+    store.tags = snapshot.tags;
+    recovered = Object.keys(snapshot.tags).length;
+  }
+  if (isEmpty(store.colors) && !isEmpty(snapshot.colors)) store.colors = snapshot.colors;
+  if (isEmpty(store.styles) && !isEmpty(snapshot.styles)) store.styles = snapshot.styles;
+  if (isEmpty(store.accounts) && !isEmpty(snapshot.accounts)) store.accounts = snapshot.accounts;
+
+  return recovered;
+}
+
+/** Force a backup now, e.g. straight after an import. */
+export const backupNow = () => scheduleBackup();
 
 /**
  * Copy the shared data into this account's bucket, so switching multi-account
