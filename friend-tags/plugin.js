@@ -267,7 +267,7 @@ const DEFAULT_STYLE = {
 
 //#endregion
 //#region plugins/friend-tags/data.js
-const { plugin: { store: store$2 }, flux: { storesFlat: storesFlat$3 }, solid: { createMemo: createMemo$7, createRoot } } = shelter;
+const { plugin: { store: store$2 }, flux: { storesFlat: storesFlat$3 } } = shelter;
 store$2.tags ??= {};
 store$2.colors ??= {};
 store$2.styles ??= {};
@@ -319,25 +319,13 @@ function detach(value) {
 	}
 	return value;
 }
-let disposeMemos;
-const memos = createRoot((dispose$1) => {
-	disposeMemos = dispose$1;
-	return {
-		tags: createMemo$7(() => detach(rawMap("tags"))),
-		colors: createMemo$7(() => detach(rawMap("colors"))),
-		styles: createMemo$7(() => detach(rawMap("styles"))),
-		uppercase: createMemo$7(() => store$2.uppercase),
-		maxShown: createMemo$7(() => store$2.maxShown),
-		animate: createMemo$7(() => store$2.animate)
-	};
-});
-const readMap = (name) => memos[name]();
+const readMap = (name) => detach(rawMap(name));
 const display = {
-	uppercase: () => memos.uppercase(),
-	maxShown: () => memos.maxShown(),
-	animate: () => memos.animate()
+	uppercase: () => store$2.uppercase,
+	maxShown: () => store$2.maxShown,
+	animate: () => store$2.animate
 };
-const disposeStoreMemos = () => disposeMemos?.();
+const disposeStoreMemos = () => {};
 function writeMap(name, value) {
 	const id = scopedId();
 	if (!id) store$2[name] = value;
