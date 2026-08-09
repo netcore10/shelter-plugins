@@ -4,7 +4,6 @@ import { DEFAULT_STYLE, DURATIONS, LEGACY_ANIMATION_TRACK } from "./presets";
 const {
   plugin: { store },
   flux: { storesFlat },
-  solid: { createMemo, createRoot },
 } = shelter;
 
 // ---------------------------------------------------------------------------
@@ -91,34 +90,24 @@ function detach(value) {
   return value;
 }
 
-// One shared reactive root for the whole plugin. Six memos subscribe to the
-// store; every chip reads the memos instead of the store, so adding chips costs
-// nothing in subscriptions. Disposed on unload.
-let disposeMemos;
+// Read straight from the store, detaching as we go.
+//
+// This used to go through memos in a module-level createRoot, to cut the
+// per-chip signal churn shelter's store causes. That root is disposed on
+// unload, and a disposed memo stops recomputing — so after a reload, reads
+// returned stale data and newly added tags never appeared. Correctness wins;
+// the saving was never measured against a real client anyway.
+const readMap = (name) => detach(rawMap(name));
 
-const memos = createRoot((dispose) => {
-  disposeMemos = dispose;
-
-  return {
-    tags: createMemo(() => detach(rawMap("tags"))),
-    colors: createMemo(() => detach(rawMap("colors"))),
-    styles: createMemo(() => detach(rawMap("styles"))),
-    uppercase: createMemo(() => store.uppercase),
-    maxShown: createMemo(() => store.maxShown),
-    animate: createMemo(() => store.animate),
-  };
-});
-
-const readMap = (name) => memos[name]();
-
-/** Display options, memoised so chips don't each subscribe to the store. */
+/** Display options. */
 export const display = {
-  uppercase: () => memos.uppercase(),
-  maxShown: () => memos.maxShown(),
-  animate: () => memos.animate(),
+  uppercase: () => store.uppercase,
+  maxShown: () => store.maxShown,
+  animate: () => store.animate,
 };
 
-export const disposeStoreMemos = () => disposeMemos?.();
+/** Kept so index.jsx's onUnload keeps working; nothing to dispose now. */
+export const disposeStoreMemos = () => {};
 
 function writeMap(name, value) {
   const id = scopedId();
