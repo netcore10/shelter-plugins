@@ -149,12 +149,25 @@ let backupTimer;
 function scheduleBackup() {
   clearTimeout(backupTimer);
   backupTimer = setTimeout(() => {
-    saveSnapshot({
-      tags: detach(store.tags),
-      colors: detach(store.colors),
-      styles: detach(store.styles),
-      accounts: detach(store.accounts),
-    });
+    // JSON round-trip, not detach(): detach stops at a depth limit and hands
+    // back the raw shelter proxy below it. IndexedDB structured-clones what it
+    // is given, and cloning that proxy walks getters that mint deeper proxies
+    // without end — "Maximum call stack size exceeded". JSON guarantees plain
+    // data, and the store holds nothing that isn't JSON-safe.
+    try {
+      saveSnapshot(
+        JSON.parse(
+          JSON.stringify({
+            tags: store.tags,
+            colors: store.colors,
+            styles: store.styles,
+            accounts: store.accounts,
+          }),
+        ),
+      );
+    } catch (err) {
+      if (store.debug) console.error("[ftags] backup failed", err);
+    }
   }, 400);
 }
 

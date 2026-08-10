@@ -75,14 +75,24 @@ export default function ColorPicker(props) {
   const [hsv, setHsv] = createSignal(hexToHsv(props.value ?? "#5865f2"));
   const [text, setText] = createSignal(props.value ?? "");
 
+  // Once the user has touched the picker it owns its own state.
+  //
+  // This effect used to resync from props on every change, and it reads hsv()
+  // — so it re-ran on each drag step and, whenever props.value hadn't caught
+  // up yet, wrote the OLD colour straight back. The thumb snapped home and the
+  // drag went nowhere, even though the colour itself had been applied.
+  let userDriven = false;
+
   createEffect(() => {
     const value = props.value;
-    if (!value) return;
-    if (hsvToHex(hsv()) !== value) setHsv(hexToHsv(value));
-    if (normaliseHex(text()) !== value) setText(value);
+    if (userDriven || !value) return;
+
+    setHsv(hexToHsv(value));
+    setText(value);
   });
 
   const commit = (next) => {
+    userDriven = true;
     setHsv(next);
     const hex = hsvToHex(next);
     setText(hex);
@@ -90,27 +100,27 @@ export default function ColorPicker(props) {
   };
 
   /**
-   * `getEl` is a ref accessor, not e.currentTarget.
+   * Drag handling. The box is measured ONCE, when the drag starts.
    *
-   * On the modal's first open the element can still measure 0x0 — shelter
-   * animates a new modal in from transform: scale(0) — and dividing by a zero
-   * width produced NaN, so the first drag set no colour at all and it only
-   * appeared to work the second time you opened the picker. Reading the live
-   * element each move, and skipping while it has no size, fixes that.
+   * Re-measuring per move, or switching between offsetX and bounding-rect
+   * depending on what the pointer happened to be over, gives two subtly
+   * different answers and the thumb jitters between them. One measurement for
+   * the whole gesture is stable — and safe now that the picker only mounts
+   * after the modal has finished animating, so the box isn't mid-transform.
    */
-  const dragging = (getEl, compute) => (e) => {
+  const dragging = (compute) => (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const apply = (event) => {
-      const element = getEl();
-      if (!element) return;
+    const rect = e.currentTarget.getBoundingClientRect();
 
-      const rect = element.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
+    if (!rect.width || !rect.height) return;
 
-      compute(event, rect);
-    };
+    const apply = (event) =>
+      compute(
+        (event.clientX - rect.left) / rect.width,
+        (event.clientY - rect.top) / rect.height,
+      );
 
     apply(e);
 
@@ -124,26 +134,14 @@ export default function ColorPicker(props) {
     onCleanup(stop);
   };
 
-  let squareEl;
-  let hueEl;
-
-  const onSquare = dragging(
-    () => squareEl,
-    (event, rect) =>
-      commit({
-        ...hsv(),
-        s: clamp01((event.clientX - rect.left) / rect.width),
-        v: 1 - clamp01((event.clientY - rect.top) / rect.height),
-      }),
+  const onSquare = dragging((fx, fy) =>
+    commit({ ...hsv(), s: clamp01(fx), v: 1 - clamp01(fy) }),
   );
 
-  const onHue = dragging(
-    () => hueEl,
-    (event, rect) =>
-      commit({ ...hsv(), h: clamp01((event.clientX - rect.left) / rect.width) * 360 }),
-  );
+  const onHue = dragging((fx) => commit({ ...hsv(), h: clamp01(fx) * 360 }));
 
   const onHexInput = (value) => {
+    userDriven = true;
     setText(value);
     // Full values only: "#aab" is valid 3-digit hex, so committing while typing
     // would flash a wrong colour partway through a 6-digit one.
@@ -165,7 +163,6 @@ export default function ColorPicker(props) {
   return (
     <div class="ftags-picker">
       <div
-        ref={squareEl}
         class="ftags-picker-sv"
         style={{ "background-color": hsvToHex({ h: hsv().h, s: 1, v: 1 }) }}
         onPointerDown={onSquare}
@@ -176,7 +173,7 @@ export default function ColorPicker(props) {
         />
       </div>
 
-      <div ref={hueEl} class="ftags-picker-hue" onPointerDown={onHue}>
+      <div class="ftags-picker-hue" onPointerDown={onHue}>
         <div class="ftags-picker-thumb" style={{ left: `${(hsv().h / 360) * 100}%`, top: "50%" }} />
       </div>
 

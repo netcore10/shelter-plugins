@@ -46,7 +46,7 @@ function TagRowEntry(props) {
         Style
       </Button>
 
-      <Show when={renaming()} fallback={<Chip tag={props.tag.label} />}>
+      <Show when={renaming()} fallback={<Chip tag={props.tag.label} animate={false} />}>
         <div style="display: flex; gap: 6px; align-items: center">
           <TextBox value={draft()} onInput={setDraft} aria-label="Rename tag" maxlength={40} />
           <Button size={ButtonSizes.TINY} onClick={commit}>
@@ -167,7 +167,7 @@ export default function TagManager(props) {
                 </span>
 
                 <span class="ftags-user-tags">
-                  <For each={entry.tags}>{(tag) => <Chip tag={tag} />}</For>
+                  <For each={entry.tags}>{(tag) => <Chip tag={tag} animate={false} />}</For>
                 </span>
 
                 <Button

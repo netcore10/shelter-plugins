@@ -244,6 +244,13 @@ html.theme-light .ftags-preview-pop {
 
 /* --- editor / manager modals --- */
 
+/* Belt and braces: even a static chip's box-shadow shouldn't be able to grow
+   these lists enough to toggle the modal's scrollbar. */
+.ftags-editor-list,
+.ftags-suggestions {
+  overflow: hidden;
+}
+
 .ftags-editor-list {
   display: flex;
   flex-wrap: wrap;
@@ -325,6 +332,10 @@ html.theme-light .ftags-preview-pop {
 }
 
 /* --- colour picker: saturation/brightness square + hue bar --- */
+
+/* Reserves the picker's height while it waits for the modal animation, so
+   nothing jumps when it appears. */
+.ftags-picker-slot { min-height: 232px; }
 
 .ftags-picker { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
@@ -548,13 +559,16 @@ html.theme-light .ftags-ac-badge {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 18px;
+  padding: 26px 18px;
   margin-bottom: 14px;
   border-radius: 8px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-accent);
-  /* room for float/breathe to move without being clipped */
-  overflow: visible;
+  /* Padding gives breathe/float room to move. overflow must NOT be visible:
+     an animated chip that spills outside the box intermittently overflows the
+     modal body, which makes its scrollbar flicker on and off as the animation
+     loops. */
+  overflow: hidden;
 }
 .ftags-preview .ftags-chip { height: 26px; line-height: 26px; font-size: 13px; padding: 0 10px; border-radius: 13px; }
 

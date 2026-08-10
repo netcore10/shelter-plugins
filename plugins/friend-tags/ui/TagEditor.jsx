@@ -112,7 +112,7 @@ export default function TagEditor(props) {
         <Show when={draft()}>
           <div class="ftags-live-preview">
             <span class="ftags-live-label">Preview</span>
-            <Chip tag={draft()} />
+            <Chip tag={draft()} animate={false} />
           </div>
         </Show>
 
@@ -130,7 +130,7 @@ export default function TagEditor(props) {
             <For each={tags()}>
               {(tag) => (
                 <div style="display: flex; align-items: center; gap: 8px">
-                  <Chip tag={tag} />
+                  <Chip tag={tag} animate={false} />
                   <div style="flex: 1" />
                   <Button
                     size={ButtonSizes.TINY}
@@ -154,6 +154,7 @@ export default function TagEditor(props) {
               {(t) => (
                 <Chip
                   class="ftags-suggestion"
+                  animate={false}
                   tag={t.label}
                   title={`Used by ${t.count} ${t.count === 1 ? "person" : "people"}`}
                   onClick={() => addTag(props.userId, t.label)}
