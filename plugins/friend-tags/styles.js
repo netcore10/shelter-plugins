@@ -196,9 +196,11 @@ html.theme-light .ftags-preview-pop {
 /* Shrink to the chip's own width instead of reserving a share of the row.
    max-width: 50% held that space open whether or not the tag needed it, which
    left a gap between the tag and whatever follows it in the DM list. */
+/* Cap it: uncapped, a long tag takes the whole row and truncates the name it
+   belongs to. The name comes first — the tag clips instead. */
 .ftags-row--compact {
   min-width: 0;
-  max-width: 100%;
+  max-width: 40%;
   flex: 0 1 auto;
 }
 .ftags-row--compact .ftags-chip {
