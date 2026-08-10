@@ -310,16 +310,19 @@ const rawMap = (name) => {
 * and every write then notifies all of them. Detaching once, inside a memo,
 * means consumers touch ordinary objects.
 */
-function detach(value) {
-	if (Array.isArray(value)) return value.map(detach);
+function detach(value, depth = 4) {
+	if (depth <= 0) return value;
+	if (Array.isArray(value)) return value.map((item) => detach(item, depth - 1));
 	if (value && typeof value === "object") {
 		const out = {};
-		for (const key in value) out[key] = detach(value[key]);
+		for (const key in value) out[key] = detach(value[key], depth - 1);
 		return out;
 	}
 	return value;
 }
 const readMap = (name) => detach(rawMap(name));
+/** Detach a single entry rather than the whole map. */
+const readEntry = (name, key) => detach(rawMap(name)[key]);
 const display = {
 	uppercase: () => store$2.uppercase,
 	maxShown: () => store$2.maxShown,
@@ -348,12 +351,16 @@ let backupTimer;
 function scheduleBackup() {
 	clearTimeout(backupTimer);
 	backupTimer = setTimeout(() => {
-		saveSnapshot({
-			tags: detach(store$2.tags),
-			colors: detach(store$2.colors),
-			styles: detach(store$2.styles),
-			accounts: detach(store$2.accounts)
-		});
+		try {
+			saveSnapshot(JSON.parse(JSON.stringify({
+				tags: store$2.tags,
+				colors: store$2.colors,
+				styles: store$2.styles,
+				accounts: store$2.accounts
+			})));
+		} catch (err) {
+			if (store$2.debug) console.error("[ftags] backup failed", err);
+		}
 	}, 400);
 }
 async function restoreFromBackup() {
@@ -386,7 +393,7 @@ function seedCurrentAccount() {
 const normalise = (tag) => String(tag ?? "").replace(/\s+/g, " ").trim();
 const tagKey = (tag) => normalise(tag).toLowerCase();
 const allUserTags = () => readMap("tags");
-const getTags = (userId) => readMap("tags")[userId] ?? [];
+const getTags = (userId) => readEntry("tags", userId) ?? [];
 function setTags(userId, tags) {
 	const seen = new Set();
 	const clean = [];
@@ -480,7 +487,7 @@ function hashString(str) {
 	for (let i = 0; i < str.length; i++) hash = Math.imul(hash, 31) + str.charCodeAt(i) | 0;
 	return Math.abs(hash);
 }
-const colorOf = (tag) => readMap("colors")[tagKey(tag)] ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
+const colorOf = (tag) => readEntry("colors", tagKey(tag)) ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
 function setColor(tag, color) {
 	writeMap("colors", {
 		...readMap("colors"),
@@ -501,7 +508,7 @@ function textOn(hex) {
 	return (r * 299 + g * 587 + b * 114) / 1e3 > 150 ? "#000" : "#fff";
 }
 function styleOf(tag) {
-	const saved = readMap("styles")[tagKey(tag)] ?? {};
+	const saved = readEntry("styles", tagKey(tag)) ?? {};
 	const style = {
 		...DEFAULT_STYLE,
 		...saved,
@@ -831,9 +838,13 @@ html.theme-light .ftags-preview-pop {
 /* Compact surfaces (member list, DM list) are width constrained. The chip must
    be allowed to SHRINK (flex: 0 1 auto) for text-overflow to kick in — with the
    base "flex: 0 0 auto" it just overflows and gets cut off mid-word. */
+/* Shrink to the chip's own width instead of reserving a share of the row.
+   max-width: 50% held that space open whether or not the tag needed it, which
+   left a gap between the tag and whatever follows it in the DM list. */
 .ftags-row--compact {
   min-width: 0;
-  max-width: 50%;
+  max-width: 100%;
+  flex: 0 1 auto;
 }
 .ftags-row--compact .ftags-chip {
   flex: 0 1 auto;
@@ -877,6 +888,13 @@ html.theme-light .ftags-preview-pop {
 .ftags-row--editable .ftags-chip { cursor: pointer; }
 
 /* --- editor / manager modals --- */
+
+/* Belt and braces: even a static chip's box-shadow shouldn't be able to grow
+   these lists enough to toggle the modal's scrollbar. */
+.ftags-editor-list,
+.ftags-suggestions {
+  overflow: hidden;
+}
 
 .ftags-editor-list {
   display: flex;
@@ -959,6 +977,10 @@ html.theme-light .ftags-preview-pop {
 }
 
 /* --- colour picker: saturation/brightness square + hue bar --- */
+
+/* Reserves the picker's height while it waits for the modal animation, so
+   nothing jumps when it appears. */
+.ftags-picker-slot { min-height: 232px; }
 
 .ftags-picker { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
@@ -1182,13 +1204,16 @@ html.theme-light .ftags-ac-badge {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 18px;
+  padding: 26px 18px;
   margin-bottom: 14px;
   border-radius: 8px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-accent);
-  /* room for float/breathe to move without being clipped */
-  overflow: visible;
+  /* Padding gives breathe/float room to move. overflow must NOT be visible:
+     an animated chip that spills outside the box intermittently overflows the
+     modal body, which makes its scrollbar flicker on and off as the animation
+     loops. */
+  overflow: hidden;
 }
 .ftags-preview .ftags-chip { height: 26px; line-height: 26px; font-size: 13px; padding: 0 10px; border-radius: 13px; }
 
@@ -1244,6 +1269,7 @@ var require_web = __commonJS({ "solid-js/web"(exports, module) {
 
 //#endregion
 //#region plugins/friend-tags/ui/EmojiPreview.jsx
+var import_web$102 = __toESM(require_web(), 1);
 var import_web$103 = __toESM(require_web(), 1);
 var import_web$104 = __toESM(require_web(), 1);
 var import_web$105 = __toESM(require_web(), 1);
@@ -1254,8 +1280,7 @@ var import_web$109 = __toESM(require_web(), 1);
 var import_web$110 = __toESM(require_web(), 1);
 var import_web$111 = __toESM(require_web(), 1);
 var import_web$112 = __toESM(require_web(), 1);
-var import_web$113 = __toESM(require_web(), 1);
-const _tmpl$$11 = /*#__PURE__*/ (0, import_web$103.template)(`<div class="ftags-preview-pop"><div class="ftags-preview-art"></div><div class="ftags-preview-name">:<!#><!/>:</div><div class="ftags-preview-source"></div></div>`, 10), _tmpl$2$9 = /*#__PURE__*/ (0, import_web$103.template)(`<img>`, 1), _tmpl$3$7 = /*#__PURE__*/ (0, import_web$103.template)(`<span class="ftags-preview-char"></span>`, 2);
+const _tmpl$$11 = /*#__PURE__*/ (0, import_web$102.template)(`<div class="ftags-preview-pop"><div class="ftags-preview-art"></div><div class="ftags-preview-name">:<!#><!/>:</div><div class="ftags-preview-source"></div></div>`, 10), _tmpl$2$9 = /*#__PURE__*/ (0, import_web$102.template)(`<img>`, 1), _tmpl$3$7 = /*#__PURE__*/ (0, import_web$102.template)(`<span class="ftags-preview-char"></span>`, 2);
 const { flux: { storesFlat: storesFlat$2 }, solidWeb: { render }, ui: { getRoot: getRoot$1 } } = shelter;
 let dispose;
 function closeEmojiPreview() {
@@ -1279,17 +1304,17 @@ function Preview(props) {
 	const above = rect.top > height + 12;
 	const left = Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
 	return (() => {
-		const _el$ = (0, import_web$109.getNextElement)(_tmpl$$11), _el$2 = _el$.firstChild, _el$3 = _el$2.nextSibling, _el$4 = _el$3.firstChild, _el$6 = _el$4.nextSibling, [_el$7, _co$] = (0, import_web$111.getNextMarker)(_el$6.nextSibling), _el$5 = _el$7.nextSibling, _el$8 = _el$3.nextSibling;
+		const _el$ = (0, import_web$108.getNextElement)(_tmpl$$11), _el$2 = _el$.firstChild, _el$3 = _el$2.nextSibling, _el$4 = _el$3.firstChild, _el$6 = _el$4.nextSibling, [_el$7, _co$] = (0, import_web$110.getNextMarker)(_el$6.nextSibling), _el$5 = _el$7.nextSibling, _el$8 = _el$3.nextSibling;
 		_el$.$$click = (e) => e.stopPropagation();
-		(0, import_web$112.insert)(_el$2, (() => {
-			const _c$ = (0, import_web$113.memo)(() => !!props.emoji.id);
+		(0, import_web$111.insert)(_el$2, (() => {
+			const _c$ = (0, import_web$112.memo)(() => !!props.emoji.id);
 			return () => _c$() ? (() => {
-				const _el$9 = (0, import_web$109.getNextElement)(_tmpl$2$9);
-				(0, import_web$106.setAttribute)(_el$9, "draggable", false);
-				(0, import_web$108.effect)((_p$) => {
+				const _el$9 = (0, import_web$108.getNextElement)(_tmpl$2$9);
+				(0, import_web$105.setAttribute)(_el$9, "draggable", false);
+				(0, import_web$107.effect)((_p$) => {
 					const _v$ = `https://cdn.discordapp.com/emojis/${props.emoji.id}.${props.emoji.animated ? "gif" : "webp"}?size=128`, _v$2 = props.emoji.name ?? "";
-					_v$ !== _p$._v$ && (0, import_web$106.setAttribute)(_el$9, "src", _p$._v$ = _v$);
-					_v$2 !== _p$._v$2 && (0, import_web$106.setAttribute)(_el$9, "alt", _p$._v$2 = _v$2);
+					_v$ !== _p$._v$ && (0, import_web$105.setAttribute)(_el$9, "src", _p$._v$ = _v$);
+					_v$2 !== _p$._v$2 && (0, import_web$105.setAttribute)(_el$9, "alt", _p$._v$2 = _v$2);
 					return _p$;
 				}, {
 					_v$: undefined,
@@ -1297,19 +1322,19 @@ function Preview(props) {
 				});
 				return _el$9;
 			})() : (() => {
-				const _el$0 = (0, import_web$109.getNextElement)(_tmpl$3$7);
-				(0, import_web$112.insert)(_el$0, () => props.emoji.char);
+				const _el$0 = (0, import_web$108.getNextElement)(_tmpl$3$7);
+				(0, import_web$111.insert)(_el$0, () => props.emoji.char);
 				return _el$0;
 			})();
 		})());
-		(0, import_web$112.insert)(_el$3, () => props.emoji.name ?? "emoji", _el$7, _co$);
-		(0, import_web$112.insert)(_el$8, () => sourceOf(props.emoji));
-		(0, import_web$108.effect)((_$p) => (0, import_web$107.style)(_el$, {
+		(0, import_web$111.insert)(_el$3, () => props.emoji.name ?? "emoji", _el$7, _co$);
+		(0, import_web$111.insert)(_el$8, () => sourceOf(props.emoji));
+		(0, import_web$107.effect)((_$p) => (0, import_web$106.style)(_el$, {
 			left: `${left}px`,
 			width: `${width}px`,
 			...above ? { bottom: `${window.innerHeight - rect.top + 10}px` } : { top: `${rect.bottom + 10}px` }
 		}, _$p));
-		(0, import_web$110.runHydrationEvents)();
+		(0, import_web$109.runHydrationEvents)();
 		return _el$;
 	})();
 }
@@ -1326,7 +1351,7 @@ function showEmojiPreview(emoji, anchor) {
 	container.className = "ftags-preview-host";
 	root.appendChild(container);
 	const rect = anchor.getBoundingClientRect();
-	const unrender = render(() => (0, import_web$105.createComponent)(Preview, {
+	const unrender = render(() => (0, import_web$104.createComponent)(Preview, {
 		emoji,
 		rect
 	}), container);
@@ -1348,7 +1373,7 @@ function showEmojiPreview(emoji, anchor) {
 		container.remove();
 	};
 }
-(0, import_web$104.delegateEvents)(["click"]);
+(0, import_web$103.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/emoji.js
@@ -1736,6 +1761,7 @@ const applyEmoji = (text, emoji) => String(text ?? "").replace(/:([a-zA-Z0-9_+-]
 
 //#endregion
 //#region plugins/friend-tags/ui/RichText.jsx
+var import_web$92 = __toESM(require_web(), 1);
 var import_web$93 = __toESM(require_web(), 1);
 var import_web$94 = __toESM(require_web(), 1);
 var import_web$95 = __toESM(require_web(), 1);
@@ -1745,8 +1771,7 @@ var import_web$98 = __toESM(require_web(), 1);
 var import_web$99 = __toESM(require_web(), 1);
 var import_web$100 = __toESM(require_web(), 1);
 var import_web$101 = __toESM(require_web(), 1);
-var import_web$102 = __toESM(require_web(), 1);
-const _tmpl$$10 = /*#__PURE__*/ (0, import_web$93.template)(`<span class="ftags-emoji-char"></span>`, 2), _tmpl$2$8 = /*#__PURE__*/ (0, import_web$93.template)(`<img class="ftags-emoji">`, 1), _tmpl$3$6 = /*#__PURE__*/ (0, import_web$93.template)(`<b></b>`, 2), _tmpl$4$5 = /*#__PURE__*/ (0, import_web$93.template)(`<i></i>`, 2), _tmpl$5$4 = /*#__PURE__*/ (0, import_web$93.template)(`<u></u>`, 2), _tmpl$6$3 = /*#__PURE__*/ (0, import_web$93.template)(`<s></s>`, 2), _tmpl$7$3 = /*#__PURE__*/ (0, import_web$93.template)(`<b><i></i></b>`, 4), _tmpl$8$3 = /*#__PURE__*/ (0, import_web$93.template)(`<code class="ftags-code"></code>`, 2);
+const _tmpl$$10 = /*#__PURE__*/ (0, import_web$92.template)(`<span class="ftags-emoji-char"></span>`, 2), _tmpl$2$8 = /*#__PURE__*/ (0, import_web$92.template)(`<img class="ftags-emoji">`, 1), _tmpl$3$6 = /*#__PURE__*/ (0, import_web$92.template)(`<b></b>`, 2), _tmpl$4$5 = /*#__PURE__*/ (0, import_web$92.template)(`<i></i>`, 2), _tmpl$5$4 = /*#__PURE__*/ (0, import_web$92.template)(`<u></u>`, 2), _tmpl$6$3 = /*#__PURE__*/ (0, import_web$92.template)(`<s></s>`, 2), _tmpl$7$3 = /*#__PURE__*/ (0, import_web$92.template)(`<b><i></i></b>`, 4), _tmpl$8$3 = /*#__PURE__*/ (0, import_web$92.template)(`<code class="ftags-code"></code>`, 2);
 const { flux: { storesFlat }, solid: { For: For$5, createMemo: createMemo$6 } } = shelter;
 const EMOJI_CDN = "https://cdn.discordapp.com/emojis";
 /**
@@ -1903,37 +1928,37 @@ const previewOnClick = (emoji) => (e) => {
 };
 function Node(props) {
 	const node = () => props.node;
-	return (0, import_web$102.memo)((() => {
-		const _c$ = (0, import_web$102.memo)(() => typeof node() === "string");
+	return (0, import_web$101.memo)((() => {
+		const _c$ = (0, import_web$101.memo)(() => typeof node() === "string");
 		return () => _c$() ? node() : (() => {
-			const _c$2 = (0, import_web$102.memo)(() => !!node().text);
+			const _c$2 = (0, import_web$101.memo)(() => !!node().text);
 			return () => _c$2() ? (() => {
-				const _el$ = (0, import_web$98.getNextElement)(_tmpl$$10);
-				(0, import_web$101.addEventListener)(_el$, "click", previewOnClick({
+				const _el$ = (0, import_web$97.getNextElement)(_tmpl$$10);
+				(0, import_web$100.addEventListener)(_el$, "click", previewOnClick({
 					char: node().text,
 					name: node().name
 				}), true);
-				(0, import_web$100.insert)(_el$, () => node().text);
-				(0, import_web$99.runHydrationEvents)();
+				(0, import_web$99.insert)(_el$, () => node().text);
+				(0, import_web$98.runHydrationEvents)();
 				return _el$;
 			})() : (() => {
-				const _c$3 = (0, import_web$102.memo)(() => !!node().id);
+				const _c$3 = (0, import_web$101.memo)(() => !!node().id);
 				return () => _c$3() ? (() => {
-					const _el$2 = (0, import_web$98.getNextElement)(_tmpl$2$8);
-					(0, import_web$101.addEventListener)(_el$2, "click", previewOnClick(node()), true);
-					(0, import_web$97.setAttribute)(_el$2, "draggable", false);
-					(0, import_web$96.effect)((_p$) => {
+					const _el$2 = (0, import_web$97.getNextElement)(_tmpl$2$8);
+					(0, import_web$100.addEventListener)(_el$2, "click", previewOnClick(node()), true);
+					(0, import_web$96.setAttribute)(_el$2, "draggable", false);
+					(0, import_web$95.effect)((_p$) => {
 						const _v$ = `${EMOJI_CDN}/${node().id}.${node().animated ? "gif" : "webp"}?size=44`, _v$2 = `:${node().name}:`;
-						_v$ !== _p$._v$ && (0, import_web$97.setAttribute)(_el$2, "src", _p$._v$ = _v$);
-						_v$2 !== _p$._v$2 && (0, import_web$97.setAttribute)(_el$2, "alt", _p$._v$2 = _v$2);
+						_v$ !== _p$._v$ && (0, import_web$96.setAttribute)(_el$2, "src", _p$._v$ = _v$);
+						_v$2 !== _p$._v$2 && (0, import_web$96.setAttribute)(_el$2, "alt", _p$._v$2 = _v$2);
 						return _p$;
 					}, {
 						_v$: undefined,
 						_v$2: undefined
 					});
-					(0, import_web$99.runHydrationEvents)();
+					(0, import_web$98.runHydrationEvents)();
 					return _el$2;
-				})() : (0, import_web$95.createComponent)(Marked, { get node() {
+				})() : (0, import_web$94.createComponent)(Marked, { get node() {
 					return node();
 				} });
 			})();
@@ -1941,44 +1966,44 @@ function Node(props) {
 	})());
 }
 function Marked(props) {
-	const children = () => (0, import_web$95.createComponent)(For$5, {
+	const children = () => (0, import_web$94.createComponent)(For$5, {
 		get each() {
 			return props.node.children;
 		},
-		children: (child) => (0, import_web$95.createComponent)(Node, { node: child })
+		children: (child) => (0, import_web$94.createComponent)(Node, { node: child })
 	});
 	switch (props.node.tag) {
 		case "b": return (() => {
-			const _el$3 = (0, import_web$98.getNextElement)(_tmpl$3$6);
-			(0, import_web$100.insert)(_el$3, children);
+			const _el$3 = (0, import_web$97.getNextElement)(_tmpl$3$6);
+			(0, import_web$99.insert)(_el$3, children);
 			return _el$3;
 		})();
 		case "i": return (() => {
-			const _el$4 = (0, import_web$98.getNextElement)(_tmpl$4$5);
-			(0, import_web$100.insert)(_el$4, children);
+			const _el$4 = (0, import_web$97.getNextElement)(_tmpl$4$5);
+			(0, import_web$99.insert)(_el$4, children);
 			return _el$4;
 		})();
 		case "u": return (() => {
-			const _el$5 = (0, import_web$98.getNextElement)(_tmpl$5$4);
-			(0, import_web$100.insert)(_el$5, children);
+			const _el$5 = (0, import_web$97.getNextElement)(_tmpl$5$4);
+			(0, import_web$99.insert)(_el$5, children);
 			return _el$5;
 		})();
 		case "s": return (() => {
-			const _el$6 = (0, import_web$98.getNextElement)(_tmpl$6$3);
-			(0, import_web$100.insert)(_el$6, children);
+			const _el$6 = (0, import_web$97.getNextElement)(_tmpl$6$3);
+			(0, import_web$99.insert)(_el$6, children);
 			return _el$6;
 		})();
 		case "bi": return (() => {
-			const _el$7 = (0, import_web$98.getNextElement)(_tmpl$7$3), _el$8 = _el$7.firstChild;
-			(0, import_web$100.insert)(_el$8, children);
+			const _el$7 = (0, import_web$97.getNextElement)(_tmpl$7$3), _el$8 = _el$7.firstChild;
+			(0, import_web$99.insert)(_el$8, children);
 			return _el$7;
 		})();
 		case "code": return (() => {
-			const _el$9 = (0, import_web$98.getNextElement)(_tmpl$8$3);
-			(0, import_web$100.insert)(_el$9, children);
+			const _el$9 = (0, import_web$97.getNextElement)(_tmpl$8$3);
+			(0, import_web$99.insert)(_el$9, children);
 			return _el$9;
 		})();
-		default: return (0, import_web$102.memo)(children);
+		default: return (0, import_web$101.memo)(children);
 	}
 }
 const CUSTOM_EMOJI_ALL = /<(a?):(\w+):(\d+)>/g;
@@ -1999,17 +2024,18 @@ function parseCached(text) {
 }
 function RichText(props) {
 	const nodes = createMemo$6(() => parseCached(String(props.text ?? "")));
-	return (0, import_web$95.createComponent)(For$5, {
+	return (0, import_web$94.createComponent)(For$5, {
 		get each() {
 			return nodes();
 		},
-		children: (node) => (0, import_web$95.createComponent)(Node, { node })
+		children: (node) => (0, import_web$94.createComponent)(Node, { node })
 	});
 }
-(0, import_web$94.delegateEvents)(["click"]);
+(0, import_web$93.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/Chip.jsx
+var import_web$81 = __toESM(require_web(), 1);
 var import_web$82 = __toESM(require_web(), 1);
 var import_web$83 = __toESM(require_web(), 1);
 var import_web$84 = __toESM(require_web(), 1);
@@ -2020,37 +2046,37 @@ var import_web$88 = __toESM(require_web(), 1);
 var import_web$89 = __toESM(require_web(), 1);
 var import_web$90 = __toESM(require_web(), 1);
 var import_web$91 = __toESM(require_web(), 1);
-var import_web$92 = __toESM(require_web(), 1);
-const _tmpl$$9 = /*#__PURE__*/ (0, import_web$82.template)(`<span><span class="ftags-chip-text"></span></span>`, 4);
+const _tmpl$$9 = /*#__PURE__*/ (0, import_web$81.template)(`<span><span class="ftags-chip-text"></span></span>`, 4);
 const { solid: { createMemo: createMemo$5 } } = shelter;
 function Chip(props) {
 	const config = createMemo$5(() => props.style ?? styleOf(props.tag));
 	const css = createMemo$5(() => styleToCss(config(), { animate: props.animate ?? display.animate() }));
 	return (() => {
-		const _el$ = (0, import_web$88.getNextElement)(_tmpl$$9), _el$2 = _el$.firstChild;
-		(0, import_web$92.addEventListener)(_el$, "click", props.onClick, true);
-		(0, import_web$90.insert)(_el$2, (0, import_web$91.createComponent)(RichText, { get text() {
+		const _el$ = (0, import_web$87.getNextElement)(_tmpl$$9), _el$2 = _el$.firstChild;
+		(0, import_web$91.addEventListener)(_el$, "click", props.onClick, true);
+		(0, import_web$89.insert)(_el$2, (0, import_web$90.createComponent)(RichText, { get text() {
 			return props.tag;
 		} }));
-		(0, import_web$87.effect)((_p$) => {
+		(0, import_web$86.effect)((_p$) => {
 			const _v$ = `ftags-chip${display.uppercase() && !props.plain ? " ftags-chip--upper" : ""}${props.class ? ` ${props.class}` : ""}`, _v$2 = css(), _v$3 = props.title ?? plainText(props.tag);
-			_v$ !== _p$._v$ && (0, import_web$86.className)(_el$, _p$._v$ = _v$);
-			_p$._v$2 = (0, import_web$85.style)(_el$, _v$2, _p$._v$2);
-			_v$3 !== _p$._v$3 && (0, import_web$84.setAttribute)(_el$, "title", _p$._v$3 = _v$3);
+			_v$ !== _p$._v$ && (0, import_web$85.className)(_el$, _p$._v$ = _v$);
+			_p$._v$2 = (0, import_web$84.style)(_el$, _v$2, _p$._v$2);
+			_v$3 !== _p$._v$3 && (0, import_web$83.setAttribute)(_el$, "title", _p$._v$3 = _v$3);
 			return _p$;
 		}, {
 			_v$: undefined,
 			_v$2: undefined,
 			_v$3: undefined
 		});
-		(0, import_web$89.runHydrationEvents)();
+		(0, import_web$88.runHydrationEvents)();
 		return _el$;
 	})();
 }
-(0, import_web$83.delegateEvents)(["click"]);
+(0, import_web$82.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/EmojiAutocomplete.jsx
+var import_web$70 = __toESM(require_web(), 1);
 var import_web$71 = __toESM(require_web(), 1);
 var import_web$72 = __toESM(require_web(), 1);
 var import_web$73 = __toESM(require_web(), 1);
@@ -2061,15 +2087,14 @@ var import_web$77 = __toESM(require_web(), 1);
 var import_web$78 = __toESM(require_web(), 1);
 var import_web$79 = __toESM(require_web(), 1);
 var import_web$80 = __toESM(require_web(), 1);
-var import_web$81 = __toESM(require_web(), 1);
-const _tmpl$$8 = /*#__PURE__*/ (0, import_web$71.template)(`<div class="ftags-ac"><div class="ftags-ac-header">Emoji matching <strong>:<!#><!/></strong></div><div class="ftags-ac-list"></div></div>`, 10), _tmpl$2$7 = /*#__PURE__*/ (0, import_web$71.template)(`<img>`, 1), _tmpl$3$5 = /*#__PURE__*/ (0, import_web$71.template)(`<span class="ftags-ac-badge">server</span>`, 2), _tmpl$4$4 = /*#__PURE__*/ (0, import_web$71.template)(`<div><span class="ftags-ac-emoji"></span><span class="ftags-ac-name">:<!#><!/>:</span><!#><!/></div>`, 10), _tmpl$5$3 = /*#__PURE__*/ (0, import_web$71.template)(`<span class="ftags-ac-char"></span>`, 2);
-const { solid: { For: For$4, Show: Show$4, createEffect: createEffect$1, createMemo: createMemo$4, createSignal: createSignal$5, onCleanup: onCleanup$1 }, solidWeb: { Portal }, ui: { getRoot } } = shelter;
+const _tmpl$$8 = /*#__PURE__*/ (0, import_web$70.template)(`<div class="ftags-ac"><div class="ftags-ac-header">Emoji matching <strong>:<!#><!/></strong></div><div class="ftags-ac-list"></div></div>`, 10), _tmpl$2$7 = /*#__PURE__*/ (0, import_web$70.template)(`<img>`, 1), _tmpl$3$5 = /*#__PURE__*/ (0, import_web$70.template)(`<span class="ftags-ac-badge">server</span>`, 2), _tmpl$4$4 = /*#__PURE__*/ (0, import_web$70.template)(`<div><span class="ftags-ac-emoji"></span><span class="ftags-ac-name">:<!#><!/>:</span><!#><!/></div>`, 10), _tmpl$5$3 = /*#__PURE__*/ (0, import_web$70.template)(`<span class="ftags-ac-char"></span>`, 2);
+const { solid: { For: For$4, Show: Show$5, createEffect: createEffect$1, createMemo: createMemo$4, createSignal: createSignal$6, onCleanup: onCleanup$1 }, solidWeb: { Portal }, ui: { getRoot } } = shelter;
 function createEmojiAutocomplete(value, setValue) {
-	const [selected, setSelected] = createSignal$5(0);
-	const [dismissed, setDismissed] = createSignal$5(false);
-	const [anchor, setAnchor] = createSignal$5();
-	const [rect, setRect] = createSignal$5();
-	const [caret, setCaret] = createSignal$5(null);
+	const [selected, setSelected] = createSignal$6(0);
+	const [dismissed, setDismissed] = createSignal$6(false);
+	const [anchor, setAnchor] = createSignal$6();
+	const [rect, setRect] = createSignal$6();
+	const [caret, setCaret] = createSignal$6(null);
 	const input = () => anchor()?.querySelector("input, textarea");
 	createEffect$1(() => {
 		const element = input();
@@ -2195,47 +2220,47 @@ function EmojiAutocomplete(props) {
 			...above ? { bottom: `${window.innerHeight - r.top + 8}px` } : { top: `${r.bottom + 8}px` }
 		};
 	});
-	return (0, import_web$79.createComponent)(Show$4, {
+	return (0, import_web$78.createComponent)(Show$5, {
 		get when() {
 			return c().open();
 		},
 		get children() {
-			return (0, import_web$79.createComponent)(Portal, {
+			return (0, import_web$78.createComponent)(Portal, {
 				get mount() {
 					return c().mount();
 				},
 				get children() {
-					const _el$ = (0, import_web$78.getNextElement)(_tmpl$$8), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$5.nextSibling, [_el$7, _co$] = (0, import_web$80.getNextMarker)(_el$6.nextSibling), _el$8 = _el$2.nextSibling;
-					(0, import_web$81.insert)(_el$4, () => c().query(), _el$7, _co$);
-					(0, import_web$81.insert)(_el$8, (0, import_web$79.createComponent)(For$4, {
+					const _el$ = (0, import_web$77.getNextElement)(_tmpl$$8), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$5.nextSibling, [_el$7, _co$] = (0, import_web$79.getNextMarker)(_el$6.nextSibling), _el$8 = _el$2.nextSibling;
+					(0, import_web$80.insert)(_el$4, () => c().query(), _el$7, _co$);
+					(0, import_web$80.insert)(_el$8, (0, import_web$78.createComponent)(For$4, {
 						get each() {
 							return c().results();
 						},
 						children: (emoji, i) => (() => {
-							const _el$9 = (0, import_web$78.getNextElement)(_tmpl$4$4), _el$0 = _el$9.firstChild, _el$10 = _el$0.nextSibling, _el$11 = _el$10.firstChild, _el$13 = _el$11.nextSibling, [_el$14, _co$2] = (0, import_web$80.getNextMarker)(_el$13.nextSibling), _el$12 = _el$14.nextSibling, _el$16 = _el$10.nextSibling, [_el$17, _co$3] = (0, import_web$80.getNextMarker)(_el$16.nextSibling);
+							const _el$9 = (0, import_web$77.getNextElement)(_tmpl$4$4), _el$0 = _el$9.firstChild, _el$10 = _el$0.nextSibling, _el$11 = _el$10.firstChild, _el$13 = _el$11.nextSibling, [_el$14, _co$2] = (0, import_web$79.getNextMarker)(_el$13.nextSibling), _el$12 = _el$14.nextSibling, _el$16 = _el$10.nextSibling, [_el$17, _co$3] = (0, import_web$79.getNextMarker)(_el$16.nextSibling);
 							_el$9.$$mousedown = (e) => {
 								e.preventDefault();
 								c().pick(emoji);
 							};
 							_el$9.addEventListener("mouseenter", () => c().setSelected(i()));
-							(0, import_web$81.insert)(_el$0, (0, import_web$79.createComponent)(Show$4, {
+							(0, import_web$80.insert)(_el$0, (0, import_web$78.createComponent)(Show$5, {
 								get when() {
 									return emoji.id;
 								},
 								get fallback() {
 									return (() => {
-										const _el$18 = (0, import_web$78.getNextElement)(_tmpl$5$3);
-										(0, import_web$81.insert)(_el$18, () => emoji.char);
+										const _el$18 = (0, import_web$77.getNextElement)(_tmpl$5$3);
+										(0, import_web$80.insert)(_el$18, () => emoji.char);
 										return _el$18;
 									})();
 								},
 								get children() {
-									const _el$1 = (0, import_web$78.getNextElement)(_tmpl$2$7);
-									(0, import_web$75.setAttribute)(_el$1, "draggable", false);
-									(0, import_web$77.effect)((_p$) => {
+									const _el$1 = (0, import_web$77.getNextElement)(_tmpl$2$7);
+									(0, import_web$74.setAttribute)(_el$1, "draggable", false);
+									(0, import_web$76.effect)((_p$) => {
 										const _v$ = `https://cdn.discordapp.com/emojis/${emoji.id}.${emoji.animated ? "gif" : "webp"}?size=44`, _v$2 = emoji.key;
-										_v$ !== _p$._v$ && (0, import_web$75.setAttribute)(_el$1, "src", _p$._v$ = _v$);
-										_v$2 !== _p$._v$2 && (0, import_web$75.setAttribute)(_el$1, "alt", _p$._v$2 = _v$2);
+										_v$ !== _p$._v$ && (0, import_web$74.setAttribute)(_el$1, "src", _p$._v$ = _v$);
+										_v$2 !== _p$._v$2 && (0, import_web$74.setAttribute)(_el$1, "alt", _p$._v$2 = _v$2);
 										return _p$;
 									}, {
 										_v$: undefined,
@@ -2244,28 +2269,28 @@ function EmojiAutocomplete(props) {
 									return _el$1;
 								}
 							}));
-							(0, import_web$81.insert)(_el$10, () => emoji.key, _el$14, _co$2);
-							(0, import_web$81.insert)(_el$9, (0, import_web$79.createComponent)(Show$4, {
+							(0, import_web$80.insert)(_el$10, () => emoji.key, _el$14, _co$2);
+							(0, import_web$80.insert)(_el$9, (0, import_web$78.createComponent)(Show$5, {
 								get when() {
 									return emoji.id;
 								},
 								get children() {
-									return (0, import_web$78.getNextElement)(_tmpl$3$5);
+									return (0, import_web$77.getNextElement)(_tmpl$3$5);
 								}
 							}), _el$17, _co$3);
-							(0, import_web$77.effect)(() => (0, import_web$73.className)(_el$9, `ftags-ac-row${i() === c().selected() ? " ftags-ac-row--on" : ""}`));
-							(0, import_web$74.runHydrationEvents)();
+							(0, import_web$76.effect)(() => (0, import_web$72.className)(_el$9, `ftags-ac-row${i() === c().selected() ? " ftags-ac-row--on" : ""}`));
+							(0, import_web$73.runHydrationEvents)();
 							return _el$9;
 						})()
 					}));
-					(0, import_web$77.effect)((_$p) => (0, import_web$76.style)(_el$, position(), _$p));
+					(0, import_web$76.effect)((_$p) => (0, import_web$75.style)(_el$, position(), _$p));
 					return _el$;
 				}
 			});
 		}
 	});
 }
-(0, import_web$72.delegateEvents)(["mousedown"]);
+(0, import_web$71.delegateEvents)(["mousedown"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/ColorPicker.jsx
@@ -2279,9 +2304,8 @@ var import_web$66 = __toESM(require_web(), 1);
 var import_web$67 = __toESM(require_web(), 1);
 var import_web$68 = __toESM(require_web(), 1);
 var import_web$69 = __toESM(require_web(), 1);
-var import_web$70 = __toESM(require_web(), 1);
 const _tmpl$$7 = /*#__PURE__*/ (0, import_web$60.template)(`<div class="ftags-picker"><div class="ftags-picker-sv"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-hue"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-row"><span class="ftags-picker-preview"></span><!#><!/></div></div>`, 16);
-const { ui: { TextBox: TextBox$3 }, solid: { createEffect, createSignal: createSignal$4, onCleanup } } = shelter;
+const { ui: { TextBox: TextBox$3 }, solid: { createEffect, createSignal: createSignal$5, onCleanup } } = shelter;
 function normaliseHex(input) {
 	const raw = String(input ?? "").trim().replace(/^#/, "");
 	const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
@@ -2360,39 +2384,37 @@ const hsvToHex = (hsv) => rgbToHex(hsvToRgb(hsv));
 const hexToHsv = (hex) => rgbToHsv(hexToRgb(hex));
 const clamp01 = (n) => Math.min(1, Math.max(0, n));
 function ColorPicker(props) {
-	const [hsv, setHsv] = createSignal$4(hexToHsv(props.value ?? "#5865f2"));
-	const [text, setText] = createSignal$4(props.value ?? "");
+	const [hsv, setHsv] = createSignal$5(hexToHsv(props.value ?? "#5865f2"));
+	const [text, setText] = createSignal$5(props.value ?? "");
+	let userDriven = false;
 	createEffect(() => {
 		const value = props.value;
-		if (!value) return;
-		if (hsvToHex(hsv()) !== value) setHsv(hexToHsv(value));
-		if (normaliseHex(text()) !== value) setText(value);
+		if (userDriven || !value) return;
+		setHsv(hexToHsv(value));
+		setText(value);
 	});
 	const commit = (next) => {
+		userDriven = true;
 		setHsv(next);
 		const hex = hsvToHex(next);
 		setText(hex);
 		props.onChange(hex);
 	};
 	/**
-	* `getEl` is a ref accessor, not e.currentTarget.
+	* Drag handling. The box is measured ONCE, when the drag starts.
 	*
-	* On the modal's first open the element can still measure 0x0 — shelter
-	* animates a new modal in from transform: scale(0) — and dividing by a zero
-	* width produced NaN, so the first drag set no colour at all and it only
-	* appeared to work the second time you opened the picker. Reading the live
-	* element each move, and skipping while it has no size, fixes that.
+	* Re-measuring per move, or switching between offsetX and bounding-rect
+	* depending on what the pointer happened to be over, gives two subtly
+	* different answers and the thumb jitters between them. One measurement for
+	* the whole gesture is stable — and safe now that the picker only mounts
+	* after the modal has finished animating, so the box isn't mid-transform.
 	*/
-	const dragging = (getEl, compute) => (e) => {
+	const dragging = (compute) => (e) => {
 		e.preventDefault();
 		e.stopPropagation();
-		const apply = (event) => {
-			const element = getEl();
-			if (!element) return;
-			const rect = element.getBoundingClientRect();
-			if (!rect.width || !rect.height) return;
-			compute(event, rect);
-		};
+		const rect = e.currentTarget.getBoundingClientRect();
+		if (!rect.width || !rect.height) return;
+		const apply = (event) => compute((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
 		apply(e);
 		const stop = () => {
 			window.removeEventListener("pointermove", apply);
@@ -2402,18 +2424,17 @@ function ColorPicker(props) {
 		window.addEventListener("pointerup", stop);
 		onCleanup(stop);
 	};
-	let squareEl;
-	let hueEl;
-	const onSquare = dragging(() => squareEl, (event, rect) => commit({
+	const onSquare = dragging((fx, fy) => commit({
 		...hsv(),
-		s: clamp01((event.clientX - rect.left) / rect.width),
-		v: 1 - clamp01((event.clientY - rect.top) / rect.height)
+		s: clamp01(fx),
+		v: 1 - clamp01(fy)
 	}));
-	const onHue = dragging(() => hueEl, (event, rect) => commit({
+	const onHue = dragging((fx) => commit({
 		...hsv(),
-		h: clamp01((event.clientX - rect.left) / rect.width) * 360
+		h: clamp01(fx) * 360
 	}));
 	const onHexInput = (value) => {
+		userDriven = true;
 		setText(value);
 		if (/^#?[0-9a-f]{6}$/i.test(value.trim())) {
 			const hex = normaliseHex(value);
@@ -2431,11 +2452,7 @@ function ColorPicker(props) {
 	return (() => {
 		const _el$ = (0, import_web$63.getNextElement)(_tmpl$$7), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$4.nextSibling, _el$7 = _el$6.firstChild, _el$8 = _el$7.nextSibling, [_el$9, _co$] = (0, import_web$65.getNextMarker)(_el$8.nextSibling);
 		(0, import_web$69.addEventListener)(_el$2, "pointerdown", onSquare, true);
-		const _ref$ = squareEl;
-		typeof _ref$ === "function" ? (0, import_web$70.use)(_ref$, _el$2) : squareEl = _el$2;
 		(0, import_web$69.addEventListener)(_el$4, "pointerdown", onHue, true);
-		const _ref$2 = hueEl;
-		typeof _ref$2 === "function" ? (0, import_web$70.use)(_ref$2, _el$4) : hueEl = _el$4;
 		_el$5.style.setProperty("top", "50%");
 		(0, import_web$66.insert)(_el$6, (0, import_web$67.createComponent)(TextBox$3, {
 			get value() {
@@ -2480,45 +2497,56 @@ var import_web$56 = __toESM(require_web(), 1);
 var import_web$57 = __toESM(require_web(), 1);
 var import_web$58 = __toESM(require_web(), 1);
 var import_web$59 = __toESM(require_web(), 1);
-const _tmpl$$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div style="padding-bottom: 10px"></div>`, 2), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div style="display: flex; justify-content: flex-end; width: 100%"></div>`, 2);
-const { ui: { Button: Button$4, ModalBody: ModalBody$4, ModalFooter: ModalFooter$4, ModalHeader: ModalHeader$4, ModalRoot: ModalRoot$4, ModalSizes: ModalSizes$4, openModal: openModal$3 } } = shelter;
+const _tmpl$$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div class="ftags-picker-slot"></div>`, 2), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div style="display: flex; justify-content: flex-end; width: 100%"></div>`, 2);
+const { ui: { Button: Button$4, ModalBody: ModalBody$4, ModalFooter: ModalFooter$4, ModalHeader: ModalHeader$4, ModalRoot: ModalRoot$4, ModalSizes: ModalSizes$4, openModal: openModal$3 }, solid: { Show: Show$4, createSignal: createSignal$4, onMount } } = shelter;
 function openColorPicker({ label: label$1, value, onChange }) {
-	return openModal$3((props) => (0, import_web$59.createComponent)(ModalRoot$4, {
-		get size() {
-			return ModalSizes$4.SMALL;
-		},
-		get children() {
-			return [
-				(0, import_web$59.createComponent)(ModalHeader$4, {
-					get close() {
-						return props.close;
-					},
-					children: label$1
-				}),
-				(0, import_web$59.createComponent)(ModalBody$4, { get children() {
-					const _el$ = (0, import_web$57.getNextElement)(_tmpl$$6);
-					(0, import_web$58.insert)(_el$, (0, import_web$59.createComponent)(ColorPicker, {
-						label: label$1,
-						get value() {
-							return value();
-						},
-						onChange
-					}));
-					return _el$;
-				} }),
-				(0, import_web$59.createComponent)(ModalFooter$4, { get children() {
-					const _el$2 = (0, import_web$57.getNextElement)(_tmpl$2$6);
-					(0, import_web$58.insert)(_el$2, (0, import_web$59.createComponent)(Button$4, {
-						get onClick() {
+	return openModal$3((props) => {
+		const [ready, setReady] = createSignal$4(false);
+		onMount(() => setTimeout(() => setReady(true), 300));
+		return (0, import_web$59.createComponent)(ModalRoot$4, {
+			get size() {
+				return ModalSizes$4.SMALL;
+			},
+			get children() {
+				return [
+					(0, import_web$59.createComponent)(ModalHeader$4, {
+						get close() {
 							return props.close;
 						},
-						children: "Done"
-					}));
-					return _el$2;
-				} })
-			];
-		}
-	}));
+						children: label$1
+					}),
+					(0, import_web$59.createComponent)(ModalBody$4, { get children() {
+						const _el$ = (0, import_web$57.getNextElement)(_tmpl$$6);
+						(0, import_web$58.insert)(_el$, (0, import_web$59.createComponent)(Show$4, {
+							get when() {
+								return ready();
+							},
+							get children() {
+								return (0, import_web$59.createComponent)(ColorPicker, {
+									label: label$1,
+									get value() {
+										return value();
+									},
+									onChange
+								});
+							}
+						}));
+						return _el$;
+					} }),
+					(0, import_web$59.createComponent)(ModalFooter$4, { get children() {
+						const _el$2 = (0, import_web$57.getNextElement)(_tmpl$2$6);
+						(0, import_web$58.insert)(_el$2, (0, import_web$59.createComponent)(Button$4, {
+							get onClick() {
+								return props.close;
+							},
+							children: "Done"
+						}));
+						return _el$2;
+					} })
+				];
+			}
+		});
+	});
 }
 
 //#endregion
@@ -3244,9 +3272,12 @@ function TagEditor(props) {
 							},
 							get children() {
 								const _el$9 = (0, import_web$38.getNextElement)(_tmpl$3$3), _el$0 = _el$9.firstChild, _el$1 = _el$0.nextSibling, [_el$10, _co$4] = (0, import_web$36.getNextMarker)(_el$1.nextSibling);
-								(0, import_web$39.insert)(_el$9, (0, import_web$40.createComponent)(Chip, { get tag() {
-									return draft();
-								} }), _el$10, _co$4);
+								(0, import_web$39.insert)(_el$9, (0, import_web$40.createComponent)(Chip, {
+									get tag() {
+										return draft();
+									},
+									animate: false
+								}), _el$10, _co$4);
 								return _el$9;
 							}
 						}),
@@ -3285,7 +3316,10 @@ function TagEditor(props) {
 										},
 										children: (tag) => (() => {
 											const _el$23 = (0, import_web$38.getNextElement)(_tmpl$9), _el$25 = _el$23.firstChild, [_el$26, _co$8] = (0, import_web$36.getNextMarker)(_el$25.nextSibling), _el$24 = _el$26.nextSibling, _el$27 = _el$24.nextSibling, [_el$28, _co$9] = (0, import_web$36.getNextMarker)(_el$27.nextSibling);
-											(0, import_web$39.insert)(_el$23, (0, import_web$40.createComponent)(Chip, { tag }), _el$26, _co$8);
+											(0, import_web$39.insert)(_el$23, (0, import_web$40.createComponent)(Chip, {
+												tag,
+												animate: false
+											}), _el$26, _co$8);
 											(0, import_web$39.insert)(_el$23, (0, import_web$40.createComponent)(Button$2, {
 												get size() {
 													return ButtonSizes$1.TINY;
@@ -3322,6 +3356,7 @@ function TagEditor(props) {
 										},
 										children: (t) => (0, import_web$40.createComponent)(Chip, {
 											"class": "ftags-suggestion",
+											animate: false,
 											get tag() {
 												return t.label;
 											},
@@ -3628,8 +3663,14 @@ function inject(element, surface) {
 }
 let lastContextUser;
 function addContextMenuItem(menu) {
-	if (!lastContextUser || Date.now() - lastContextUser.at > 1e3) return;
-	const userId = lastContextUser.id;
+	const recent = lastContextUser && Date.now() - lastContextUser.at < 1e3;
+	const userId = recent && lastContextUser.id || resolveUser(menu, [
+		"user",
+		"message",
+		"userId",
+		"channel"
+	], 25)?.id;
+	if (!userId) return;
 	const items = menu.querySelectorAll("[role=\"menuitem\"]");
 	if (!items.length) return;
 	const template = items[items.length - 1];
@@ -3723,9 +3764,12 @@ function TagRowEntry(props) {
 				return renaming();
 			},
 			get fallback() {
-				return (0, import_web$13.createComponent)(Chip, { get tag() {
-					return props.tag.label;
-				} });
+				return (0, import_web$13.createComponent)(Chip, {
+					get tag() {
+						return props.tag.label;
+					},
+					animate: false
+				});
 			},
 			get children() {
 				const _el$ = (0, import_web$10.getNextElement)(_tmpl$$1), _el$2 = _el$.firstChild, [_el$3, _co$] = (0, import_web$11.getNextMarker)(_el$2.nextSibling), _el$4 = _el$3.nextSibling, [_el$5, _co$2] = (0, import_web$11.getNextMarker)(_el$4.nextSibling);
@@ -3885,7 +3929,10 @@ function TagManager(props) {
 											get each() {
 												return entry.tags;
 											},
-											children: (tag) => (0, import_web$13.createComponent)(Chip, { tag })
+											children: (tag) => (0, import_web$13.createComponent)(Chip, {
+												tag,
+												animate: false
+											})
 										}));
 										(0, import_web$12.insert)(_el$18, (0, import_web$13.createComponent)(Button$1, {
 											get size() {
