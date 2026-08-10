@@ -193,9 +193,13 @@ html.theme-light .ftags-preview-pop {
 /* Compact surfaces (member list, DM list) are width constrained. The chip must
    be allowed to SHRINK (flex: 0 1 auto) for text-overflow to kick in — with the
    base "flex: 0 0 auto" it just overflows and gets cut off mid-word. */
+/* Shrink to the chip's own width instead of reserving a share of the row.
+   max-width: 50% held that space open whether or not the tag needed it, which
+   left a gap between the tag and whatever follows it in the DM list. */
 .ftags-row--compact {
   min-width: 0;
-  max-width: 50%;
+  max-width: 100%;
+  flex: 0 1 auto;
 }
 .ftags-row--compact .ftags-chip {
   flex: 0 1 auto;
