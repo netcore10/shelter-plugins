@@ -1,3 +1,5 @@
+
+This was made by ai for personal use, my friend wanted to use it so i updated it here.
 # shelter-plugins
 
 My plugins for [shelter](https://shelter.uwu.network).
