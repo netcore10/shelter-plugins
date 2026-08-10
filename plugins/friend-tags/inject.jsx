@@ -241,10 +241,17 @@ function inject(element, surface) {
 let lastContextUser;
 
 function addContextMenuItem(menu) {
-  // Stale claim: a menu opened by something other than a tagged row.
-  if (!lastContextUser || Date.now() - lastContextUser.at > 1000) return;
+  const recent = lastContextUser && Date.now() - lastContextUser.at < 1000;
 
-  const userId = lastContextUser.id;
+  // Fall back to reading the user off the menu itself. Relying only on the
+  // remembered right-click meant the item never appeared for someone with no
+  // tags yet — the very case where you most want to add one — because nothing
+  // had been injected onto their row to record the click.
+  const userId =
+    (recent && lastContextUser.id) ||
+    resolveUser(menu, ["user", "message", "userId", "channel"], 25)?.id;
+
+  if (!userId) return;
   const items = menu.querySelectorAll('[role="menuitem"]');
   if (!items.length) return;
 
