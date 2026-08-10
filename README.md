@@ -11,26 +11,9 @@ Add this URL in shelter's plugin list:
 ```
 https://netcore10.github.io/shelter-plugins/friend-tags
 ```
-
-> **Don't run day-to-day off `lune dev`.** Dev mode stores plugin data under a
-> throwaway ID and shelter *deletes it* when dev mode stops — see
-> [`plugins.tsx:280`](https://github.com/uwu/shelter/blob/main/packages/shelter/src/plugins.tsx#L280),
-> where `removePlugin` drops the storage for the devmode plugin, and
-> `stopDevmode` is wired to the dev websocket's `onclose`. Install from the URL
-> above and your tags persist properly.
-
 ## Friend Tags
 
-Add custom tags to people from your friends list, then see those tags everywhere
-they show up:
-
-| Surface | Shows tags | Can edit tags |
-| --- | --- | --- |
-| Friends list | yes | yes — hover a row, click **+** |
-| Chat messages (servers *and* DMs) | yes | — |
-| Server member list | yes | — |
-| DM list | yes | — |
-| Profile popout / full profile | yes | yes |
+Add custom tags to people from your friends list, then see those tags practically everywhere
 
 Right-click anyone on those surfaces for an **Edit tags** entry in the context
 menu.
@@ -40,24 +23,7 @@ everyone who has it, and restyling it restyles it everywhere at once.
 
 ### Tag text
 
-Tags render Discord emoji and inline markdown:
-
-| You type | You get |
-| --- | --- |
-| `:fire:` | 🔥 — type `:` for a Discord-style autocomplete |
-| `<:name:id>` | a custom server emoji |
-| `**bold**` `*italic*` `__underline__` | as written |
-| `~~strike~~` or `~strike~` | ~~struck through~~ |
-| `` `code` `` | inline code |
-
-Underscores only italicise at word boundaries, matching Discord, so a tag named
-`big_tiddy_goth_girl` stays intact. Unmatched markers stay literal, so `C++ ~ Rust`
-is safe. Unknown `:shortcodes:` are left exactly as typed.
-
-The autocomplete offers your server's custom emoji (via Discord's `EmojiStore`)
-plus a built-in unicode list. The built-in list is deliberate: `EmojiStore` is an
-internal API that moves between builds, and the picker should keep working when
-it does.
+Tags render Discord emoji and inline markdown.
 
 ### Multiple accounts
 
