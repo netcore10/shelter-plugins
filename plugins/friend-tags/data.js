@@ -80,11 +80,12 @@ const rawMap = (name) => {
  * and every write then notifies all of them. Detaching once, inside a memo,
  * means consumers touch ordinary objects.
  */
-function detach(value) {
-  if (Array.isArray(value)) return value.map(detach);
+function detach(value, depth = 4) {
+  if (depth <= 0) return value;
+  if (Array.isArray(value)) return value.map((item) => detach(item, depth - 1));
   if (value && typeof value === "object") {
     const out = {};
-    for (const key in value) out[key] = detach(value[key]);
+    for (const key in value) out[key] = detach(value[key], depth - 1);
     return out;
   }
   return value;
@@ -98,6 +99,15 @@ function detach(value) {
 // returned stale data and newly added tags never appeared. Correctness wins;
 // the saving was never measured against a real client anyway.
 const readMap = (name) => detach(rawMap(name));
+
+/**
+ * Detach a single entry instead of the whole map.
+ *
+ * getTags() runs per chip per render, and going via readMap() deep-copied every
+ * user's tags just to read one array — 100 chips on screen meant 100 clones of
+ * the entire map. Read the one key and copy only that.
+ */
+const readEntry = (name, key) => detach(rawMap(name)[key]);
 
 /** Display options. */
 export const display = {
@@ -197,7 +207,7 @@ export const tagKey = (tag) => normalise(tag).toLowerCase();
 
 export const allUserTags = () => readMap("tags");
 
-export const getTags = (userId) => readMap("tags")[userId] ?? [];
+export const getTags = (userId) => readEntry("tags", userId) ?? [];
 
 export const hasTags = (userId) => getTags(userId).length > 0;
 
@@ -318,7 +328,7 @@ function hashString(str) {
 
 /** A tag's colour: the user's override if set, else a stable colour from its name. */
 export const colorOf = (tag) =>
-  readMap("colors")[tagKey(tag)] ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
+  readEntry("colors", tagKey(tag)) ?? PALETTE[hashString(tagKey(tag)) % PALETTE.length];
 
 export function setColor(tag, color) {
   writeMap("colors", { ...readMap("colors"), [tagKey(tag)]: color });
@@ -347,7 +357,7 @@ export function textOn(hex) {
 
 /** A tag's full style, with every unset field filled in from the defaults. */
 export function styleOf(tag) {
-  const saved = readMap("styles")[tagKey(tag)] ?? {};
+  const saved = readEntry("styles", tagKey(tag)) ?? {};
   const style = { ...DEFAULT_STYLE, ...saved, color: saved.color ?? colorOf(tag) };
 
   // Styles saved before motion and colour became separate tracks carried a
