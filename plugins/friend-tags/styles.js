@@ -559,7 +559,10 @@ html.theme-light .ftags-ac-badge {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 26px 18px;
+  /* Generous padding so a rotating (wiggle) or scaling (breathe) chip has room
+     to move inside the box. overflow stays hidden — letting it spill instead
+     makes the modal body scrollbar flicker in time with the animation. */
+  padding: 30px 34px;
   margin-bottom: 14px;
   border-radius: 8px;
   background: var(--background-secondary);

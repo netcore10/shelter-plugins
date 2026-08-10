@@ -30,6 +30,7 @@ const {
 store.tags ??= {};
 store.colors ??= {};
 store.styles ??= {};
+store.notes ??= {};
 store.accounts ??= {};
 
 // display surfaces
@@ -38,6 +39,7 @@ store.inMessages ??= true;
 store.inMembers ??= true;
 store.inDms ??= true;
 store.inProfiles ??= true;
+store.inVoice ??= true;
 
 // behaviour
 store.uppercase ??= true;
@@ -161,6 +163,7 @@ function scheduleBackup() {
             tags: store.tags,
             colors: store.colors,
             styles: store.styles,
+            notes: store.notes,
             accounts: store.accounts,
           }),
         ),
@@ -191,6 +194,7 @@ export async function restoreFromBackup() {
   }
   if (isEmpty(store.colors) && !isEmpty(snapshot.colors)) store.colors = snapshot.colors;
   if (isEmpty(store.styles) && !isEmpty(snapshot.styles)) store.styles = snapshot.styles;
+  if (isEmpty(store.notes) && !isEmpty(snapshot.notes)) store.notes = snapshot.notes;
   if (isEmpty(store.accounts) && !isEmpty(snapshot.accounts)) store.accounts = snapshot.accounts;
 
   return recovered;
@@ -221,6 +225,25 @@ export const normalise = (tag) => String(tag ?? "").replace(/\s+/g, " ").trim();
 export const tagKey = (tag) => normalise(tag).toLowerCase();
 
 export const allUserTags = () => readMap("tags");
+
+// --- private notes ---------------------------------------------------------
+//
+// Free text about a person, kept separate from tags: tags are shared labels
+// that look the same on everyone who has them, a note is just for you.
+
+export const getNote = (userId) => readEntry("notes", userId) ?? "";
+
+export function setNote(userId, note) {
+  const text = String(note ?? "").trim();
+  const next = { ...readMap("notes") };
+
+  if (text) next[userId] = text;
+  else delete next[userId];
+
+  writeMap("notes", next);
+}
+
+export const allNotes = () => readMap("notes");
 
 export const getTags = (userId) => readEntry("tags", userId) ?? [];
 
@@ -493,7 +516,7 @@ function averageColor(hexes) {
 
 export const exportData = () =>
   JSON.stringify(
-    { tags: readMap("tags"), colors: readMap("colors"), styles: readMap("styles") },
+    { tags: readMap("tags"), colors: readMap("colors"), styles: readMap("styles"), notes: readMap("notes") },
     null,
     2,
   );
@@ -527,6 +550,7 @@ export function importData(json, { merge = false } = {}) {
     writeMap("tags", incoming);
     writeMap("colors", parsed.colors && typeof parsed.colors === "object" ? { ...parsed.colors } : {});
     writeMap("styles", parsed.styles && typeof parsed.styles === "object" ? { ...parsed.styles } : {});
+    writeMap("notes", parsed.notes && typeof parsed.notes === "object" ? { ...parsed.notes } : {});
     return counts;
   }
 
@@ -546,6 +570,9 @@ export function importData(json, { merge = false } = {}) {
 
   if (parsed.styles && typeof parsed.styles === "object")
     writeMap("styles", { ...readMap("styles"), ...parsed.styles });
+
+  if (parsed.notes && typeof parsed.notes === "object")
+    writeMap("notes", { ...readMap("notes"), ...parsed.notes });
 
   return counts;
 }

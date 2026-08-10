@@ -203,7 +203,11 @@ function inject(element, surface) {
     return;
   }
 
-  const anchor = firstMatch(element, surface.anchors) ?? element;
+  const anchor = firstMatch(element, surface.anchors) ?? (surface.requireAnchor ? undefined : element);
+  if (!anchor) {
+    if (store.debug) log(`[friend-tags] ${surface.id}: no anchor matched, skipping`, "warn");
+    return;
+  }
 
   // A `display: contents` wrapper so unload can remove everything we added in
   // one go, including solid's placeholder nodes for a hidden TagRow.

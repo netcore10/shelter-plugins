@@ -6,9 +6,11 @@ import {
   allTags,
   clearUser,
   colorOf,
+  getNote,
   getTags,
   normalise,
   removeTag,
+  setNote,
   tagKey,
   textOn,
 } from "../data";
@@ -30,6 +32,7 @@ const {
     ModalRoot,
     ModalSizes,
     Text,
+    TextArea,
     TextBox,
   },
   solid: { For, Show, createMemo, createSignal },
@@ -37,6 +40,7 @@ const {
 
 export default function TagEditor(props) {
   const [draft, setDraft] = createSignal("");
+  const [note, setNoteDraft] = createSignal(getNote(props.userId));
   const autocomplete = createEmojiAutocomplete(draft, setDraft);
 
   const user = createMemo(() => UserStore.getUser(props.userId));
@@ -144,6 +148,27 @@ export default function TagEditor(props) {
             </For>
           </div>
         </Show>
+
+        <Header tag={HeaderTags.H5} margin>
+          Note
+        </Header>
+        <Text style={{ color: "var(--text-muted)", "font-size": "12px" }}>
+          Private to you, and never shown next to their name.
+        </Text>
+        <div style="margin-top: 6px">
+          <TextArea
+            value={note()}
+            onInput={(value) => {
+              setNoteDraft(value);
+              // Saved as you type; there's no confirm step to forget.
+              setNote(props.userId, value);
+            }}
+            placeholder="How you know them, what they like…"
+            maxlength={500}
+            resize-y
+            aria-label="Private note"
+          />
+        </div>
 
         <Show when={suggestions().length}>
           <Header tag={HeaderTags.H5} margin>
