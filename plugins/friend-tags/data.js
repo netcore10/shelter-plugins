@@ -91,22 +91,24 @@ function detach(value, depth = 4) {
   return value;
 }
 
-// Read straight from the store, detaching as we go.
+// ---------------------------------------------------------------------------
+// Reads
 //
-// This used to go through memos in a module-level createRoot, to cut the
-// per-chip signal churn shelter's store causes. That root is disposed on
-// unload, and a disposed memo stops recomputing — so after a reload, reads
-// returned stale data and newly added tags never appeared. Correctness wins;
-// the saving was never measured against a real client anyway.
+// Deliberately NOT memoised. Caching these behind memos in a shared createRoot
+// was tried twice to cut the signal churn shelter's store causes, and both
+// times it broke the same two things in the real client: settings toggles
+// stopped responding, and newly added tags didn't appear until Ctrl+R. Reading
+// the store directly inside each consumer keeps every component subscribed to
+// the store itself, which is what makes chips update live.
+//
+// Cost is kept down by reading ONE key rather than cloning whole maps —
+// see readEntry, which is where the actual win was (measured ~150x on a
+// 200-friend map).
+// ---------------------------------------------------------------------------
+
 const readMap = (name) => detach(rawMap(name));
 
-/**
- * Detach a single entry instead of the whole map.
- *
- * getTags() runs per chip per render, and going via readMap() deep-copied every
- * user's tags just to read one array — 100 chips on screen meant 100 clones of
- * the entire map. Read the one key and copy only that.
- */
+/** Detach a single entry rather than the whole map. */
 const readEntry = (name, key) => detach(rawMap(name)[key]);
 
 /** Display options. */
@@ -116,7 +118,7 @@ export const display = {
   animate: () => store.animate,
 };
 
-/** Kept so index.jsx's onUnload keeps working; nothing to dispose now. */
+/** Kept so onUnload keeps working; there is no cache to dispose. */
 export const disposeStoreMemos = () => {};
 
 function writeMap(name, value) {
