@@ -2587,7 +2587,7 @@ var import_web$52 = __toESM(require_web(), 1);
 var import_web$53 = __toESM(require_web(), 1);
 var import_web$54 = __toESM(require_web(), 1);
 var import_web$55 = __toESM(require_web(), 1);
-const _tmpl$$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-preview"><!#><!/><!#><!/></div>`, 6), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$3$4 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; margin-bottom: 10px"><!#><!/><!#><!/></div>`, 6), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span></span><!#><!/></div>`, 6), _tmpl$5$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Stops</span><div class="ftags-stops"><!#><!/><!#><!/><!#><!/></div></div>`, 12), _tmpl$6$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Angle — <!#><!/>°</span><!#><!/></div>`, 8), _tmpl$7$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Presets</span><div class="ftags-suggestions"></div></div>`, 6), _tmpl$8$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div style="display: flex; gap: 8px; margin-bottom: 8px"><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$9$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Font</span><div class="ftags-font-grid"></div><!#><!/></div>`, 8), _tmpl$0$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Weight — <!#><!/></span><!#><!/></div>`, 8), _tmpl$1 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Colour speed — <!#><!/>×</span>`, 4), _tmpl$10 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div class="ftags-anim-grid"></div><!#><!/><!#><!/></div>`, 10), _tmpl$11 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Movement speed — <!#><!/>×</span>`, 4), _tmpl$12 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Movement</span><div class="ftags-anim-grid"></div><!#><!/></div>`, 8), _tmpl$13 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$14 = /*#__PURE__*/ (0, import_web$43.template)(`<button></button>`, 2);
+const _tmpl$$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div></div>`, 2), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-preview"><!#><!/><!#><!/></div>`, 6), _tmpl$3$4 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; margin-bottom: 10px"><!#><!/><!#><!/></div>`, 6), _tmpl$5$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span></span><!#><!/></div>`, 6), _tmpl$6$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Stops</span><div class="ftags-stops"><!#><!/><!#><!/><!#><!/></div></div>`, 12), _tmpl$7$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Angle — <!#><!/>°</span><!#><!/></div>`, 8), _tmpl$8$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Presets</span><div class="ftags-suggestions"></div></div>`, 6), _tmpl$9$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div style="display: flex; gap: 8px; margin-bottom: 8px"><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$0$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Font</span><div class="ftags-font-grid"></div><!#><!/></div>`, 8), _tmpl$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Weight — <!#><!/></span><!#><!/></div>`, 8), _tmpl$10 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Colour speed — <!#><!/>×</span>`, 4), _tmpl$11 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div class="ftags-anim-grid"></div><!#><!/><!#><!/></div>`, 10), _tmpl$12 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Movement speed — <!#><!/>×</span>`, 4), _tmpl$13 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Movement</span><div class="ftags-anim-grid"></div><!#><!/></div>`, 8), _tmpl$14 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$15 = /*#__PURE__*/ (0, import_web$43.template)(`<button></button>`, 2);
 const { ui: { Button: Button$3, ButtonColors: ButtonColors$3, ButtonLooks: ButtonLooks$3, ButtonSizes: ButtonSizes$2, Divider: Divider$2, Header: Header$3, HeaderTags: HeaderTags$3, ModalBody: ModalBody$3, ModalFooter: ModalFooter$3, ModalHeader: ModalHeader$3, ModalRoot: ModalRoot$3, ModalSizes: ModalSizes$3, Slider: Slider$1, SwitchItem: SwitchItem$1, Text: Text$3, TextBox: TextBox$2 }, solid: { For: For$3, Show: Show$3, createSignal: createSignal$3 } } = shelter;
 const label = {
 	color: "var(--header-secondary)",
@@ -2595,6 +2595,42 @@ const label = {
 	"text-transform": "uppercase",
 	"font-weight": 700
 };
+/**
+* shelter's Slider, used the way shelter's own docs and demo use it.
+*
+*   <div style={{ width: "100%" }}>
+*     <Slider min={0} max={10} step={1} tick value={v()} onInput={setV} />
+*   </div>
+*
+* Small integer range, step of 1, wrapped in a full-width div. Staying in that
+* shape matters: shelter builds the input's props with
+* mergeProps({ step, value: min }, rawProps), which puts the defaults first, so
+* the spread assigns `value` before `min`/`max`. A range input clamps on
+* assignment, so anything above the default max of 100 is clamped and then
+* pushed to min — which is why a 400-900 weight slider pinned its thumb left.
+* Counting steps keeps every value small, exactly like the demo.
+*/
+function StepSlider(props) {
+	const steps = () => Math.max(1, Math.round((props.max - props.min) / props.step));
+	const index = () => Math.round((props.value - props.min) / props.step);
+	return (() => {
+		const _el$ = (0, import_web$53.getNextElement)(_tmpl$$5);
+		_el$.style.setProperty("width", "100%");
+		(0, import_web$54.insert)(_el$, (0, import_web$55.createComponent)(Slider$1, {
+			min: 0,
+			get max() {
+				return steps();
+			},
+			step: 1,
+			tick: true,
+			get value() {
+				return index();
+			},
+			onInput: (i) => props.onInput(props.min + i * props.step)
+		}));
+		return _el$;
+	})();
+}
 function TagStyler(props) {
 	const [draft, setDraft] = createSignal$3(styleOf(props.tag));
 	const [name, setName] = createSignal$3(props.tag);
@@ -2618,29 +2654,29 @@ function TagStyler(props) {
 		setStyle(target, draft());
 		props.close();
 	};
-	return (0, import_web$54.createComponent)(ModalRoot$3, {
+	return (0, import_web$55.createComponent)(ModalRoot$3, {
 		get size() {
 			return ModalSizes$3.MEDIUM;
 		},
 		get children() {
 			return [
-				(0, import_web$54.createComponent)(ModalHeader$3, {
+				(0, import_web$55.createComponent)(ModalHeader$3, {
 					get close() {
 						return props.close;
 					},
 					get children() {
 						return [
 							"Style “",
-							(0, import_web$55.memo)(() => props.tag),
+							(0, import_web$52.memo)(() => props.tag),
 							"”"
 						];
 					}
 				}),
-				(0, import_web$54.createComponent)(ModalBody$3, { get children() {
+				(0, import_web$55.createComponent)(ModalBody$3, { get children() {
 					return [
 						(() => {
-							const _el$ = (0, import_web$51.getNextElement)(_tmpl$$5), _el$2 = _el$.firstChild, [_el$3, _co$] = (0, import_web$52.getNextMarker)(_el$2.nextSibling), _el$4 = _el$3.nextSibling, [_el$5, _co$2] = (0, import_web$52.getNextMarker)(_el$4.nextSibling);
-							(0, import_web$53.insert)(_el$, (0, import_web$54.createComponent)(Chip, {
+							const _el$2 = (0, import_web$53.getNextElement)(_tmpl$2$5), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$51.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$51.getNextMarker)(_el$5.nextSibling);
+							(0, import_web$54.insert)(_el$2, (0, import_web$55.createComponent)(Chip, {
 								get tag() {
 									return normalise(name()) || props.tag;
 								},
@@ -2648,8 +2684,8 @@ function TagStyler(props) {
 									return draft();
 								},
 								animate: true
-							}), _el$3, _co$);
-							(0, import_web$53.insert)(_el$, (0, import_web$54.createComponent)(Chip, {
+							}), _el$4, _co$);
+							(0, import_web$54.insert)(_el$2, (0, import_web$55.createComponent)(Chip, {
 								get tag() {
 									return normalise(name()) || props.tag;
 								},
@@ -2658,20 +2694,20 @@ function TagStyler(props) {
 								},
 								animate: true,
 								plain: true
-							}), _el$5, _co$2);
-							return _el$;
+							}), _el$6, _co$2);
+							return _el$2;
 						})(),
-						(0, import_web$54.createComponent)(Header$3, {
+						(0, import_web$55.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Name"
 						}),
 						(() => {
-							const _el$6 = (0, import_web$51.getNextElement)(_tmpl$2$5), _el$7 = _el$6.firstChild, [_el$8, _co$3] = (0, import_web$52.getNextMarker)(_el$7.nextSibling), _el$9 = _el$8.nextSibling, [_el$0, _co$4] = (0, import_web$52.getNextMarker)(_el$9.nextSibling), _el$1 = _el$0.nextSibling, [_el$10, _co$5] = (0, import_web$52.getNextMarker)(_el$1.nextSibling);
+							const _el$7 = (0, import_web$53.getNextElement)(_tmpl$3$4), _el$8 = _el$7.firstChild, [_el$9, _co$3] = (0, import_web$51.getNextMarker)(_el$8.nextSibling), _el$0 = _el$9.nextSibling, [_el$1, _co$4] = (0, import_web$51.getNextMarker)(_el$0.nextSibling), _el$10 = _el$1.nextSibling, [_el$11, _co$5] = (0, import_web$51.getNextMarker)(_el$10.nextSibling);
 							const _ref$ = autocomplete.setAnchor;
-							typeof _ref$ === "function" ? (0, import_web$50.use)(_ref$, _el$6) : autocomplete.setAnchor = _el$6;
-							(0, import_web$53.insert)(_el$6, (0, import_web$54.createComponent)(TextBox$2, {
+							typeof _ref$ === "function" ? (0, import_web$50.use)(_ref$, _el$7) : autocomplete.setAnchor = _el$7;
+							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(TextBox$2, {
 								get value() {
 									return name();
 								},
@@ -2682,14 +2718,14 @@ function TagStyler(props) {
 								get onKeyDown() {
 									return autocomplete.keydown;
 								}
-							}), _el$8, _co$3);
-							(0, import_web$53.insert)(_el$6, (0, import_web$54.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$0, _co$4);
-							(0, import_web$53.insert)(_el$6, (0, import_web$54.createComponent)(Show$3, {
+							}), _el$9, _co$3);
+							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$1, _co$4);
+							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(Show$3, {
 								get when() {
 									return renamed();
 								},
 								get children() {
-									return (0, import_web$54.createComponent)(Text$3, {
+									return (0, import_web$55.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-muted)",
 											"font-size": "12px"
@@ -2697,46 +2733,46 @@ function TagStyler(props) {
 										children: "Renaming on save — this updates the tag on everyone who has it."
 									});
 								}
-							}), _el$10, _co$5);
-							return _el$6;
+							}), _el$11, _co$5);
+							return _el$7;
 						})(),
-						(0, import_web$54.createComponent)(Divider$2, {
+						(0, import_web$55.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$54.createComponent)(Header$3, {
+						(0, import_web$55.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Fill"
 						}),
 						(() => {
-							const _el$11 = (0, import_web$51.getNextElement)(_tmpl$3$4), _el$12 = _el$11.firstChild, [_el$13, _co$6] = (0, import_web$52.getNextMarker)(_el$12.nextSibling), _el$14 = _el$13.nextSibling, [_el$15, _co$7] = (0, import_web$52.getNextMarker)(_el$14.nextSibling);
-							(0, import_web$53.insert)(_el$11, (0, import_web$54.createComponent)(Button$3, {
+							const _el$12 = (0, import_web$53.getNextElement)(_tmpl$4$3), _el$13 = _el$12.firstChild, [_el$14, _co$6] = (0, import_web$51.getNextMarker)(_el$13.nextSibling), _el$15 = _el$14.nextSibling, [_el$16, _co$7] = (0, import_web$51.getNextMarker)(_el$15.nextSibling);
+							(0, import_web$54.insert)(_el$12, (0, import_web$55.createComponent)(Button$3, {
 								grow: true,
 								get look() {
 									return draft().fill === "solid" ? ButtonLooks$3.FILLED : ButtonLooks$3.OUTLINED;
 								},
 								onClick: () => patch({ fill: "solid" }),
 								children: "Solid"
-							}), _el$13, _co$6);
-							(0, import_web$53.insert)(_el$11, (0, import_web$54.createComponent)(Button$3, {
+							}), _el$14, _co$6);
+							(0, import_web$54.insert)(_el$12, (0, import_web$55.createComponent)(Button$3, {
 								grow: true,
 								get look() {
 									return draft().fill === "gradient" ? ButtonLooks$3.FILLED : ButtonLooks$3.OUTLINED;
 								},
 								onClick: () => patch({ fill: "gradient" }),
 								children: "Gradient"
-							}), _el$15, _co$7);
-							return _el$11;
+							}), _el$16, _co$7);
+							return _el$12;
 						})(),
 						(() => {
-							const _el$16 = (0, import_web$51.getNextElement)(_tmpl$4$3), _el$17 = _el$16.firstChild, _el$18 = _el$17.nextSibling, [_el$19, _co$8] = (0, import_web$52.getNextMarker)(_el$18.nextSibling);
-							(0, import_web$53.insert)(_el$17, (() => {
-								const _c$ = (0, import_web$55.memo)(() => draft().fill === "gradient");
+							const _el$17 = (0, import_web$53.getNextElement)(_tmpl$5$2), _el$18 = _el$17.firstChild, _el$19 = _el$18.nextSibling, [_el$20, _co$8] = (0, import_web$51.getNextMarker)(_el$19.nextSibling);
+							(0, import_web$54.insert)(_el$18, (() => {
+								const _c$ = (0, import_web$52.memo)(() => draft().fill === "gradient");
 								return () => _c$() ? `Colour — stop ${activeStop() + 1}` : "Colour";
 							})());
-							(0, import_web$53.insert)(_el$16, (0, import_web$54.createComponent)(Button$3, {
+							(0, import_web$54.insert)(_el$17, (0, import_web$55.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.NONE;
 								},
@@ -2750,23 +2786,23 @@ function TagStyler(props) {
 									value: () => draft().fill === "gradient" ? draft().colors[activeStop()] ?? draft().colors[0] : draft().color,
 									onChange: (colour) => draft().fill === "gradient" ? setStop(activeStop(), colour) : patch({ color: colour })
 								})
-							}), _el$19, _co$8);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$17, label, _$p));
-							return _el$16;
+							}), _el$20, _co$8);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$18, label, _$p));
+							return _el$17;
 						})(),
-						(0, import_web$54.createComponent)(Show$3, {
+						(0, import_web$55.createComponent)(Show$3, {
 							get when() {
 								return draft().fill === "gradient";
 							},
 							get children() {
 								return [
 									(() => {
-										const _el$20 = (0, import_web$51.getNextElement)(_tmpl$5$2), _el$21 = _el$20.firstChild, _el$22 = _el$21.nextSibling, _el$23 = _el$22.firstChild, [_el$24, _co$9] = (0, import_web$52.getNextMarker)(_el$23.nextSibling), _el$25 = _el$24.nextSibling, [_el$26, _co$0] = (0, import_web$52.getNextMarker)(_el$25.nextSibling), _el$27 = _el$26.nextSibling, [_el$28, _co$1] = (0, import_web$52.getNextMarker)(_el$27.nextSibling);
-										(0, import_web$53.insert)(_el$22, (0, import_web$54.createComponent)(For$3, {
+										const _el$21 = (0, import_web$53.getNextElement)(_tmpl$6$2), _el$22 = _el$21.firstChild, _el$23 = _el$22.nextSibling, _el$24 = _el$23.firstChild, [_el$25, _co$9] = (0, import_web$51.getNextMarker)(_el$24.nextSibling), _el$26 = _el$25.nextSibling, [_el$27, _co$0] = (0, import_web$51.getNextMarker)(_el$26.nextSibling), _el$28 = _el$27.nextSibling, [_el$29, _co$1] = (0, import_web$51.getNextMarker)(_el$28.nextSibling);
+										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(For$3, {
 											get each() {
 												return draft().colors;
 											},
-											children: (stop, i) => (0, import_web$54.createComponent)(Button$3, {
+											children: (stop, i) => (0, import_web$55.createComponent)(Button$3, {
 												get size() {
 													return ButtonSizes$2.NONE;
 												},
@@ -2786,13 +2822,13 @@ function TagStyler(props) {
 													});
 												}
 											})
-										}), _el$24, _co$9);
-										(0, import_web$53.insert)(_el$22, (0, import_web$54.createComponent)(Show$3, {
+										}), _el$25, _co$9);
+										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(Show$3, {
 											get when() {
 												return draft().colors.length > 2;
 											},
 											get children() {
-												return (0, import_web$54.createComponent)(Button$3, {
+												return (0, import_web$55.createComponent)(Button$3, {
 													get size() {
 														return ButtonSizes$2.TINY;
 													},
@@ -2809,13 +2845,13 @@ function TagStyler(props) {
 													children: "Remove"
 												});
 											}
-										}), _el$26, _co$0);
-										(0, import_web$53.insert)(_el$22, (0, import_web$54.createComponent)(Show$3, {
+										}), _el$27, _co$0);
+										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(Show$3, {
 											get when() {
 												return draft().colors.length < 5;
 											},
 											get children() {
-												return (0, import_web$54.createComponent)(Button$3, {
+												return (0, import_web$55.createComponent)(Button$3, {
 													get size() {
 														return ButtonSizes$2.TINY;
 													},
@@ -2829,14 +2865,14 @@ function TagStyler(props) {
 													children: "+ Add"
 												});
 											}
-										}), _el$28, _co$1);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$21, label, _$p));
-										return _el$20;
+										}), _el$29, _co$1);
+										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$22, label, _$p));
+										return _el$21;
 									})(),
 									(() => {
-										const _el$29 = (0, import_web$51.getNextElement)(_tmpl$6$2), _el$30 = _el$29.firstChild, _el$31 = _el$30.firstChild, _el$33 = _el$31.nextSibling, [_el$34, _co$10] = (0, import_web$52.getNextMarker)(_el$33.nextSibling), _el$32 = _el$34.nextSibling, _el$35 = _el$30.nextSibling, [_el$36, _co$11] = (0, import_web$52.getNextMarker)(_el$35.nextSibling);
-										(0, import_web$53.insert)(_el$30, () => draft().angle, _el$34, _co$10);
-										(0, import_web$53.insert)(_el$29, (0, import_web$54.createComponent)(Slider$1, {
+										const _el$30 = (0, import_web$53.getNextElement)(_tmpl$7$2), _el$31 = _el$30.firstChild, _el$32 = _el$31.firstChild, _el$34 = _el$32.nextSibling, [_el$35, _co$10] = (0, import_web$51.getNextMarker)(_el$34.nextSibling), _el$33 = _el$35.nextSibling, _el$36 = _el$31.nextSibling, [_el$37, _co$11] = (0, import_web$51.getNextMarker)(_el$36.nextSibling);
+										(0, import_web$54.insert)(_el$31, () => draft().angle, _el$35, _co$10);
+										(0, import_web$54.insert)(_el$30, (0, import_web$55.createComponent)(StepSlider, {
 											get value() {
 												return draft().angle;
 											},
@@ -2844,15 +2880,15 @@ function TagStyler(props) {
 											min: 0,
 											max: 360,
 											step: 15
-										}), _el$36, _co$11);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$30, label, _$p));
-										return _el$29;
+										}), _el$37, _co$11);
+										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$31, label, _$p));
+										return _el$30;
 									})(),
 									(() => {
-										const _el$37 = (0, import_web$51.getNextElement)(_tmpl$7$2), _el$38 = _el$37.firstChild, _el$39 = _el$38.nextSibling;
-										(0, import_web$53.insert)(_el$39, (0, import_web$54.createComponent)(For$3, {
+										const _el$38 = (0, import_web$53.getNextElement)(_tmpl$8$2), _el$39 = _el$38.firstChild, _el$40 = _el$39.nextSibling;
+										(0, import_web$54.insert)(_el$40, (0, import_web$55.createComponent)(For$3, {
 											each: GRADIENT_PRESETS,
-											children: (preset) => (0, import_web$54.createComponent)(Chip, {
+											children: (preset) => (0, import_web$55.createComponent)(Chip, {
 												"class": "ftags-suggestion",
 												get tag() {
 													return preset.label;
@@ -2873,25 +2909,25 @@ function TagStyler(props) {
 												})
 											})
 										}));
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$38, label, _$p));
-										return _el$37;
+										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$39, label, _$p));
+										return _el$38;
 									})()
 								];
 							}
 						}),
-						(0, import_web$54.createComponent)(Divider$2, {
+						(0, import_web$55.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$54.createComponent)(Header$3, {
+						(0, import_web$55.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Text"
 						}),
 						(() => {
-							const _el$40 = (0, import_web$51.getNextElement)(_tmpl$8$2), _el$41 = _el$40.firstChild, _el$42 = _el$41.nextSibling, _el$43 = _el$42.firstChild, [_el$44, _co$12] = (0, import_web$52.getNextMarker)(_el$43.nextSibling), _el$45 = _el$44.nextSibling, [_el$46, _co$13] = (0, import_web$52.getNextMarker)(_el$45.nextSibling), _el$47 = _el$42.nextSibling, [_el$48, _co$14] = (0, import_web$52.getNextMarker)(_el$47.nextSibling);
-							(0, import_web$53.insert)(_el$42, (0, import_web$54.createComponent)(Button$3, {
+							const _el$41 = (0, import_web$53.getNextElement)(_tmpl$9$1), _el$42 = _el$41.firstChild, _el$43 = _el$42.nextSibling, _el$44 = _el$43.firstChild, [_el$45, _co$12] = (0, import_web$51.getNextMarker)(_el$44.nextSibling), _el$46 = _el$45.nextSibling, [_el$47, _co$13] = (0, import_web$51.getNextMarker)(_el$46.nextSibling), _el$48 = _el$43.nextSibling, [_el$49, _co$14] = (0, import_web$51.getNextMarker)(_el$48.nextSibling);
+							(0, import_web$54.insert)(_el$43, (0, import_web$55.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.SMALL;
 								},
@@ -2900,8 +2936,8 @@ function TagStyler(props) {
 								},
 								onClick: () => patch({ text: "auto" }),
 								children: "Auto"
-							}), _el$44, _co$12);
-							(0, import_web$53.insert)(_el$42, (0, import_web$54.createComponent)(Button$3, {
+							}), _el$45, _co$12);
+							(0, import_web$54.insert)(_el$43, (0, import_web$55.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.SMALL;
 								},
@@ -2910,13 +2946,13 @@ function TagStyler(props) {
 								},
 								onClick: () => patch({ text: draft().text === "auto" ? "#ffffff" : draft().text }),
 								children: "Custom"
-							}), _el$46, _co$13);
-							(0, import_web$53.insert)(_el$40, (0, import_web$54.createComponent)(Show$3, {
+							}), _el$47, _co$13);
+							(0, import_web$54.insert)(_el$41, (0, import_web$55.createComponent)(Show$3, {
 								get when() {
 									return draft().text !== "auto";
 								},
 								get fallback() {
-									return (0, import_web$54.createComponent)(Text$3, {
+									return (0, import_web$55.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-muted)",
 											"font-size": "12px"
@@ -2925,7 +2961,7 @@ function TagStyler(props) {
 									});
 								},
 								get children() {
-									return (0, import_web$54.createComponent)(Button$3, {
+									return (0, import_web$55.createComponent)(Button$3, {
 										get size() {
 											return ButtonSizes$2.NONE;
 										},
@@ -2941,59 +2977,58 @@ function TagStyler(props) {
 										})
 									});
 								}
-							}), _el$48, _co$14);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$41, label, _$p));
-							return _el$40;
+							}), _el$49, _co$14);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$42, label, _$p));
+							return _el$41;
 						})(),
 						(() => {
-							const _el$49 = (0, import_web$51.getNextElement)(_tmpl$9$1), _el$50 = _el$49.firstChild, _el$51 = _el$50.nextSibling, _el$52 = _el$51.nextSibling, [_el$53, _co$15] = (0, import_web$52.getNextMarker)(_el$52.nextSibling);
-							(0, import_web$53.insert)(_el$51, (0, import_web$54.createComponent)(For$3, {
+							const _el$50 = (0, import_web$53.getNextElement)(_tmpl$0$1), _el$51 = _el$50.firstChild, _el$52 = _el$51.nextSibling, _el$53 = _el$52.nextSibling, [_el$54, _co$15] = (0, import_web$51.getNextMarker)(_el$53.nextSibling);
+							(0, import_web$54.insert)(_el$52, (0, import_web$55.createComponent)(For$3, {
 								each: FONTS,
 								children: (font) => (() => {
-									const _el$90 = (0, import_web$51.getNextElement)(_tmpl$14);
-									_el$90.$$click = () => patch({ font: font.id });
-									(0, import_web$53.insert)(_el$90, () => font.label);
+									const _el$91 = (0, import_web$53.getNextElement)(_tmpl$15);
+									_el$91.$$click = () => patch({ font: font.id });
+									(0, import_web$54.insert)(_el$91, () => font.label);
 									(0, import_web$49.effect)((_p$) => {
 										const _v$ = `ftags-font-option${draft().font === font.id ? " ftags-font-option--on" : ""}`, _v$2 = font.id || "inherit";
-										_v$ !== _p$._v$ && (0, import_web$46.className)(_el$90, _p$._v$ = _v$);
-										_v$2 !== _p$._v$2 && _el$90.style.setProperty("font-family", _p$._v$2 = _v$2);
+										_v$ !== _p$._v$ && (0, import_web$46.className)(_el$91, _p$._v$ = _v$);
+										_v$2 !== _p$._v$2 && _el$91.style.setProperty("font-family", _p$._v$2 = _v$2);
 										return _p$;
 									}, {
 										_v$: undefined,
 										_v$2: undefined
 									});
 									(0, import_web$47.runHydrationEvents)();
-									return _el$90;
+									return _el$91;
 								})()
 							}));
-							(0, import_web$53.insert)(_el$49, (0, import_web$54.createComponent)(TextBox$2, {
+							(0, import_web$54.insert)(_el$50, (0, import_web$55.createComponent)(TextBox$2, {
 								get value() {
 									return draft().font;
 								},
 								onInput: (v) => patch({ font: v }),
 								placeholder: "…or a custom font-family",
 								"aria-label": "Custom font family"
-							}), _el$53, _co$15);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$50, label, _$p));
-							return _el$49;
+							}), _el$54, _co$15);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$51, label, _$p));
+							return _el$50;
 						})(),
 						(() => {
-							const _el$54 = (0, import_web$51.getNextElement)(_tmpl$0$1), _el$55 = _el$54.firstChild, _el$56 = _el$55.firstChild, _el$57 = _el$56.nextSibling, [_el$58, _co$16] = (0, import_web$52.getNextMarker)(_el$57.nextSibling), _el$59 = _el$55.nextSibling, [_el$60, _co$17] = (0, import_web$52.getNextMarker)(_el$59.nextSibling);
-							(0, import_web$53.insert)(_el$55, () => draft().weight, _el$58, _co$16);
-							(0, import_web$53.insert)(_el$54, (0, import_web$54.createComponent)(Slider$1, {
+							const _el$55 = (0, import_web$53.getNextElement)(_tmpl$1), _el$56 = _el$55.firstChild, _el$57 = _el$56.firstChild, _el$58 = _el$57.nextSibling, [_el$59, _co$16] = (0, import_web$51.getNextMarker)(_el$58.nextSibling), _el$60 = _el$56.nextSibling, [_el$61, _co$17] = (0, import_web$51.getNextMarker)(_el$60.nextSibling);
+							(0, import_web$54.insert)(_el$56, () => draft().weight, _el$59, _co$16);
+							(0, import_web$54.insert)(_el$55, (0, import_web$55.createComponent)(StepSlider, {
 								get value() {
 									return draft().weight;
 								},
 								onInput: (v) => patch({ weight: Math.round(v) }),
 								min: 400,
 								max: 900,
-								step: 100,
-								tick: 100
-							}), _el$60, _co$17);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$55, label, _$p));
-							return _el$54;
+								step: 100
+							}), _el$61, _co$17);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$56, label, _$p));
+							return _el$55;
 						})(),
-						(0, import_web$54.createComponent)(SwitchItem$1, {
+						(0, import_web$55.createComponent)(SwitchItem$1, {
 							get checked() {
 								return draft().italic;
 							},
@@ -3004,17 +3039,17 @@ function TagStyler(props) {
 							hideBorder: true,
 							children: "Italic"
 						}),
-						(0, import_web$54.createComponent)(Divider$2, {
+						(0, import_web$55.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$54.createComponent)(Header$3, {
+						(0, import_web$55.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Animation"
 						}),
-						(0, import_web$54.createComponent)(Text$3, {
+						(0, import_web$55.createComponent)(Text$3, {
 							style: {
 								color: "var(--text-muted)",
 								"font-size": "12px"
@@ -3022,33 +3057,33 @@ function TagStyler(props) {
 							children: "Colour and movement are separate — pick one of each, or just one."
 						}),
 						(() => {
-							const _el$61 = (0, import_web$51.getNextElement)(_tmpl$10), _el$62 = _el$61.firstChild, _el$63 = _el$62.nextSibling, _el$69 = _el$63.nextSibling, [_el$70, _co$19] = (0, import_web$52.getNextMarker)(_el$69.nextSibling), _el$71 = _el$70.nextSibling, [_el$72, _co$20] = (0, import_web$52.getNextMarker)(_el$71.nextSibling);
-							_el$61.style.setProperty("margin-top", "10px");
-							(0, import_web$53.insert)(_el$63, (0, import_web$54.createComponent)(For$3, {
+							const _el$62 = (0, import_web$53.getNextElement)(_tmpl$11), _el$63 = _el$62.firstChild, _el$64 = _el$63.nextSibling, _el$70 = _el$64.nextSibling, [_el$71, _co$19] = (0, import_web$51.getNextMarker)(_el$70.nextSibling), _el$72 = _el$71.nextSibling, [_el$73, _co$20] = (0, import_web$51.getNextMarker)(_el$72.nextSibling);
+							_el$62.style.setProperty("margin-top", "10px");
+							(0, import_web$54.insert)(_el$64, (0, import_web$55.createComponent)(For$3, {
 								each: COLOR_ANIMS,
 								children: (anim) => (() => {
-									const _el$91 = (0, import_web$51.getNextElement)(_tmpl$14);
-									_el$91.$$click = () => patch({ colorAnim: anim.id });
-									(0, import_web$53.insert)(_el$91, () => anim.label);
+									const _el$92 = (0, import_web$53.getNextElement)(_tmpl$15);
+									_el$92.$$click = () => patch({ colorAnim: anim.id });
+									(0, import_web$54.insert)(_el$92, () => anim.label);
 									(0, import_web$49.effect)((_p$) => {
 										const _v$3 = `ftags-anim-option${draft().colorAnim === anim.id ? " ftags-anim-option--on" : ""}`, _v$4 = anim.note;
-										_v$3 !== _p$._v$3 && (0, import_web$46.className)(_el$91, _p$._v$3 = _v$3);
-										_v$4 !== _p$._v$4 && (0, import_web$45.setAttribute)(_el$91, "title", _p$._v$4 = _v$4);
+										_v$3 !== _p$._v$3 && (0, import_web$46.className)(_el$92, _p$._v$3 = _v$3);
+										_v$4 !== _p$._v$4 && (0, import_web$45.setAttribute)(_el$92, "title", _p$._v$4 = _v$4);
 										return _p$;
 									}, {
 										_v$3: undefined,
 										_v$4: undefined
 									});
 									(0, import_web$47.runHydrationEvents)();
-									return _el$91;
+									return _el$92;
 								})()
 							}));
-							(0, import_web$53.insert)(_el$61, (0, import_web$54.createComponent)(Show$3, {
+							(0, import_web$54.insert)(_el$62, (0, import_web$55.createComponent)(Show$3, {
 								get when() {
-									return (0, import_web$55.memo)(() => draft().colorAnim === "flow")() && draft().fill !== "gradient";
+									return (0, import_web$52.memo)(() => draft().colorAnim === "flow")() && draft().fill !== "gradient";
 								},
 								get children() {
-									return (0, import_web$54.createComponent)(Text$3, {
+									return (0, import_web$55.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-warning, var(--text-muted))",
 											"font-size": "12px"
@@ -3056,18 +3091,18 @@ function TagStyler(props) {
 										children: "Flow needs a gradient fill to have anything to slide."
 									});
 								}
-							}), _el$70, _co$19);
-							(0, import_web$53.insert)(_el$61, (0, import_web$54.createComponent)(Show$3, {
+							}), _el$71, _co$19);
+							(0, import_web$54.insert)(_el$62, (0, import_web$55.createComponent)(Show$3, {
 								get when() {
 									return draft().colorAnim !== "none";
 								},
 								get children() {
 									return [(() => {
-										const _el$64 = (0, import_web$51.getNextElement)(_tmpl$1), _el$65 = _el$64.firstChild, _el$67 = _el$65.nextSibling, [_el$68, _co$18] = (0, import_web$52.getNextMarker)(_el$67.nextSibling), _el$66 = _el$68.nextSibling;
-										(0, import_web$53.insert)(_el$64, () => draft().colorSpeed, _el$68, _co$18);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$64, label, _$p));
-										return _el$64;
-									})(), (0, import_web$54.createComponent)(Slider$1, {
+										const _el$65 = (0, import_web$53.getNextElement)(_tmpl$10), _el$66 = _el$65.firstChild, _el$68 = _el$66.nextSibling, [_el$69, _co$18] = (0, import_web$51.getNextMarker)(_el$68.nextSibling), _el$67 = _el$69.nextSibling;
+										(0, import_web$54.insert)(_el$65, () => draft().colorSpeed, _el$69, _co$18);
+										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$65, label, _$p));
+										return _el$65;
+									})(), (0, import_web$55.createComponent)(StepSlider, {
 										get value() {
 											return draft().colorSpeed;
 										},
@@ -3077,42 +3112,42 @@ function TagStyler(props) {
 										step: .25
 									})];
 								}
-							}), _el$72, _co$20);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$62, label, _$p));
-							return _el$61;
+							}), _el$73, _co$20);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$63, label, _$p));
+							return _el$62;
 						})(),
 						(() => {
-							const _el$73 = (0, import_web$51.getNextElement)(_tmpl$12), _el$74 = _el$73.firstChild, _el$75 = _el$74.nextSibling, _el$81 = _el$75.nextSibling, [_el$82, _co$22] = (0, import_web$52.getNextMarker)(_el$81.nextSibling);
-							(0, import_web$53.insert)(_el$75, (0, import_web$54.createComponent)(For$3, {
+							const _el$74 = (0, import_web$53.getNextElement)(_tmpl$13), _el$75 = _el$74.firstChild, _el$76 = _el$75.nextSibling, _el$82 = _el$76.nextSibling, [_el$83, _co$22] = (0, import_web$51.getNextMarker)(_el$82.nextSibling);
+							(0, import_web$54.insert)(_el$76, (0, import_web$55.createComponent)(For$3, {
 								each: MOTIONS,
 								children: (anim) => (() => {
-									const _el$92 = (0, import_web$51.getNextElement)(_tmpl$14);
-									_el$92.$$click = () => patch({ motion: anim.id });
-									(0, import_web$53.insert)(_el$92, () => anim.label);
+									const _el$93 = (0, import_web$53.getNextElement)(_tmpl$15);
+									_el$93.$$click = () => patch({ motion: anim.id });
+									(0, import_web$54.insert)(_el$93, () => anim.label);
 									(0, import_web$49.effect)((_p$) => {
 										const _v$5 = `ftags-anim-option${draft().motion === anim.id ? " ftags-anim-option--on" : ""}`, _v$6 = anim.note;
-										_v$5 !== _p$._v$5 && (0, import_web$46.className)(_el$92, _p$._v$5 = _v$5);
-										_v$6 !== _p$._v$6 && (0, import_web$45.setAttribute)(_el$92, "title", _p$._v$6 = _v$6);
+										_v$5 !== _p$._v$5 && (0, import_web$46.className)(_el$93, _p$._v$5 = _v$5);
+										_v$6 !== _p$._v$6 && (0, import_web$45.setAttribute)(_el$93, "title", _p$._v$6 = _v$6);
 										return _p$;
 									}, {
 										_v$5: undefined,
 										_v$6: undefined
 									});
 									(0, import_web$47.runHydrationEvents)();
-									return _el$92;
+									return _el$93;
 								})()
 							}));
-							(0, import_web$53.insert)(_el$73, (0, import_web$54.createComponent)(Show$3, {
+							(0, import_web$54.insert)(_el$74, (0, import_web$55.createComponent)(Show$3, {
 								get when() {
 									return draft().motion !== "none";
 								},
 								get children() {
 									return [(() => {
-										const _el$76 = (0, import_web$51.getNextElement)(_tmpl$11), _el$77 = _el$76.firstChild, _el$79 = _el$77.nextSibling, [_el$80, _co$21] = (0, import_web$52.getNextMarker)(_el$79.nextSibling), _el$78 = _el$80.nextSibling;
-										(0, import_web$53.insert)(_el$76, () => draft().motionSpeed, _el$80, _co$21);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$76, label, _$p));
-										return _el$76;
-									})(), (0, import_web$54.createComponent)(Slider$1, {
+										const _el$77 = (0, import_web$53.getNextElement)(_tmpl$12), _el$78 = _el$77.firstChild, _el$80 = _el$78.nextSibling, [_el$81, _co$21] = (0, import_web$51.getNextMarker)(_el$80.nextSibling), _el$79 = _el$81.nextSibling;
+										(0, import_web$54.insert)(_el$77, () => draft().motionSpeed, _el$81, _co$21);
+										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$77, label, _$p));
+										return _el$77;
+									})(), (0, import_web$55.createComponent)(StepSlider, {
 										get value() {
 											return draft().motionSpeed;
 										},
@@ -3122,15 +3157,15 @@ function TagStyler(props) {
 										step: .25
 									})];
 								}
-							}), _el$82, _co$22);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$74, label, _$p));
-							return _el$73;
+							}), _el$83, _co$22);
+							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$75, label, _$p));
+							return _el$74;
 						})()
 					];
 				} }),
-				(0, import_web$54.createComponent)(ModalFooter$3, { get children() {
-					const _el$83 = (0, import_web$51.getNextElement)(_tmpl$13), _el$84 = _el$83.firstChild, [_el$85, _co$23] = (0, import_web$52.getNextMarker)(_el$84.nextSibling), _el$86 = _el$85.nextSibling, [_el$87, _co$24] = (0, import_web$52.getNextMarker)(_el$86.nextSibling), _el$88 = _el$87.nextSibling, [_el$89, _co$25] = (0, import_web$52.getNextMarker)(_el$88.nextSibling);
-					(0, import_web$53.insert)(_el$83, (0, import_web$54.createComponent)(Button$3, {
+				(0, import_web$55.createComponent)(ModalFooter$3, { get children() {
+					const _el$84 = (0, import_web$53.getNextElement)(_tmpl$14), _el$85 = _el$84.firstChild, [_el$86, _co$23] = (0, import_web$51.getNextMarker)(_el$85.nextSibling), _el$87 = _el$86.nextSibling, [_el$88, _co$24] = (0, import_web$51.getNextMarker)(_el$87.nextSibling), _el$89 = _el$88.nextSibling, [_el$90, _co$25] = (0, import_web$51.getNextMarker)(_el$89.nextSibling);
+					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
 						get look() {
 							return ButtonLooks$3.OUTLINED;
 						},
@@ -3142,8 +3177,8 @@ function TagStyler(props) {
 							props.close();
 						},
 						children: "Reset"
-					}), _el$85, _co$23);
-					(0, import_web$53.insert)(_el$83, (0, import_web$54.createComponent)(Button$3, {
+					}), _el$86, _co$23);
+					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
 						get look() {
 							return ButtonLooks$3.OUTLINED;
 						},
@@ -3151,12 +3186,12 @@ function TagStyler(props) {
 							return props.close;
 						},
 						children: "Cancel"
-					}), _el$87, _co$24);
-					(0, import_web$53.insert)(_el$83, (0, import_web$54.createComponent)(Button$3, {
+					}), _el$88, _co$24);
+					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
 						onClick: save,
 						children: "Save"
-					}), _el$89, _co$25);
-					return _el$83;
+					}), _el$90, _co$25);
+					return _el$84;
 				} })
 			];
 		}
