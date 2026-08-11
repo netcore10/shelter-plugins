@@ -73,7 +73,11 @@ const SURFACES = [
     // get filtered out in resolveDmUser instead of by the selector, which
     // avoids depending on where the link sits within the row.
     selector: '[data-list-item-id^="private-channels-uid_"]',
-    anchors: ['[class*="nameAndDecorators"]', '[class*="name_"]'],
+    // Last child of layout__20a53 — the row's flex container (avatar | content).
+    // Sitting there, the chip is a sibling of the name block rather than inside
+    // it, so none of that block's growing boxes can push it away. Verified by
+    // dragging the mount there by hand.
+    anchors: ['[class*="layout_"]'],
     resolve: resolveDmUser,
     compact: true,
     enabled: () => store.inDms,
