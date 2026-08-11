@@ -30,6 +30,7 @@ export const COLOR_ANIMS = [
   { id: "glow", label: "Glow", note: "Soft halo that swells" },
   { id: "shimmer", label: "Shimmer", note: "Sweeps a highlight across" },
   { id: "flow", label: "Flow", note: "Slides the gradient along — needs a gradient fill" },
+  { id: "spin", label: "Spin", note: "Turns the gradient — needs a gradient fill" },
 ];
 
 // Base durations in seconds, divided by that track's speed multiplier.
@@ -43,6 +44,7 @@ export const DURATIONS = {
   glow: 2.6,
   shimmer: 2.8,
   flow: 4,
+  spin: 5,
 };
 
 // Maps the old single-animation setting onto the new two-track model.

@@ -468,7 +468,7 @@ export function styleToCss(style, { animate = true } = {}) {
 
   add(style.motion, style.motionSpeed);
   // Hue cycling and gradient sliding read better at a constant rate.
-  if (style.colorAnim === "rainbow" || style.colorAnim === "flow") {
+  if (style.colorAnim === "rainbow" || style.colorAnim === "flow" || style.colorAnim === "spin") {
     const duration = DURATIONS[style.colorAnim];
     const speed = style.colorSpeed > 0 ? style.colorSpeed : 1;
     tracks.push(`ftags-${style.colorAnim} ${(duration / speed).toFixed(2)}s linear infinite`);
@@ -487,6 +487,13 @@ export function styleToCss(style, { animate = true } = {}) {
   }
 
   // Flow slides the gradient itself, so it needs room to slide into.
+  // Spin adds the animated angle to the configured one, so it starts from
+  // whatever angle the tag is set to. Only the gradient turns — the chip and
+  // its text stay put.
+  if (style.colorAnim === "spin" && gradient) {
+    css.background = `linear-gradient(calc(${style.angle ?? 90}deg + var(--ftags-spin, 0deg)), ${style.colors.join(", ")})`;
+  }
+
   if (style.colorAnim === "flow" && gradient) {
     css["background-size"] = "200% 100%";
   }

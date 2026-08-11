@@ -9,7 +9,32 @@ const {
   ui: { ToastColors, showToast },
 } = shelter;
 
+/**
+ * Register --ftags-spin as a real <angle>.
+ *
+ * Confirmed from the console: getComputedStyle(chip).getPropertyValue(
+ * "--ftags-spin") came back EMPTY. A registered property would report its
+ * initial value (0deg) even before animating, so the @property rule in our
+ * injected stylesheet isn't taking effect. Unregistered means untyped, and an
+ * untyped custom property can't be interpolated — the animation runs discretely
+ * and the gradient appears frozen.
+ */
+function registerSpinAngle() {
+  try {
+    CSS.registerProperty({
+      name: "--ftags-spin",
+      syntax: "<angle>",
+      inherits: false,
+      initialValue: "0deg",
+    });
+  } catch {
+    // Already registered, or unsupported — spin stays a static gradient.
+  }
+}
+
 export function onLoad() {
+  registerSpinAngle();
+
   // Note: injectCss lives under scoped.ui, not on scoped directly.
   scoped.ui.injectCss(css);
   startInjection();

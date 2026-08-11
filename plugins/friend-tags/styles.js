@@ -50,6 +50,20 @@ export default `
   to   { background-position: 0 0, 220% 0; }
 }
 
+/* Spin turns the gradient. A gradient's angle isn't animatable on its own, so
+   the rotation lives in a registered custom property — @property gives it a
+   type, which is what lets the browser interpolate rather than jump. */
+@property --ftags-spin {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ftags-spin {
+  from { --ftags-spin: 0deg; }
+  to   { --ftags-spin: 360deg; }
+}
+
 /* slides the gradient itself along the chip */
 @keyframes ftags-flow {
   from { background-position: 0% 50%; }
