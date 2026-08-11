@@ -3593,7 +3593,7 @@ const SURFACES = [
 	{
 		id: "dms",
 		selector: "[data-list-item-id^=\"private-channels-uid_\"]",
-		anchors: ["[class*=\"nameAndDecorators\"]", "[class*=\"name_\"]"],
+		anchors: ["[class*=\"layout_\"]"],
 		resolve: resolveDmUser,
 		compact: true,
 		enabled: () => store$1.inDms
