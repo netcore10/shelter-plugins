@@ -131,6 +131,11 @@ const COLOR_ANIMS = [
 		id: "flow",
 		label: "Flow",
 		note: "Slides the gradient along — needs a gradient fill"
+	},
+	{
+		id: "spin",
+		label: "Spin",
+		note: "Turns the gradient — needs a gradient fill"
 	}
 ];
 const DURATIONS = {
@@ -142,7 +147,8 @@ const DURATIONS = {
 	rainbow: 6,
 	glow: 2.6,
 	shimmer: 2.8,
-	flow: 4
+	flow: 4,
+	spin: 5
 };
 const LEGACY_ANIMATION_TRACK = {
 	breathe: "motion",
@@ -574,7 +580,7 @@ function styleToCss(style, { animate = true } = {}) {
 		tracks.push(`ftags-${name} ${(duration / (speed > 0 ? speed : 1)).toFixed(2)}s ease-in-out infinite`);
 	};
 	add(style.motion, style.motionSpeed);
-	if (style.colorAnim === "rainbow" || style.colorAnim === "flow") {
+	if (style.colorAnim === "rainbow" || style.colorAnim === "flow" || style.colorAnim === "spin") {
 		const duration = DURATIONS[style.colorAnim];
 		const speed = style.colorSpeed > 0 ? style.colorSpeed : 1;
 		tracks.push(`ftags-${style.colorAnim} ${(duration / speed).toFixed(2)}s linear infinite`);
@@ -586,6 +592,7 @@ function styleToCss(style, { animate = true } = {}) {
 		css["background-size"] = "100% 100%, 220% 100%";
 		css["background-repeat"] = "no-repeat";
 	}
+	if (style.colorAnim === "spin" && gradient) css.background = `linear-gradient(calc(${style.angle ?? 90}deg + var(--ftags-spin, 0deg)), ${style.colors.join(", ")})`;
 	if (style.colorAnim === "flow" && gradient) css["background-size"] = "200% 100%";
 	return css;
 }
@@ -711,6 +718,20 @@ var styles_default = `
 @keyframes ftags-shimmer {
   from { background-position: 0 0, -120% 0; }
   to   { background-position: 0 0, 220% 0; }
+}
+
+/* Spin turns the gradient. A gradient's angle isn't animatable on its own, so
+   the rotation lives in a registered custom property — @property gives it a
+   type, which is what lets the browser interpolate rather than jump. */
+@property --ftags-spin {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ftags-spin {
+  from { --ftags-spin: 0deg; }
+  to   { --ftags-spin: 360deg; }
 }
 
 /* slides the gradient itself along the chip */
@@ -4444,7 +4465,28 @@ function Settings() {
 //#endregion
 //#region plugins/friend-tags/index.jsx
 const { plugin: { scoped }, ui: { ToastColors, showToast } } = shelter;
+/**
+* Register --ftags-spin as a real <angle>.
+*
+* Confirmed from the console: getComputedStyle(chip).getPropertyValue(
+* "--ftags-spin") came back EMPTY. A registered property would report its
+* initial value (0deg) even before animating, so the @property rule in our
+* injected stylesheet isn't taking effect. Unregistered means untyped, and an
+* untyped custom property can't be interpolated — the animation runs discretely
+* and the gradient appears frozen.
+*/
+function registerSpinAngle() {
+	try {
+		CSS.registerProperty({
+			name: "--ftags-spin",
+			syntax: "<angle>",
+			inherits: false,
+			initialValue: "0deg"
+		});
+	} catch {}
+}
 function onLoad() {
+	registerSpinAngle();
 	scoped.ui.injectCss(styles_default);
 	startInjection();
 	restoreFromBackup().then((recovered) => {
