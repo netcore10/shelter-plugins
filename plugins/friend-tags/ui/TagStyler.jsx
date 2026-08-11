@@ -28,6 +28,39 @@ const {
 
 const label = { color: "var(--header-secondary)", "font-size": "12px", "text-transform": "uppercase", "font-weight": 700 };
 
+/**
+ * shelter's Slider, used the way shelter's own docs and demo use it.
+ *
+ *   <div style={{ width: "100%" }}>
+ *     <Slider min={0} max={10} step={1} tick value={v()} onInput={setV} />
+ *   </div>
+ *
+ * Small integer range, step of 1, wrapped in a full-width div. Staying in that
+ * shape matters: shelter builds the input's props with
+ * mergeProps({ step, value: min }, rawProps), which puts the defaults first, so
+ * the spread assigns `value` before `min`/`max`. A range input clamps on
+ * assignment, so anything above the default max of 100 is clamped and then
+ * pushed to min — which is why a 400-900 weight slider pinned its thumb left.
+ * Counting steps keeps every value small, exactly like the demo.
+ */
+function StepSlider(props) {
+  const steps = () => Math.max(1, Math.round((props.max - props.min) / props.step));
+  const index = () => Math.round((props.value - props.min) / props.step);
+
+  return (
+    <div style={{ width: "100%" }}>
+      <Slider
+        min={0}
+        max={steps()}
+        step={1}
+        tick
+        value={index()}
+        onInput={(i) => props.onInput(props.min + i * props.step)}
+      />
+    </div>
+  );
+}
+
 export default function TagStyler(props) {
   // Edited locally so the preview updates instantly and Cancel can walk away.
   const [draft, setDraft] = createSignal(styleOf(props.tag));
@@ -196,7 +229,7 @@ export default function TagStyler(props) {
 
           <div class="ftags-field">
             <span style={label}>Angle — {draft().angle}°</span>
-            <Slider
+            <StepSlider
               value={draft().angle}
               onInput={(v) => patch({ angle: Math.round(v) })}
               min={0}
@@ -296,13 +329,12 @@ export default function TagStyler(props) {
 
         <div class="ftags-field">
           <span style={label}>Weight — {draft().weight}</span>
-          <Slider
+          <StepSlider
             value={draft().weight}
             onInput={(v) => patch({ weight: Math.round(v) })}
             min={400}
             max={900}
             step={100}
-            tick={100}
           />
         </div>
 
@@ -345,7 +377,7 @@ export default function TagStyler(props) {
 
           <Show when={draft().colorAnim !== "none"}>
             <span style={label}>Colour speed — {draft().colorSpeed}×</span>
-            <Slider
+            <StepSlider
               value={draft().colorSpeed}
               onInput={(v) => patch({ colorSpeed: Math.round(v * 4) / 4 })}
               min={0.25}
@@ -373,7 +405,7 @@ export default function TagStyler(props) {
 
           <Show when={draft().motion !== "none"}>
             <span style={label}>Movement speed — {draft().motionSpeed}×</span>
-            <Slider
+            <StepSlider
               value={draft().motionSpeed}
               onInput={(v) => patch({ motionSpeed: Math.round(v * 4) / 4 })}
               min={0.25}
