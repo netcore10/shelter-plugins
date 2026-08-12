@@ -1,4 +1,4 @@
-Friend tags, TBD, TBD, was made by ai for personal use, my friend wanted to use it so i updated it here. Feel free to edit/modify/and clean up this shitshow and use it as you will.
+Friend tags, Radio, TBD was made by ai for personal use, my friend wanted to use it so i updated it here. Feel free to edit/modify/and clean up this shitshow and use it as you will.
 # shelter-plugins
 
 My plugins for [shelter](https://shelter.uwu.network).
