@@ -52,6 +52,47 @@ try {
 var styles_default = `
 .rad-mount { display: contents; }
 
+.rad-root {
+  --rad-fb-bg: #111214;
+  --rad-fb-text: #f2f3f5;
+  --rad-fb-dim: #b5bac1;
+  --rad-fb-muted: #949ba4;
+  --rad-fb-line: rgba(255, 255, 255, .07);
+  --rad-fb-hover: rgba(255, 255, 255, .06);
+  --rad-fb-active: rgba(255, 255, 255, .09);
+  --rad-fb-track: rgba(255, 255, 255, .12);
+  --rad-fb-shadow: rgba(0, 0, 0, .5);
+}
+
+.rad-root.theme-light {
+  --rad-fb-bg: #fff;
+  --rad-fb-text: #14151a;
+  --rad-fb-dim: #4e5058;
+  --rad-fb-muted: #5c5e66;
+  --rad-fb-line: rgba(0, 0, 0, .09);
+  --rad-fb-hover: rgba(0, 0, 0, .05);
+  --rad-fb-active: rgba(0, 0, 0, .07);
+  --rad-fb-track: rgba(0, 0, 0, .12);
+  --rad-fb-shadow: rgba(0, 0, 0, .16);
+}
+
+.rad-root {
+  /* Darkest-first, and the base tokens lead deliberately.
+     Measured on a current build: --background-floating and --background-secondary
+     both come back EMPTY, and an empty custom property still counts as defined —
+     var() takes the empty value rather than the fallback, and the declaration
+     goes invalid at computed-value time. They stay in the chain for older builds
+     that do define them, but never ahead of a token known to resolve. */
+  --rad-bg: var(--background-base-lowest, var(--background-base-lower, var(--background-floating, var(--background-secondary, var(--rad-fb-bg)))));
+  --rad-text: var(--text-default, var(--text-normal, var(--rad-fb-text)));
+  --rad-dim: var(--text-secondary, var(--interactive-normal, var(--rad-fb-dim)));
+  --rad-muted: var(--text-muted, var(--channels-default, var(--rad-fb-muted)));
+  --rad-line: var(--border-subtle, var(--background-modifier-accent, var(--rad-fb-line)));
+  --rad-hover: var(--background-modifier-hover, var(--rad-fb-hover));
+  --rad-active: var(--background-modifier-selected, var(--rad-fb-active));
+  --rad-track: var(--background-modifier-accent, var(--rad-fb-track));
+}
+
 /* ------------------------------------------------------------------ button */
 
 .rad-btn {
@@ -89,6 +130,10 @@ var styles_default = `
   50%      { transform: scaleY(1); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .rad-bars i { animation: none; transform: scaleY(.6); }
+}
+
 /* ------------------------------------------------------------------- panel */
 
 .rad-panel {
@@ -97,19 +142,15 @@ var styles_default = `
   width: 328px;
   border-radius: 10px;
   overflow: hidden;
-  background: #1a1b1e;
-  color: #f2f3f5;
-  border: 1px solid rgba(255, 255, 255, .07);
-  box-shadow: 0 10px 34px rgba(0, 0, 0, .5);
+  /* Solid colour underneath, themed colour layered on top. A bad theme
+     variable kills the image, never the colour, so this can't go transparent. */
+  background-color: var(--rad-fb-bg);
+  background-image: linear-gradient(var(--rad-bg), var(--rad-bg));
+  color: var(--rad-text);
+  border: 1px solid var(--rad-line);
+  box-shadow: 0 10px 34px var(--rad-fb-shadow);
   font-family: var(--font-primary, "gg sans", sans-serif);
   animation: rad-in 140ms ease-out;
-}
-
-.theme-light .rad-panel {
-  background: #fff;
-  color: #14151a;
-  border-color: rgba(0, 0, 0, .09);
-  box-shadow: 0 10px 34px rgba(0, 0, 0, .16);
 }
 
 @keyframes rad-in {
@@ -117,15 +158,17 @@ var styles_default = `
   to   { opacity: 1; transform: none; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .rad-panel { animation: none; }
+}
+
 .rad-head {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  border-bottom: 1px solid var(--rad-line);
 }
-
-.theme-light .rad-head { border-bottom-color: rgba(0, 0, 0, .07); }
 
 .rad-station {
   flex: 1;
@@ -152,11 +195,9 @@ var styles_default = `
 
 .rad-station-group {
   font-size: 11px;
-  color: #949ba4;
+  color: var(--rad-muted);
   white-space: nowrap;
 }
-
-.theme-light .rad-station-group { color: #5c5e66; }
 
 .rad-station .rad-caret {
   flex: 0 0 auto;
@@ -182,10 +223,8 @@ var styles_default = `
   height: 72px;
   border-radius: 8px;
   object-fit: cover;
-  background: rgba(255, 255, 255, .05);
+  background: var(--rad-hover);
 }
-
-.theme-light .rad-art { background: rgba(0, 0, 0, .05); }
 
 .rad-art-blank {
   display: flex;
@@ -220,16 +259,13 @@ var styles_default = `
 
 .rad-sub, .rad-alt {
   font-size: 12px;
-  color: #b5bac1;
+  color: var(--rad-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.theme-light .rad-sub, .theme-light .rad-alt { color: #4e5058; }
-
-.rad-alt { color: #80848e; font-size: 11px; }
-.theme-light .rad-alt { color: #6d6f78; }
+.rad-alt { color: var(--rad-muted); font-size: 11px; }
 
 .rad-tag {
   align-self: flex-start;
@@ -250,11 +286,9 @@ var styles_default = `
 .rad-bar {
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, .1);
+  background: var(--rad-track);
   overflow: hidden;
 }
-
-.theme-light .rad-bar { background: rgba(0, 0, 0, .1); }
 
 /* Matches the 1s tick, so the fill glides instead of stepping. */
 .rad-bar span {
@@ -270,10 +304,8 @@ var styles_default = `
   margin-top: 4px;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
-  color: #949ba4;
+  color: var(--rad-muted);
 }
-
-.theme-light .rad-times { color: #5c5e66; }
 
 /* ---------------------------------------------------------------- controls */
 
@@ -327,36 +359,28 @@ var styles_default = `
   border: 0;
   padding: 0;
   cursor: pointer;
-  color: #b5bac1;
+  color: var(--rad-dim);
 }
 
-.rad-mute:hover { color: #f2f3f5; }
-.theme-light .rad-mute { color: #4e5058; }
-.theme-light .rad-mute:hover { color: #14151a; }
+.rad-mute:hover { color: var(--rad-text); }
 
-/* shelter's Slider ships with margins meant for a settings page. */
-.rad-volume [class*="slider"], .rad-volume [class*="scontainer"] { margin: 0 !important; flex: 1; }
+/* shelter's Slider is built for a settings page: --bar-offset gives it 24px of
+   lead-in for tick labels we don't use, making the control 48px tall. */
+.rad-volume [class*="scontainer"] {
+  --bar-offset: 0px;
+  margin: 0 !important;
+  flex: 1;
+  height: 24px;
+}
 
-/* The Slider sets --upper-half inline (its fill percentage) and paints the
-   track from it in Discord's blurple. Reusing that variable recolours the fill
-   to the station's accent without reimplementing the control. !important
-   because shelter's own stylesheet is injected after ours. */
+/* The fill is painted on the track pseudo-elements (::-webkit-slider-runnable-track
+   and friends) from var(--blurple-50) — the input's own background is
+   transparent, which is why styling it did nothing. Redefining the variable
+   here recolours the fill to the station accent: custom properties inherit into
+   pseudo-elements, so there's no need to restate the gradient or fight
+   specificity. */
 .rad-volume input[type="range"] {
-  background: linear-gradient(
-    to right,
-    var(--rad-accent, #ff015b) 0%,
-    var(--rad-accent, #ff015b) var(--upper-half, 0%),
-    rgba(255, 255, 255, .14) var(--upper-half, 0%)
-  ) !important;
-}
-
-.theme-light .rad-volume input[type="range"] {
-  background: linear-gradient(
-    to right,
-    var(--rad-accent, #ff015b) 0%,
-    var(--rad-accent, #ff015b) var(--upper-half, 0%),
-    rgba(0, 0, 0, .14) var(--upper-half, 0%)
-  ) !important;
+  --blurple-50: var(--rad-accent, #ff015b);
 }
 
 /* ------------------------------------------------------------------ footer */
@@ -366,14 +390,9 @@ var styles_default = `
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border-top: 1px solid rgba(255, 255, 255, .06);
+  border-top: 1px solid var(--rad-line);
   font-size: 11px;
-  color: #949ba4;
-}
-
-.theme-light .rad-foot {
-  border-top-color: rgba(0, 0, 0, .07);
-  color: #5c5e66;
+  color: var(--rad-muted);
 }
 
 .rad-foot-text {
@@ -389,14 +408,20 @@ var styles_default = `
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #949ba4;
+  background: var(--rad-muted);
 }
 
-.rad-dot[data-status="live"] { background: #23a55a; }
-.rad-dot[data-status="connecting"] { background: #f0b232; animation: rad-blink 1s ease-in-out infinite; }
-.rad-dot[data-status="error"] { background: #f23f43; }
+/* Status colours are semantic, not decorative — Discord's own green/amber/red
+   where the build exposes them. */
+.rad-dot[data-status="live"] { background: var(--status-positive, var(--text-positive, #23a55a)); }
+.rad-dot[data-status="connecting"] { background: var(--status-warning, var(--text-warning, #f0b232)); animation: rad-blink 1s ease-in-out infinite; }
+.rad-dot[data-status="error"] { background: var(--status-danger, var(--text-danger, #f23f43)); }
 
 @keyframes rad-blink { 50% { opacity: .3; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rad-dot[data-status="connecting"] { animation: none; }
+}
 
 /* ------------------------------------------------------------ station list */
 
@@ -409,7 +434,7 @@ var styles_default = `
 
 .rad-list::-webkit-scrollbar { width: 8px; }
 .rad-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, .12);
+  background: var(--rad-track);
   border-radius: 4px;
 }
 
@@ -419,10 +444,8 @@ var styles_default = `
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: #949ba4;
+  color: var(--rad-muted);
 }
-
-.theme-light .rad-group { color: #5c5e66; }
 
 .rad-item {
   display: flex;
@@ -439,11 +462,8 @@ var styles_default = `
   cursor: pointer;
 }
 
-.rad-item:hover { background: rgba(255, 255, 255, .06); }
-.theme-light .rad-item:hover { background: rgba(0, 0, 0, .05); }
-
-.rad-item[aria-current="true"] { background: rgba(255, 255, 255, .09); }
-.theme-light .rad-item[aria-current="true"] { background: rgba(0, 0, 0, .07); }
+.rad-item:hover { background: var(--rad-hover); }
+.rad-item[aria-current="true"] { background: var(--rad-active); }
 
 .rad-item-art {
   flex: 0 0 auto;
@@ -471,13 +491,11 @@ var styles_default = `
 
 .rad-item-genre {
   font-size: 11px;
-  color: #949ba4;
+  color: var(--rad-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.theme-light .rad-item-genre { color: #5c5e66; }
 
 /* --------------------------------------------------------------- segmented */
 
@@ -486,10 +504,8 @@ var styles_default = `
   gap: 4px;
   padding: 3px;
   border-radius: 7px;
-  background: rgba(255, 255, 255, .05);
+  background: var(--rad-hover);
 }
-
-.theme-light .rad-seg { background: rgba(0, 0, 0, .05); }
 
 .rad-seg button {
   flex: 1;
@@ -497,37 +513,31 @@ var styles_default = `
   border: 0;
   border-radius: 5px;
   background: none;
-  color: #b5bac1;
+  color: var(--rad-dim);
   font: inherit;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
 }
 
-.rad-seg button:hover { color: #f2f3f5; }
-.theme-light .rad-seg button { color: #4e5058; }
-.theme-light .rad-seg button:hover { color: #14151a; }
+.rad-seg button:hover { color: var(--rad-text); }
 
 .rad-seg button[aria-pressed="true"] {
-  background: rgba(255, 255, 255, .1);
-  color: #fff;
-}
-
-.theme-light .rad-seg button[aria-pressed="true"] {
-  background: #fff;
-  color: #14151a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  background: var(--rad-active);
+  color: var(--rad-text);
 }
 
 /* ---------------------------------------------------------------- settings */
 
+/* Rendered inside Discord's settings modal, which is already in the themed
+   subtree, so these read the variables directly. */
 .rad-settings-row { margin: 14px 0; }
 
 .rad-settings-label {
   margin-bottom: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--header-secondary, #b5bac1);
+  color: var(--header-secondary, var(--text-secondary, #b5bac1));
 }
 
 .rad-custom {
