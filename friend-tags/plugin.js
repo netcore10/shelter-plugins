@@ -387,6 +387,27 @@ async function restoreFromBackup() {
 	if (isEmpty(store$2.accounts) && !isEmpty(snapshot.accounts)) store$2.accounts = snapshot.accounts;
 	return recovered;
 }
+async function exportFile() {
+	const json = exportData();
+	if (typeof CompressionStream !== "function") return {
+		blob: new Blob([json], { type: "application/json" }),
+		raw: json.length,
+		gzipped: false
+	};
+	const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+	const blob = await new Response(stream).blob();
+	return {
+		blob,
+		raw: json.length,
+		gzipped: true
+	};
+}
+async function importFile(file, options) {
+	const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+	const gzipped = head[0] === 31 && head[1] === 139;
+	const json = gzipped ? await new Response(file.stream().pipeThrough(new DecompressionStream("gzip"))).text() : await file.text();
+	return importData(json, options);
+}
 function seedCurrentAccount() {
 	const id = currentAccountId();
 	if (!id || store$2.accounts[id]) return false;
@@ -1313,7 +1334,6 @@ var require_web = __commonJS({ "solid-js/web"(exports, module) {
 
 //#endregion
 //#region plugins/friend-tags/ui/EmojiPreview.jsx
-var import_web$102 = __toESM(require_web(), 1);
 var import_web$103 = __toESM(require_web(), 1);
 var import_web$104 = __toESM(require_web(), 1);
 var import_web$105 = __toESM(require_web(), 1);
@@ -1324,7 +1344,8 @@ var import_web$109 = __toESM(require_web(), 1);
 var import_web$110 = __toESM(require_web(), 1);
 var import_web$111 = __toESM(require_web(), 1);
 var import_web$112 = __toESM(require_web(), 1);
-const _tmpl$$11 = /*#__PURE__*/ (0, import_web$102.template)(`<div class="ftags-preview-pop"><div class="ftags-preview-art"></div><div class="ftags-preview-name">:<!#><!/>:</div><div class="ftags-preview-source"></div></div>`, 10), _tmpl$2$9 = /*#__PURE__*/ (0, import_web$102.template)(`<img>`, 1), _tmpl$3$7 = /*#__PURE__*/ (0, import_web$102.template)(`<span class="ftags-preview-char"></span>`, 2);
+var import_web$113 = __toESM(require_web(), 1);
+const _tmpl$$11 = /*#__PURE__*/ (0, import_web$103.template)(`<div class="ftags-preview-pop"><div class="ftags-preview-art"></div><div class="ftags-preview-name">:<!#><!/>:</div><div class="ftags-preview-source"></div></div>`, 10), _tmpl$2$9 = /*#__PURE__*/ (0, import_web$103.template)(`<img>`, 1), _tmpl$3$7 = /*#__PURE__*/ (0, import_web$103.template)(`<span class="ftags-preview-char"></span>`, 2);
 const { flux: { storesFlat: storesFlat$2 }, solidWeb: { render }, ui: { getRoot: getRoot$1 } } = shelter;
 let dispose;
 function closeEmojiPreview() {
@@ -1348,17 +1369,17 @@ function Preview(props) {
 	const above = rect.top > height + 12;
 	const left = Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
 	return (() => {
-		const _el$ = (0, import_web$108.getNextElement)(_tmpl$$11), _el$2 = _el$.firstChild, _el$3 = _el$2.nextSibling, _el$4 = _el$3.firstChild, _el$6 = _el$4.nextSibling, [_el$7, _co$] = (0, import_web$110.getNextMarker)(_el$6.nextSibling), _el$5 = _el$7.nextSibling, _el$8 = _el$3.nextSibling;
+		const _el$ = (0, import_web$109.getNextElement)(_tmpl$$11), _el$2 = _el$.firstChild, _el$3 = _el$2.nextSibling, _el$4 = _el$3.firstChild, _el$6 = _el$4.nextSibling, [_el$7, _co$] = (0, import_web$111.getNextMarker)(_el$6.nextSibling), _el$5 = _el$7.nextSibling, _el$8 = _el$3.nextSibling;
 		_el$.$$click = (e) => e.stopPropagation();
-		(0, import_web$111.insert)(_el$2, (() => {
-			const _c$ = (0, import_web$112.memo)(() => !!props.emoji.id);
+		(0, import_web$112.insert)(_el$2, (() => {
+			const _c$ = (0, import_web$113.memo)(() => !!props.emoji.id);
 			return () => _c$() ? (() => {
-				const _el$9 = (0, import_web$108.getNextElement)(_tmpl$2$9);
-				(0, import_web$105.setAttribute)(_el$9, "draggable", false);
-				(0, import_web$107.effect)((_p$) => {
+				const _el$9 = (0, import_web$109.getNextElement)(_tmpl$2$9);
+				(0, import_web$106.setAttribute)(_el$9, "draggable", false);
+				(0, import_web$108.effect)((_p$) => {
 					const _v$ = `https://cdn.discordapp.com/emojis/${props.emoji.id}.${props.emoji.animated ? "gif" : "webp"}?size=128`, _v$2 = props.emoji.name ?? "";
-					_v$ !== _p$._v$ && (0, import_web$105.setAttribute)(_el$9, "src", _p$._v$ = _v$);
-					_v$2 !== _p$._v$2 && (0, import_web$105.setAttribute)(_el$9, "alt", _p$._v$2 = _v$2);
+					_v$ !== _p$._v$ && (0, import_web$106.setAttribute)(_el$9, "src", _p$._v$ = _v$);
+					_v$2 !== _p$._v$2 && (0, import_web$106.setAttribute)(_el$9, "alt", _p$._v$2 = _v$2);
 					return _p$;
 				}, {
 					_v$: undefined,
@@ -1366,19 +1387,19 @@ function Preview(props) {
 				});
 				return _el$9;
 			})() : (() => {
-				const _el$0 = (0, import_web$108.getNextElement)(_tmpl$3$7);
-				(0, import_web$111.insert)(_el$0, () => props.emoji.char);
+				const _el$0 = (0, import_web$109.getNextElement)(_tmpl$3$7);
+				(0, import_web$112.insert)(_el$0, () => props.emoji.char);
 				return _el$0;
 			})();
 		})());
-		(0, import_web$111.insert)(_el$3, () => props.emoji.name ?? "emoji", _el$7, _co$);
-		(0, import_web$111.insert)(_el$8, () => sourceOf(props.emoji));
-		(0, import_web$107.effect)((_$p) => (0, import_web$106.style)(_el$, {
+		(0, import_web$112.insert)(_el$3, () => props.emoji.name ?? "emoji", _el$7, _co$);
+		(0, import_web$112.insert)(_el$8, () => sourceOf(props.emoji));
+		(0, import_web$108.effect)((_$p) => (0, import_web$107.style)(_el$, {
 			left: `${left}px`,
 			width: `${width}px`,
 			...above ? { bottom: `${window.innerHeight - rect.top + 10}px` } : { top: `${rect.bottom + 10}px` }
 		}, _$p));
-		(0, import_web$109.runHydrationEvents)();
+		(0, import_web$110.runHydrationEvents)();
 		return _el$;
 	})();
 }
@@ -1395,7 +1416,7 @@ function showEmojiPreview(emoji, anchor) {
 	container.className = "ftags-preview-host";
 	root.appendChild(container);
 	const rect = anchor.getBoundingClientRect();
-	const unrender = render(() => (0, import_web$104.createComponent)(Preview, {
+	const unrender = render(() => (0, import_web$105.createComponent)(Preview, {
 		emoji,
 		rect
 	}), container);
@@ -1417,7 +1438,7 @@ function showEmojiPreview(emoji, anchor) {
 		container.remove();
 	};
 }
-(0, import_web$103.delegateEvents)(["click"]);
+(0, import_web$104.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/emoji.js
@@ -1805,7 +1826,6 @@ const applyEmoji = (text, emoji) => String(text ?? "").replace(/:([a-zA-Z0-9_+-]
 
 //#endregion
 //#region plugins/friend-tags/ui/RichText.jsx
-var import_web$92 = __toESM(require_web(), 1);
 var import_web$93 = __toESM(require_web(), 1);
 var import_web$94 = __toESM(require_web(), 1);
 var import_web$95 = __toESM(require_web(), 1);
@@ -1815,7 +1835,8 @@ var import_web$98 = __toESM(require_web(), 1);
 var import_web$99 = __toESM(require_web(), 1);
 var import_web$100 = __toESM(require_web(), 1);
 var import_web$101 = __toESM(require_web(), 1);
-const _tmpl$$10 = /*#__PURE__*/ (0, import_web$92.template)(`<span class="ftags-emoji-char"></span>`, 2), _tmpl$2$8 = /*#__PURE__*/ (0, import_web$92.template)(`<img class="ftags-emoji">`, 1), _tmpl$3$6 = /*#__PURE__*/ (0, import_web$92.template)(`<b></b>`, 2), _tmpl$4$5 = /*#__PURE__*/ (0, import_web$92.template)(`<i></i>`, 2), _tmpl$5$4 = /*#__PURE__*/ (0, import_web$92.template)(`<u></u>`, 2), _tmpl$6$3 = /*#__PURE__*/ (0, import_web$92.template)(`<s></s>`, 2), _tmpl$7$3 = /*#__PURE__*/ (0, import_web$92.template)(`<b><i></i></b>`, 4), _tmpl$8$3 = /*#__PURE__*/ (0, import_web$92.template)(`<code class="ftags-code"></code>`, 2);
+var import_web$102 = __toESM(require_web(), 1);
+const _tmpl$$10 = /*#__PURE__*/ (0, import_web$93.template)(`<span class="ftags-emoji-char"></span>`, 2), _tmpl$2$8 = /*#__PURE__*/ (0, import_web$93.template)(`<img class="ftags-emoji">`, 1), _tmpl$3$6 = /*#__PURE__*/ (0, import_web$93.template)(`<b></b>`, 2), _tmpl$4$5 = /*#__PURE__*/ (0, import_web$93.template)(`<i></i>`, 2), _tmpl$5$4 = /*#__PURE__*/ (0, import_web$93.template)(`<u></u>`, 2), _tmpl$6$3 = /*#__PURE__*/ (0, import_web$93.template)(`<s></s>`, 2), _tmpl$7$3 = /*#__PURE__*/ (0, import_web$93.template)(`<b><i></i></b>`, 4), _tmpl$8$3 = /*#__PURE__*/ (0, import_web$93.template)(`<code class="ftags-code"></code>`, 2);
 const { flux: { storesFlat }, solid: { For: For$5, createMemo: createMemo$6 } } = shelter;
 const EMOJI_CDN = "https://cdn.discordapp.com/emojis";
 /**
@@ -1972,37 +1993,37 @@ const previewOnClick = (emoji) => (e) => {
 };
 function Node(props) {
 	const node = () => props.node;
-	return (0, import_web$101.memo)((() => {
-		const _c$ = (0, import_web$101.memo)(() => typeof node() === "string");
+	return (0, import_web$102.memo)((() => {
+		const _c$ = (0, import_web$102.memo)(() => typeof node() === "string");
 		return () => _c$() ? node() : (() => {
-			const _c$2 = (0, import_web$101.memo)(() => !!node().text);
+			const _c$2 = (0, import_web$102.memo)(() => !!node().text);
 			return () => _c$2() ? (() => {
-				const _el$ = (0, import_web$97.getNextElement)(_tmpl$$10);
-				(0, import_web$100.addEventListener)(_el$, "click", previewOnClick({
+				const _el$ = (0, import_web$98.getNextElement)(_tmpl$$10);
+				(0, import_web$101.addEventListener)(_el$, "click", previewOnClick({
 					char: node().text,
 					name: node().name
 				}), true);
-				(0, import_web$99.insert)(_el$, () => node().text);
-				(0, import_web$98.runHydrationEvents)();
+				(0, import_web$100.insert)(_el$, () => node().text);
+				(0, import_web$99.runHydrationEvents)();
 				return _el$;
 			})() : (() => {
-				const _c$3 = (0, import_web$101.memo)(() => !!node().id);
+				const _c$3 = (0, import_web$102.memo)(() => !!node().id);
 				return () => _c$3() ? (() => {
-					const _el$2 = (0, import_web$97.getNextElement)(_tmpl$2$8);
-					(0, import_web$100.addEventListener)(_el$2, "click", previewOnClick(node()), true);
-					(0, import_web$96.setAttribute)(_el$2, "draggable", false);
-					(0, import_web$95.effect)((_p$) => {
+					const _el$2 = (0, import_web$98.getNextElement)(_tmpl$2$8);
+					(0, import_web$101.addEventListener)(_el$2, "click", previewOnClick(node()), true);
+					(0, import_web$97.setAttribute)(_el$2, "draggable", false);
+					(0, import_web$96.effect)((_p$) => {
 						const _v$ = `${EMOJI_CDN}/${node().id}.${node().animated ? "gif" : "webp"}?size=44`, _v$2 = `:${node().name}:`;
-						_v$ !== _p$._v$ && (0, import_web$96.setAttribute)(_el$2, "src", _p$._v$ = _v$);
-						_v$2 !== _p$._v$2 && (0, import_web$96.setAttribute)(_el$2, "alt", _p$._v$2 = _v$2);
+						_v$ !== _p$._v$ && (0, import_web$97.setAttribute)(_el$2, "src", _p$._v$ = _v$);
+						_v$2 !== _p$._v$2 && (0, import_web$97.setAttribute)(_el$2, "alt", _p$._v$2 = _v$2);
 						return _p$;
 					}, {
 						_v$: undefined,
 						_v$2: undefined
 					});
-					(0, import_web$98.runHydrationEvents)();
+					(0, import_web$99.runHydrationEvents)();
 					return _el$2;
-				})() : (0, import_web$94.createComponent)(Marked, { get node() {
+				})() : (0, import_web$95.createComponent)(Marked, { get node() {
 					return node();
 				} });
 			})();
@@ -2010,44 +2031,44 @@ function Node(props) {
 	})());
 }
 function Marked(props) {
-	const children = () => (0, import_web$94.createComponent)(For$5, {
+	const children = () => (0, import_web$95.createComponent)(For$5, {
 		get each() {
 			return props.node.children;
 		},
-		children: (child) => (0, import_web$94.createComponent)(Node, { node: child })
+		children: (child) => (0, import_web$95.createComponent)(Node, { node: child })
 	});
 	switch (props.node.tag) {
 		case "b": return (() => {
-			const _el$3 = (0, import_web$97.getNextElement)(_tmpl$3$6);
-			(0, import_web$99.insert)(_el$3, children);
+			const _el$3 = (0, import_web$98.getNextElement)(_tmpl$3$6);
+			(0, import_web$100.insert)(_el$3, children);
 			return _el$3;
 		})();
 		case "i": return (() => {
-			const _el$4 = (0, import_web$97.getNextElement)(_tmpl$4$5);
-			(0, import_web$99.insert)(_el$4, children);
+			const _el$4 = (0, import_web$98.getNextElement)(_tmpl$4$5);
+			(0, import_web$100.insert)(_el$4, children);
 			return _el$4;
 		})();
 		case "u": return (() => {
-			const _el$5 = (0, import_web$97.getNextElement)(_tmpl$5$4);
-			(0, import_web$99.insert)(_el$5, children);
+			const _el$5 = (0, import_web$98.getNextElement)(_tmpl$5$4);
+			(0, import_web$100.insert)(_el$5, children);
 			return _el$5;
 		})();
 		case "s": return (() => {
-			const _el$6 = (0, import_web$97.getNextElement)(_tmpl$6$3);
-			(0, import_web$99.insert)(_el$6, children);
+			const _el$6 = (0, import_web$98.getNextElement)(_tmpl$6$3);
+			(0, import_web$100.insert)(_el$6, children);
 			return _el$6;
 		})();
 		case "bi": return (() => {
-			const _el$7 = (0, import_web$97.getNextElement)(_tmpl$7$3), _el$8 = _el$7.firstChild;
-			(0, import_web$99.insert)(_el$8, children);
+			const _el$7 = (0, import_web$98.getNextElement)(_tmpl$7$3), _el$8 = _el$7.firstChild;
+			(0, import_web$100.insert)(_el$8, children);
 			return _el$7;
 		})();
 		case "code": return (() => {
-			const _el$9 = (0, import_web$97.getNextElement)(_tmpl$8$3);
-			(0, import_web$99.insert)(_el$9, children);
+			const _el$9 = (0, import_web$98.getNextElement)(_tmpl$8$3);
+			(0, import_web$100.insert)(_el$9, children);
 			return _el$9;
 		})();
-		default: return (0, import_web$101.memo)(children);
+		default: return (0, import_web$102.memo)(children);
 	}
 }
 const CUSTOM_EMOJI_ALL = /<(a?):(\w+):(\d+)>/g;
@@ -2068,18 +2089,17 @@ function parseCached(text) {
 }
 function RichText(props) {
 	const nodes = createMemo$6(() => parseCached(String(props.text ?? "")));
-	return (0, import_web$94.createComponent)(For$5, {
+	return (0, import_web$95.createComponent)(For$5, {
 		get each() {
 			return nodes();
 		},
-		children: (node) => (0, import_web$94.createComponent)(Node, { node })
+		children: (node) => (0, import_web$95.createComponent)(Node, { node })
 	});
 }
-(0, import_web$93.delegateEvents)(["click"]);
+(0, import_web$94.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/Chip.jsx
-var import_web$81 = __toESM(require_web(), 1);
 var import_web$82 = __toESM(require_web(), 1);
 var import_web$83 = __toESM(require_web(), 1);
 var import_web$84 = __toESM(require_web(), 1);
@@ -2090,37 +2110,37 @@ var import_web$88 = __toESM(require_web(), 1);
 var import_web$89 = __toESM(require_web(), 1);
 var import_web$90 = __toESM(require_web(), 1);
 var import_web$91 = __toESM(require_web(), 1);
-const _tmpl$$9 = /*#__PURE__*/ (0, import_web$81.template)(`<span><span class="ftags-chip-text"></span></span>`, 4);
+var import_web$92 = __toESM(require_web(), 1);
+const _tmpl$$9 = /*#__PURE__*/ (0, import_web$82.template)(`<span><span class="ftags-chip-text"></span></span>`, 4);
 const { solid: { createMemo: createMemo$5 } } = shelter;
 function Chip(props) {
 	const config = createMemo$5(() => props.style ?? styleOf(props.tag));
 	const css = createMemo$5(() => styleToCss(config(), { animate: props.animate ?? display.animate() }));
 	return (() => {
-		const _el$ = (0, import_web$87.getNextElement)(_tmpl$$9), _el$2 = _el$.firstChild;
-		(0, import_web$91.addEventListener)(_el$, "click", props.onClick, true);
-		(0, import_web$89.insert)(_el$2, (0, import_web$90.createComponent)(RichText, { get text() {
+		const _el$ = (0, import_web$88.getNextElement)(_tmpl$$9), _el$2 = _el$.firstChild;
+		(0, import_web$92.addEventListener)(_el$, "click", props.onClick, true);
+		(0, import_web$90.insert)(_el$2, (0, import_web$91.createComponent)(RichText, { get text() {
 			return props.tag;
 		} }));
-		(0, import_web$86.effect)((_p$) => {
+		(0, import_web$87.effect)((_p$) => {
 			const _v$ = `ftags-chip${display.uppercase() && !props.plain ? " ftags-chip--upper" : ""}${props.class ? ` ${props.class}` : ""}`, _v$2 = css(), _v$3 = props.title ?? plainText(props.tag);
-			_v$ !== _p$._v$ && (0, import_web$85.className)(_el$, _p$._v$ = _v$);
-			_p$._v$2 = (0, import_web$84.style)(_el$, _v$2, _p$._v$2);
-			_v$3 !== _p$._v$3 && (0, import_web$83.setAttribute)(_el$, "title", _p$._v$3 = _v$3);
+			_v$ !== _p$._v$ && (0, import_web$86.className)(_el$, _p$._v$ = _v$);
+			_p$._v$2 = (0, import_web$85.style)(_el$, _v$2, _p$._v$2);
+			_v$3 !== _p$._v$3 && (0, import_web$84.setAttribute)(_el$, "title", _p$._v$3 = _v$3);
 			return _p$;
 		}, {
 			_v$: undefined,
 			_v$2: undefined,
 			_v$3: undefined
 		});
-		(0, import_web$88.runHydrationEvents)();
+		(0, import_web$89.runHydrationEvents)();
 		return _el$;
 	})();
 }
-(0, import_web$82.delegateEvents)(["click"]);
+(0, import_web$83.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/EmojiAutocomplete.jsx
-var import_web$70 = __toESM(require_web(), 1);
 var import_web$71 = __toESM(require_web(), 1);
 var import_web$72 = __toESM(require_web(), 1);
 var import_web$73 = __toESM(require_web(), 1);
@@ -2131,7 +2151,8 @@ var import_web$77 = __toESM(require_web(), 1);
 var import_web$78 = __toESM(require_web(), 1);
 var import_web$79 = __toESM(require_web(), 1);
 var import_web$80 = __toESM(require_web(), 1);
-const _tmpl$$8 = /*#__PURE__*/ (0, import_web$70.template)(`<div class="ftags-ac"><div class="ftags-ac-header">Emoji matching <strong>:<!#><!/></strong></div><div class="ftags-ac-list"></div></div>`, 10), _tmpl$2$7 = /*#__PURE__*/ (0, import_web$70.template)(`<img>`, 1), _tmpl$3$5 = /*#__PURE__*/ (0, import_web$70.template)(`<span class="ftags-ac-badge">server</span>`, 2), _tmpl$4$4 = /*#__PURE__*/ (0, import_web$70.template)(`<div><span class="ftags-ac-emoji"></span><span class="ftags-ac-name">:<!#><!/>:</span><!#><!/></div>`, 10), _tmpl$5$3 = /*#__PURE__*/ (0, import_web$70.template)(`<span class="ftags-ac-char"></span>`, 2);
+var import_web$81 = __toESM(require_web(), 1);
+const _tmpl$$8 = /*#__PURE__*/ (0, import_web$71.template)(`<div class="ftags-ac"><div class="ftags-ac-header">Emoji matching <strong>:<!#><!/></strong></div><div class="ftags-ac-list"></div></div>`, 10), _tmpl$2$7 = /*#__PURE__*/ (0, import_web$71.template)(`<img>`, 1), _tmpl$3$5 = /*#__PURE__*/ (0, import_web$71.template)(`<span class="ftags-ac-badge">server</span>`, 2), _tmpl$4$4 = /*#__PURE__*/ (0, import_web$71.template)(`<div><span class="ftags-ac-emoji"></span><span class="ftags-ac-name">:<!#><!/>:</span><!#><!/></div>`, 10), _tmpl$5$3 = /*#__PURE__*/ (0, import_web$71.template)(`<span class="ftags-ac-char"></span>`, 2);
 const { solid: { For: For$4, Show: Show$5, createEffect: createEffect$1, createMemo: createMemo$4, createSignal: createSignal$6, onCleanup: onCleanup$1 }, solidWeb: { Portal }, ui: { getRoot } } = shelter;
 function createEmojiAutocomplete(value, setValue) {
 	const [selected, setSelected] = createSignal$6(0);
@@ -2264,47 +2285,47 @@ function EmojiAutocomplete(props) {
 			...above ? { bottom: `${window.innerHeight - r.top + 8}px` } : { top: `${r.bottom + 8}px` }
 		};
 	});
-	return (0, import_web$78.createComponent)(Show$5, {
+	return (0, import_web$79.createComponent)(Show$5, {
 		get when() {
 			return c().open();
 		},
 		get children() {
-			return (0, import_web$78.createComponent)(Portal, {
+			return (0, import_web$79.createComponent)(Portal, {
 				get mount() {
 					return c().mount();
 				},
 				get children() {
-					const _el$ = (0, import_web$77.getNextElement)(_tmpl$$8), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$5.nextSibling, [_el$7, _co$] = (0, import_web$79.getNextMarker)(_el$6.nextSibling), _el$8 = _el$2.nextSibling;
-					(0, import_web$80.insert)(_el$4, () => c().query(), _el$7, _co$);
-					(0, import_web$80.insert)(_el$8, (0, import_web$78.createComponent)(For$4, {
+					const _el$ = (0, import_web$78.getNextElement)(_tmpl$$8), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$5.nextSibling, [_el$7, _co$] = (0, import_web$80.getNextMarker)(_el$6.nextSibling), _el$8 = _el$2.nextSibling;
+					(0, import_web$81.insert)(_el$4, () => c().query(), _el$7, _co$);
+					(0, import_web$81.insert)(_el$8, (0, import_web$79.createComponent)(For$4, {
 						get each() {
 							return c().results();
 						},
 						children: (emoji, i) => (() => {
-							const _el$9 = (0, import_web$77.getNextElement)(_tmpl$4$4), _el$0 = _el$9.firstChild, _el$10 = _el$0.nextSibling, _el$11 = _el$10.firstChild, _el$13 = _el$11.nextSibling, [_el$14, _co$2] = (0, import_web$79.getNextMarker)(_el$13.nextSibling), _el$12 = _el$14.nextSibling, _el$16 = _el$10.nextSibling, [_el$17, _co$3] = (0, import_web$79.getNextMarker)(_el$16.nextSibling);
+							const _el$9 = (0, import_web$78.getNextElement)(_tmpl$4$4), _el$0 = _el$9.firstChild, _el$10 = _el$0.nextSibling, _el$11 = _el$10.firstChild, _el$13 = _el$11.nextSibling, [_el$14, _co$2] = (0, import_web$80.getNextMarker)(_el$13.nextSibling), _el$12 = _el$14.nextSibling, _el$16 = _el$10.nextSibling, [_el$17, _co$3] = (0, import_web$80.getNextMarker)(_el$16.nextSibling);
 							_el$9.$$mousedown = (e) => {
 								e.preventDefault();
 								c().pick(emoji);
 							};
 							_el$9.addEventListener("mouseenter", () => c().setSelected(i()));
-							(0, import_web$80.insert)(_el$0, (0, import_web$78.createComponent)(Show$5, {
+							(0, import_web$81.insert)(_el$0, (0, import_web$79.createComponent)(Show$5, {
 								get when() {
 									return emoji.id;
 								},
 								get fallback() {
 									return (() => {
-										const _el$18 = (0, import_web$77.getNextElement)(_tmpl$5$3);
-										(0, import_web$80.insert)(_el$18, () => emoji.char);
+										const _el$18 = (0, import_web$78.getNextElement)(_tmpl$5$3);
+										(0, import_web$81.insert)(_el$18, () => emoji.char);
 										return _el$18;
 									})();
 								},
 								get children() {
-									const _el$1 = (0, import_web$77.getNextElement)(_tmpl$2$7);
-									(0, import_web$74.setAttribute)(_el$1, "draggable", false);
-									(0, import_web$76.effect)((_p$) => {
+									const _el$1 = (0, import_web$78.getNextElement)(_tmpl$2$7);
+									(0, import_web$75.setAttribute)(_el$1, "draggable", false);
+									(0, import_web$77.effect)((_p$) => {
 										const _v$ = `https://cdn.discordapp.com/emojis/${emoji.id}.${emoji.animated ? "gif" : "webp"}?size=44`, _v$2 = emoji.key;
-										_v$ !== _p$._v$ && (0, import_web$74.setAttribute)(_el$1, "src", _p$._v$ = _v$);
-										_v$2 !== _p$._v$2 && (0, import_web$74.setAttribute)(_el$1, "alt", _p$._v$2 = _v$2);
+										_v$ !== _p$._v$ && (0, import_web$75.setAttribute)(_el$1, "src", _p$._v$ = _v$);
+										_v$2 !== _p$._v$2 && (0, import_web$75.setAttribute)(_el$1, "alt", _p$._v$2 = _v$2);
 										return _p$;
 									}, {
 										_v$: undefined,
@@ -2313,32 +2334,31 @@ function EmojiAutocomplete(props) {
 									return _el$1;
 								}
 							}));
-							(0, import_web$80.insert)(_el$10, () => emoji.key, _el$14, _co$2);
-							(0, import_web$80.insert)(_el$9, (0, import_web$78.createComponent)(Show$5, {
+							(0, import_web$81.insert)(_el$10, () => emoji.key, _el$14, _co$2);
+							(0, import_web$81.insert)(_el$9, (0, import_web$79.createComponent)(Show$5, {
 								get when() {
 									return emoji.id;
 								},
 								get children() {
-									return (0, import_web$77.getNextElement)(_tmpl$3$5);
+									return (0, import_web$78.getNextElement)(_tmpl$3$5);
 								}
 							}), _el$17, _co$3);
-							(0, import_web$76.effect)(() => (0, import_web$72.className)(_el$9, `ftags-ac-row${i() === c().selected() ? " ftags-ac-row--on" : ""}`));
-							(0, import_web$73.runHydrationEvents)();
+							(0, import_web$77.effect)(() => (0, import_web$73.className)(_el$9, `ftags-ac-row${i() === c().selected() ? " ftags-ac-row--on" : ""}`));
+							(0, import_web$74.runHydrationEvents)();
 							return _el$9;
 						})()
 					}));
-					(0, import_web$76.effect)((_$p) => (0, import_web$75.style)(_el$, position(), _$p));
+					(0, import_web$77.effect)((_$p) => (0, import_web$76.style)(_el$, position(), _$p));
 					return _el$;
 				}
 			});
 		}
 	});
 }
-(0, import_web$71.delegateEvents)(["mousedown"]);
+(0, import_web$72.delegateEvents)(["mousedown"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/ColorPicker.jsx
-var import_web$60 = __toESM(require_web(), 1);
 var import_web$61 = __toESM(require_web(), 1);
 var import_web$62 = __toESM(require_web(), 1);
 var import_web$63 = __toESM(require_web(), 1);
@@ -2348,7 +2368,8 @@ var import_web$66 = __toESM(require_web(), 1);
 var import_web$67 = __toESM(require_web(), 1);
 var import_web$68 = __toESM(require_web(), 1);
 var import_web$69 = __toESM(require_web(), 1);
-const _tmpl$$7 = /*#__PURE__*/ (0, import_web$60.template)(`<div class="ftags-picker"><div class="ftags-picker-sv"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-hue"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-row"><span class="ftags-picker-preview"></span><!#><!/></div></div>`, 16);
+var import_web$70 = __toESM(require_web(), 1);
+const _tmpl$$7 = /*#__PURE__*/ (0, import_web$61.template)(`<div class="ftags-picker"><div class="ftags-picker-sv"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-hue"><div class="ftags-picker-thumb"></div></div><div class="ftags-picker-row"><span class="ftags-picker-preview"></span><!#><!/></div></div>`, 16);
 const { ui: { TextBox: TextBox$3 }, solid: { createEffect, createSignal: createSignal$5, onCleanup } } = shelter;
 function normaliseHex(input) {
 	const raw = String(input ?? "").trim().replace(/^#/, "");
@@ -2494,11 +2515,11 @@ function ColorPicker(props) {
 		} else setText(props.value ?? "");
 	};
 	return (() => {
-		const _el$ = (0, import_web$63.getNextElement)(_tmpl$$7), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$4.nextSibling, _el$7 = _el$6.firstChild, _el$8 = _el$7.nextSibling, [_el$9, _co$] = (0, import_web$65.getNextMarker)(_el$8.nextSibling);
-		(0, import_web$69.addEventListener)(_el$2, "pointerdown", onSquare, true);
-		(0, import_web$69.addEventListener)(_el$4, "pointerdown", onHue, true);
+		const _el$ = (0, import_web$64.getNextElement)(_tmpl$$7), _el$2 = _el$.firstChild, _el$3 = _el$2.firstChild, _el$4 = _el$2.nextSibling, _el$5 = _el$4.firstChild, _el$6 = _el$4.nextSibling, _el$7 = _el$6.firstChild, _el$8 = _el$7.nextSibling, [_el$9, _co$] = (0, import_web$66.getNextMarker)(_el$8.nextSibling);
+		(0, import_web$70.addEventListener)(_el$2, "pointerdown", onSquare, true);
+		(0, import_web$70.addEventListener)(_el$4, "pointerdown", onHue, true);
 		_el$5.style.setProperty("top", "50%");
-		(0, import_web$66.insert)(_el$6, (0, import_web$67.createComponent)(TextBox$3, {
+		(0, import_web$67.insert)(_el$6, (0, import_web$68.createComponent)(TextBox$3, {
 			get value() {
 				return text();
 			},
@@ -2510,7 +2531,7 @@ function ColorPicker(props) {
 				return props.label ?? "Hex colour";
 			}
 		}), _el$9, _co$);
-		(0, import_web$62.effect)((_p$) => {
+		(0, import_web$63.effect)((_p$) => {
 			const _v$ = hsvToHex({
 				h: hsv().h,
 				s: 1,
@@ -2529,44 +2550,44 @@ function ColorPicker(props) {
 			_v$4: undefined,
 			_v$5: undefined
 		});
-		(0, import_web$64.runHydrationEvents)();
+		(0, import_web$65.runHydrationEvents)();
 		return _el$;
 	})();
 }
-(0, import_web$61.delegateEvents)(["pointerdown"]);
+(0, import_web$62.delegateEvents)(["pointerdown"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/openColorPicker.jsx
-var import_web$56 = __toESM(require_web(), 1);
 var import_web$57 = __toESM(require_web(), 1);
 var import_web$58 = __toESM(require_web(), 1);
 var import_web$59 = __toESM(require_web(), 1);
-const _tmpl$$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div class="ftags-picker-slot"></div>`, 2), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$56.template)(`<div style="display: flex; justify-content: flex-end; width: 100%"></div>`, 2);
+var import_web$60 = __toESM(require_web(), 1);
+const _tmpl$$6 = /*#__PURE__*/ (0, import_web$57.template)(`<div class="ftags-picker-slot"></div>`, 2), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$57.template)(`<div style="display: flex; justify-content: flex-end; width: 100%"></div>`, 2);
 const { ui: { Button: Button$4, ModalBody: ModalBody$4, ModalFooter: ModalFooter$4, ModalHeader: ModalHeader$4, ModalRoot: ModalRoot$4, ModalSizes: ModalSizes$4, openModal: openModal$3 }, solid: { Show: Show$4, createSignal: createSignal$4, onMount } } = shelter;
 function openColorPicker({ label: label$1, value, onChange }) {
 	return openModal$3((props) => {
 		const [ready, setReady] = createSignal$4(false);
 		onMount(() => setTimeout(() => setReady(true), 300));
-		return (0, import_web$59.createComponent)(ModalRoot$4, {
+		return (0, import_web$60.createComponent)(ModalRoot$4, {
 			get size() {
 				return ModalSizes$4.SMALL;
 			},
 			get children() {
 				return [
-					(0, import_web$59.createComponent)(ModalHeader$4, {
+					(0, import_web$60.createComponent)(ModalHeader$4, {
 						get close() {
 							return props.close;
 						},
 						children: label$1
 					}),
-					(0, import_web$59.createComponent)(ModalBody$4, { get children() {
-						const _el$ = (0, import_web$57.getNextElement)(_tmpl$$6);
-						(0, import_web$58.insert)(_el$, (0, import_web$59.createComponent)(Show$4, {
+					(0, import_web$60.createComponent)(ModalBody$4, { get children() {
+						const _el$ = (0, import_web$58.getNextElement)(_tmpl$$6);
+						(0, import_web$59.insert)(_el$, (0, import_web$60.createComponent)(Show$4, {
 							get when() {
 								return ready();
 							},
 							get children() {
-								return (0, import_web$59.createComponent)(ColorPicker, {
+								return (0, import_web$60.createComponent)(ColorPicker, {
 									label: label$1,
 									get value() {
 										return value();
@@ -2577,9 +2598,9 @@ function openColorPicker({ label: label$1, value, onChange }) {
 						}));
 						return _el$;
 					} }),
-					(0, import_web$59.createComponent)(ModalFooter$4, { get children() {
-						const _el$2 = (0, import_web$57.getNextElement)(_tmpl$2$6);
-						(0, import_web$58.insert)(_el$2, (0, import_web$59.createComponent)(Button$4, {
+					(0, import_web$60.createComponent)(ModalFooter$4, { get children() {
+						const _el$2 = (0, import_web$58.getNextElement)(_tmpl$2$6);
+						(0, import_web$59.insert)(_el$2, (0, import_web$60.createComponent)(Button$4, {
 							get onClick() {
 								return props.close;
 							},
@@ -2595,7 +2616,6 @@ function openColorPicker({ label: label$1, value, onChange }) {
 
 //#endregion
 //#region plugins/friend-tags/ui/TagStyler.jsx
-var import_web$43 = __toESM(require_web(), 1);
 var import_web$44 = __toESM(require_web(), 1);
 var import_web$45 = __toESM(require_web(), 1);
 var import_web$46 = __toESM(require_web(), 1);
@@ -2608,7 +2628,8 @@ var import_web$52 = __toESM(require_web(), 1);
 var import_web$53 = __toESM(require_web(), 1);
 var import_web$54 = __toESM(require_web(), 1);
 var import_web$55 = __toESM(require_web(), 1);
-const _tmpl$$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div></div>`, 2), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-preview"><!#><!/><!#><!/></div>`, 6), _tmpl$3$4 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; margin-bottom: 10px"><!#><!/><!#><!/></div>`, 6), _tmpl$5$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span></span><!#><!/></div>`, 6), _tmpl$6$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Stops</span><div class="ftags-stops"><!#><!/><!#><!/><!#><!/></div></div>`, 12), _tmpl$7$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Angle — <!#><!/>°</span><!#><!/></div>`, 8), _tmpl$8$2 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Presets</span><div class="ftags-suggestions"></div></div>`, 6), _tmpl$9$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div style="display: flex; gap: 8px; margin-bottom: 8px"><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$0$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Font</span><div class="ftags-font-grid"></div><!#><!/></div>`, 8), _tmpl$1 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Weight — <!#><!/></span><!#><!/></div>`, 8), _tmpl$10 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Colour speed — <!#><!/>×</span>`, 4), _tmpl$11 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Colour</span><div class="ftags-anim-grid"></div><!#><!/><!#><!/></div>`, 10), _tmpl$12 = /*#__PURE__*/ (0, import_web$43.template)(`<span>Movement speed — <!#><!/>×</span>`, 4), _tmpl$13 = /*#__PURE__*/ (0, import_web$43.template)(`<div class="ftags-field"><span>Movement</span><div class="ftags-anim-grid"></div><!#><!/></div>`, 8), _tmpl$14 = /*#__PURE__*/ (0, import_web$43.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$15 = /*#__PURE__*/ (0, import_web$43.template)(`<button></button>`, 2);
+var import_web$56 = __toESM(require_web(), 1);
+const _tmpl$$5 = /*#__PURE__*/ (0, import_web$44.template)(`<div></div>`, 2), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-preview"><!#><!/><!#><!/></div>`, 6), _tmpl$3$4 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$44.template)(`<div style="display: flex; gap: 8px; margin-bottom: 10px"><!#><!/><!#><!/></div>`, 6), _tmpl$5$2 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span></span><!#><!/></div>`, 6), _tmpl$6$2 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Stops</span><div class="ftags-stops"><!#><!/><!#><!/><!#><!/></div></div>`, 12), _tmpl$7$2 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Angle — <!#><!/>°</span><!#><!/></div>`, 8), _tmpl$8$2 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Presets</span><div class="ftags-suggestions"></div></div>`, 6), _tmpl$9$1 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Colour</span><div style="display: flex; gap: 8px; margin-bottom: 8px"><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$0$1 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Font</span><div class="ftags-font-grid"></div><!#><!/></div>`, 8), _tmpl$1 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Weight — <!#><!/></span><!#><!/></div>`, 8), _tmpl$10 = /*#__PURE__*/ (0, import_web$44.template)(`<span>Colour speed — <!#><!/>×</span>`, 4), _tmpl$11 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Colour</span><div class="ftags-anim-grid"></div><!#><!/><!#><!/></div>`, 10), _tmpl$12 = /*#__PURE__*/ (0, import_web$44.template)(`<span>Movement speed — <!#><!/>×</span>`, 4), _tmpl$13 = /*#__PURE__*/ (0, import_web$44.template)(`<div class="ftags-field"><span>Movement</span><div class="ftags-anim-grid"></div><!#><!/></div>`, 8), _tmpl$14 = /*#__PURE__*/ (0, import_web$44.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$15 = /*#__PURE__*/ (0, import_web$44.template)(`<button></button>`, 2);
 const { ui: { Button: Button$3, ButtonColors: ButtonColors$3, ButtonLooks: ButtonLooks$3, ButtonSizes: ButtonSizes$2, Divider: Divider$2, Header: Header$3, HeaderTags: HeaderTags$3, ModalBody: ModalBody$3, ModalFooter: ModalFooter$3, ModalHeader: ModalHeader$3, ModalRoot: ModalRoot$3, ModalSizes: ModalSizes$3, Slider: Slider$1, SwitchItem: SwitchItem$1, Text: Text$3, TextBox: TextBox$2 }, solid: { For: For$3, Show: Show$3, createSignal: createSignal$3 } } = shelter;
 const label = {
 	color: "var(--header-secondary)",
@@ -2635,9 +2656,9 @@ function StepSlider(props) {
 	const steps = () => Math.max(1, Math.round((props.max - props.min) / props.step));
 	const index = () => Math.round((props.value - props.min) / props.step);
 	return (() => {
-		const _el$ = (0, import_web$53.getNextElement)(_tmpl$$5);
+		const _el$ = (0, import_web$54.getNextElement)(_tmpl$$5);
 		_el$.style.setProperty("width", "100%");
-		(0, import_web$54.insert)(_el$, (0, import_web$55.createComponent)(Slider$1, {
+		(0, import_web$55.insert)(_el$, (0, import_web$56.createComponent)(Slider$1, {
 			min: 0,
 			get max() {
 				return steps();
@@ -2675,29 +2696,29 @@ function TagStyler(props) {
 		setStyle(target, draft());
 		props.close();
 	};
-	return (0, import_web$55.createComponent)(ModalRoot$3, {
+	return (0, import_web$56.createComponent)(ModalRoot$3, {
 		get size() {
 			return ModalSizes$3.MEDIUM;
 		},
 		get children() {
 			return [
-				(0, import_web$55.createComponent)(ModalHeader$3, {
+				(0, import_web$56.createComponent)(ModalHeader$3, {
 					get close() {
 						return props.close;
 					},
 					get children() {
 						return [
 							"Style “",
-							(0, import_web$52.memo)(() => props.tag),
+							(0, import_web$53.memo)(() => props.tag),
 							"”"
 						];
 					}
 				}),
-				(0, import_web$55.createComponent)(ModalBody$3, { get children() {
+				(0, import_web$56.createComponent)(ModalBody$3, { get children() {
 					return [
 						(() => {
-							const _el$2 = (0, import_web$53.getNextElement)(_tmpl$2$5), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$51.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$51.getNextMarker)(_el$5.nextSibling);
-							(0, import_web$54.insert)(_el$2, (0, import_web$55.createComponent)(Chip, {
+							const _el$2 = (0, import_web$54.getNextElement)(_tmpl$2$5), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$52.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$52.getNextMarker)(_el$5.nextSibling);
+							(0, import_web$55.insert)(_el$2, (0, import_web$56.createComponent)(Chip, {
 								get tag() {
 									return normalise(name()) || props.tag;
 								},
@@ -2706,7 +2727,7 @@ function TagStyler(props) {
 								},
 								animate: true
 							}), _el$4, _co$);
-							(0, import_web$54.insert)(_el$2, (0, import_web$55.createComponent)(Chip, {
+							(0, import_web$55.insert)(_el$2, (0, import_web$56.createComponent)(Chip, {
 								get tag() {
 									return normalise(name()) || props.tag;
 								},
@@ -2718,17 +2739,17 @@ function TagStyler(props) {
 							}), _el$6, _co$2);
 							return _el$2;
 						})(),
-						(0, import_web$55.createComponent)(Header$3, {
+						(0, import_web$56.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Name"
 						}),
 						(() => {
-							const _el$7 = (0, import_web$53.getNextElement)(_tmpl$3$4), _el$8 = _el$7.firstChild, [_el$9, _co$3] = (0, import_web$51.getNextMarker)(_el$8.nextSibling), _el$0 = _el$9.nextSibling, [_el$1, _co$4] = (0, import_web$51.getNextMarker)(_el$0.nextSibling), _el$10 = _el$1.nextSibling, [_el$11, _co$5] = (0, import_web$51.getNextMarker)(_el$10.nextSibling);
+							const _el$7 = (0, import_web$54.getNextElement)(_tmpl$3$4), _el$8 = _el$7.firstChild, [_el$9, _co$3] = (0, import_web$52.getNextMarker)(_el$8.nextSibling), _el$0 = _el$9.nextSibling, [_el$1, _co$4] = (0, import_web$52.getNextMarker)(_el$0.nextSibling), _el$10 = _el$1.nextSibling, [_el$11, _co$5] = (0, import_web$52.getNextMarker)(_el$10.nextSibling);
 							const _ref$ = autocomplete.setAnchor;
-							typeof _ref$ === "function" ? (0, import_web$50.use)(_ref$, _el$7) : autocomplete.setAnchor = _el$7;
-							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(TextBox$2, {
+							typeof _ref$ === "function" ? (0, import_web$51.use)(_ref$, _el$7) : autocomplete.setAnchor = _el$7;
+							(0, import_web$55.insert)(_el$7, (0, import_web$56.createComponent)(TextBox$2, {
 								get value() {
 									return name();
 								},
@@ -2740,13 +2761,13 @@ function TagStyler(props) {
 									return autocomplete.keydown;
 								}
 							}), _el$9, _co$3);
-							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$1, _co$4);
-							(0, import_web$54.insert)(_el$7, (0, import_web$55.createComponent)(Show$3, {
+							(0, import_web$55.insert)(_el$7, (0, import_web$56.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$1, _co$4);
+							(0, import_web$55.insert)(_el$7, (0, import_web$56.createComponent)(Show$3, {
 								get when() {
 									return renamed();
 								},
 								get children() {
-									return (0, import_web$55.createComponent)(Text$3, {
+									return (0, import_web$56.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-muted)",
 											"font-size": "12px"
@@ -2757,19 +2778,19 @@ function TagStyler(props) {
 							}), _el$11, _co$5);
 							return _el$7;
 						})(),
-						(0, import_web$55.createComponent)(Divider$2, {
+						(0, import_web$56.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$55.createComponent)(Header$3, {
+						(0, import_web$56.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Fill"
 						}),
 						(() => {
-							const _el$12 = (0, import_web$53.getNextElement)(_tmpl$4$3), _el$13 = _el$12.firstChild, [_el$14, _co$6] = (0, import_web$51.getNextMarker)(_el$13.nextSibling), _el$15 = _el$14.nextSibling, [_el$16, _co$7] = (0, import_web$51.getNextMarker)(_el$15.nextSibling);
-							(0, import_web$54.insert)(_el$12, (0, import_web$55.createComponent)(Button$3, {
+							const _el$12 = (0, import_web$54.getNextElement)(_tmpl$4$3), _el$13 = _el$12.firstChild, [_el$14, _co$6] = (0, import_web$52.getNextMarker)(_el$13.nextSibling), _el$15 = _el$14.nextSibling, [_el$16, _co$7] = (0, import_web$52.getNextMarker)(_el$15.nextSibling);
+							(0, import_web$55.insert)(_el$12, (0, import_web$56.createComponent)(Button$3, {
 								grow: true,
 								get look() {
 									return draft().fill === "solid" ? ButtonLooks$3.FILLED : ButtonLooks$3.OUTLINED;
@@ -2777,7 +2798,7 @@ function TagStyler(props) {
 								onClick: () => patch({ fill: "solid" }),
 								children: "Solid"
 							}), _el$14, _co$6);
-							(0, import_web$54.insert)(_el$12, (0, import_web$55.createComponent)(Button$3, {
+							(0, import_web$55.insert)(_el$12, (0, import_web$56.createComponent)(Button$3, {
 								grow: true,
 								get look() {
 									return draft().fill === "gradient" ? ButtonLooks$3.FILLED : ButtonLooks$3.OUTLINED;
@@ -2788,12 +2809,12 @@ function TagStyler(props) {
 							return _el$12;
 						})(),
 						(() => {
-							const _el$17 = (0, import_web$53.getNextElement)(_tmpl$5$2), _el$18 = _el$17.firstChild, _el$19 = _el$18.nextSibling, [_el$20, _co$8] = (0, import_web$51.getNextMarker)(_el$19.nextSibling);
-							(0, import_web$54.insert)(_el$18, (() => {
-								const _c$ = (0, import_web$52.memo)(() => draft().fill === "gradient");
+							const _el$17 = (0, import_web$54.getNextElement)(_tmpl$5$2), _el$18 = _el$17.firstChild, _el$19 = _el$18.nextSibling, [_el$20, _co$8] = (0, import_web$52.getNextMarker)(_el$19.nextSibling);
+							(0, import_web$55.insert)(_el$18, (() => {
+								const _c$ = (0, import_web$53.memo)(() => draft().fill === "gradient");
 								return () => _c$() ? `Colour — stop ${activeStop() + 1}` : "Colour";
 							})());
-							(0, import_web$54.insert)(_el$17, (0, import_web$55.createComponent)(Button$3, {
+							(0, import_web$55.insert)(_el$17, (0, import_web$56.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.NONE;
 								},
@@ -2808,22 +2829,22 @@ function TagStyler(props) {
 									onChange: (colour) => draft().fill === "gradient" ? setStop(activeStop(), colour) : patch({ color: colour })
 								})
 							}), _el$20, _co$8);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$18, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$18, label, _$p));
 							return _el$17;
 						})(),
-						(0, import_web$55.createComponent)(Show$3, {
+						(0, import_web$56.createComponent)(Show$3, {
 							get when() {
 								return draft().fill === "gradient";
 							},
 							get children() {
 								return [
 									(() => {
-										const _el$21 = (0, import_web$53.getNextElement)(_tmpl$6$2), _el$22 = _el$21.firstChild, _el$23 = _el$22.nextSibling, _el$24 = _el$23.firstChild, [_el$25, _co$9] = (0, import_web$51.getNextMarker)(_el$24.nextSibling), _el$26 = _el$25.nextSibling, [_el$27, _co$0] = (0, import_web$51.getNextMarker)(_el$26.nextSibling), _el$28 = _el$27.nextSibling, [_el$29, _co$1] = (0, import_web$51.getNextMarker)(_el$28.nextSibling);
-										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(For$3, {
+										const _el$21 = (0, import_web$54.getNextElement)(_tmpl$6$2), _el$22 = _el$21.firstChild, _el$23 = _el$22.nextSibling, _el$24 = _el$23.firstChild, [_el$25, _co$9] = (0, import_web$52.getNextMarker)(_el$24.nextSibling), _el$26 = _el$25.nextSibling, [_el$27, _co$0] = (0, import_web$52.getNextMarker)(_el$26.nextSibling), _el$28 = _el$27.nextSibling, [_el$29, _co$1] = (0, import_web$52.getNextMarker)(_el$28.nextSibling);
+										(0, import_web$55.insert)(_el$23, (0, import_web$56.createComponent)(For$3, {
 											get each() {
 												return draft().colors;
 											},
-											children: (stop, i) => (0, import_web$55.createComponent)(Button$3, {
+											children: (stop, i) => (0, import_web$56.createComponent)(Button$3, {
 												get size() {
 													return ButtonSizes$2.NONE;
 												},
@@ -2844,12 +2865,12 @@ function TagStyler(props) {
 												}
 											})
 										}), _el$25, _co$9);
-										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(Show$3, {
+										(0, import_web$55.insert)(_el$23, (0, import_web$56.createComponent)(Show$3, {
 											get when() {
 												return draft().colors.length > 2;
 											},
 											get children() {
-												return (0, import_web$55.createComponent)(Button$3, {
+												return (0, import_web$56.createComponent)(Button$3, {
 													get size() {
 														return ButtonSizes$2.TINY;
 													},
@@ -2867,12 +2888,12 @@ function TagStyler(props) {
 												});
 											}
 										}), _el$27, _co$0);
-										(0, import_web$54.insert)(_el$23, (0, import_web$55.createComponent)(Show$3, {
+										(0, import_web$55.insert)(_el$23, (0, import_web$56.createComponent)(Show$3, {
 											get when() {
 												return draft().colors.length < 5;
 											},
 											get children() {
-												return (0, import_web$55.createComponent)(Button$3, {
+												return (0, import_web$56.createComponent)(Button$3, {
 													get size() {
 														return ButtonSizes$2.TINY;
 													},
@@ -2887,13 +2908,13 @@ function TagStyler(props) {
 												});
 											}
 										}), _el$29, _co$1);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$22, label, _$p));
+										(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$22, label, _$p));
 										return _el$21;
 									})(),
 									(() => {
-										const _el$30 = (0, import_web$53.getNextElement)(_tmpl$7$2), _el$31 = _el$30.firstChild, _el$32 = _el$31.firstChild, _el$34 = _el$32.nextSibling, [_el$35, _co$10] = (0, import_web$51.getNextMarker)(_el$34.nextSibling), _el$33 = _el$35.nextSibling, _el$36 = _el$31.nextSibling, [_el$37, _co$11] = (0, import_web$51.getNextMarker)(_el$36.nextSibling);
-										(0, import_web$54.insert)(_el$31, () => draft().angle, _el$35, _co$10);
-										(0, import_web$54.insert)(_el$30, (0, import_web$55.createComponent)(StepSlider, {
+										const _el$30 = (0, import_web$54.getNextElement)(_tmpl$7$2), _el$31 = _el$30.firstChild, _el$32 = _el$31.firstChild, _el$34 = _el$32.nextSibling, [_el$35, _co$10] = (0, import_web$52.getNextMarker)(_el$34.nextSibling), _el$33 = _el$35.nextSibling, _el$36 = _el$31.nextSibling, [_el$37, _co$11] = (0, import_web$52.getNextMarker)(_el$36.nextSibling);
+										(0, import_web$55.insert)(_el$31, () => draft().angle, _el$35, _co$10);
+										(0, import_web$55.insert)(_el$30, (0, import_web$56.createComponent)(StepSlider, {
 											get value() {
 												return draft().angle;
 											},
@@ -2902,14 +2923,14 @@ function TagStyler(props) {
 											max: 360,
 											step: 15
 										}), _el$37, _co$11);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$31, label, _$p));
+										(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$31, label, _$p));
 										return _el$30;
 									})(),
 									(() => {
-										const _el$38 = (0, import_web$53.getNextElement)(_tmpl$8$2), _el$39 = _el$38.firstChild, _el$40 = _el$39.nextSibling;
-										(0, import_web$54.insert)(_el$40, (0, import_web$55.createComponent)(For$3, {
+										const _el$38 = (0, import_web$54.getNextElement)(_tmpl$8$2), _el$39 = _el$38.firstChild, _el$40 = _el$39.nextSibling;
+										(0, import_web$55.insert)(_el$40, (0, import_web$56.createComponent)(For$3, {
 											each: GRADIENT_PRESETS,
-											children: (preset) => (0, import_web$55.createComponent)(Chip, {
+											children: (preset) => (0, import_web$56.createComponent)(Chip, {
 												"class": "ftags-suggestion",
 												get tag() {
 													return preset.label;
@@ -2930,25 +2951,25 @@ function TagStyler(props) {
 												})
 											})
 										}));
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$39, label, _$p));
+										(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$39, label, _$p));
 										return _el$38;
 									})()
 								];
 							}
 						}),
-						(0, import_web$55.createComponent)(Divider$2, {
+						(0, import_web$56.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$55.createComponent)(Header$3, {
+						(0, import_web$56.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Text"
 						}),
 						(() => {
-							const _el$41 = (0, import_web$53.getNextElement)(_tmpl$9$1), _el$42 = _el$41.firstChild, _el$43 = _el$42.nextSibling, _el$44 = _el$43.firstChild, [_el$45, _co$12] = (0, import_web$51.getNextMarker)(_el$44.nextSibling), _el$46 = _el$45.nextSibling, [_el$47, _co$13] = (0, import_web$51.getNextMarker)(_el$46.nextSibling), _el$48 = _el$43.nextSibling, [_el$49, _co$14] = (0, import_web$51.getNextMarker)(_el$48.nextSibling);
-							(0, import_web$54.insert)(_el$43, (0, import_web$55.createComponent)(Button$3, {
+							const _el$41 = (0, import_web$54.getNextElement)(_tmpl$9$1), _el$42 = _el$41.firstChild, _el$43 = _el$42.nextSibling, _el$44 = _el$43.firstChild, [_el$45, _co$12] = (0, import_web$52.getNextMarker)(_el$44.nextSibling), _el$46 = _el$45.nextSibling, [_el$47, _co$13] = (0, import_web$52.getNextMarker)(_el$46.nextSibling), _el$48 = _el$43.nextSibling, [_el$49, _co$14] = (0, import_web$52.getNextMarker)(_el$48.nextSibling);
+							(0, import_web$55.insert)(_el$43, (0, import_web$56.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.SMALL;
 								},
@@ -2958,7 +2979,7 @@ function TagStyler(props) {
 								onClick: () => patch({ text: "auto" }),
 								children: "Auto"
 							}), _el$45, _co$12);
-							(0, import_web$54.insert)(_el$43, (0, import_web$55.createComponent)(Button$3, {
+							(0, import_web$55.insert)(_el$43, (0, import_web$56.createComponent)(Button$3, {
 								get size() {
 									return ButtonSizes$2.SMALL;
 								},
@@ -2968,12 +2989,12 @@ function TagStyler(props) {
 								onClick: () => patch({ text: draft().text === "auto" ? "#ffffff" : draft().text }),
 								children: "Custom"
 							}), _el$47, _co$13);
-							(0, import_web$54.insert)(_el$41, (0, import_web$55.createComponent)(Show$3, {
+							(0, import_web$55.insert)(_el$41, (0, import_web$56.createComponent)(Show$3, {
 								get when() {
 									return draft().text !== "auto";
 								},
 								get fallback() {
-									return (0, import_web$55.createComponent)(Text$3, {
+									return (0, import_web$56.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-muted)",
 											"font-size": "12px"
@@ -2982,7 +3003,7 @@ function TagStyler(props) {
 									});
 								},
 								get children() {
-									return (0, import_web$55.createComponent)(Button$3, {
+									return (0, import_web$56.createComponent)(Button$3, {
 										get size() {
 											return ButtonSizes$2.NONE;
 										},
@@ -2999,31 +3020,31 @@ function TagStyler(props) {
 									});
 								}
 							}), _el$49, _co$14);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$42, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$42, label, _$p));
 							return _el$41;
 						})(),
 						(() => {
-							const _el$50 = (0, import_web$53.getNextElement)(_tmpl$0$1), _el$51 = _el$50.firstChild, _el$52 = _el$51.nextSibling, _el$53 = _el$52.nextSibling, [_el$54, _co$15] = (0, import_web$51.getNextMarker)(_el$53.nextSibling);
-							(0, import_web$54.insert)(_el$52, (0, import_web$55.createComponent)(For$3, {
+							const _el$50 = (0, import_web$54.getNextElement)(_tmpl$0$1), _el$51 = _el$50.firstChild, _el$52 = _el$51.nextSibling, _el$53 = _el$52.nextSibling, [_el$54, _co$15] = (0, import_web$52.getNextMarker)(_el$53.nextSibling);
+							(0, import_web$55.insert)(_el$52, (0, import_web$56.createComponent)(For$3, {
 								each: FONTS,
 								children: (font) => (() => {
-									const _el$91 = (0, import_web$53.getNextElement)(_tmpl$15);
+									const _el$91 = (0, import_web$54.getNextElement)(_tmpl$15);
 									_el$91.$$click = () => patch({ font: font.id });
-									(0, import_web$54.insert)(_el$91, () => font.label);
-									(0, import_web$49.effect)((_p$) => {
+									(0, import_web$55.insert)(_el$91, () => font.label);
+									(0, import_web$50.effect)((_p$) => {
 										const _v$ = `ftags-font-option${draft().font === font.id ? " ftags-font-option--on" : ""}`, _v$2 = font.id || "inherit";
-										_v$ !== _p$._v$ && (0, import_web$46.className)(_el$91, _p$._v$ = _v$);
+										_v$ !== _p$._v$ && (0, import_web$47.className)(_el$91, _p$._v$ = _v$);
 										_v$2 !== _p$._v$2 && _el$91.style.setProperty("font-family", _p$._v$2 = _v$2);
 										return _p$;
 									}, {
 										_v$: undefined,
 										_v$2: undefined
 									});
-									(0, import_web$47.runHydrationEvents)();
+									(0, import_web$48.runHydrationEvents)();
 									return _el$91;
 								})()
 							}));
-							(0, import_web$54.insert)(_el$50, (0, import_web$55.createComponent)(TextBox$2, {
+							(0, import_web$55.insert)(_el$50, (0, import_web$56.createComponent)(TextBox$2, {
 								get value() {
 									return draft().font;
 								},
@@ -3031,13 +3052,13 @@ function TagStyler(props) {
 								placeholder: "…or a custom font-family",
 								"aria-label": "Custom font family"
 							}), _el$54, _co$15);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$51, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$51, label, _$p));
 							return _el$50;
 						})(),
 						(() => {
-							const _el$55 = (0, import_web$53.getNextElement)(_tmpl$1), _el$56 = _el$55.firstChild, _el$57 = _el$56.firstChild, _el$58 = _el$57.nextSibling, [_el$59, _co$16] = (0, import_web$51.getNextMarker)(_el$58.nextSibling), _el$60 = _el$56.nextSibling, [_el$61, _co$17] = (0, import_web$51.getNextMarker)(_el$60.nextSibling);
-							(0, import_web$54.insert)(_el$56, () => draft().weight, _el$59, _co$16);
-							(0, import_web$54.insert)(_el$55, (0, import_web$55.createComponent)(StepSlider, {
+							const _el$55 = (0, import_web$54.getNextElement)(_tmpl$1), _el$56 = _el$55.firstChild, _el$57 = _el$56.firstChild, _el$58 = _el$57.nextSibling, [_el$59, _co$16] = (0, import_web$52.getNextMarker)(_el$58.nextSibling), _el$60 = _el$56.nextSibling, [_el$61, _co$17] = (0, import_web$52.getNextMarker)(_el$60.nextSibling);
+							(0, import_web$55.insert)(_el$56, () => draft().weight, _el$59, _co$16);
+							(0, import_web$55.insert)(_el$55, (0, import_web$56.createComponent)(StepSlider, {
 								get value() {
 									return draft().weight;
 								},
@@ -3046,10 +3067,10 @@ function TagStyler(props) {
 								max: 900,
 								step: 100
 							}), _el$61, _co$17);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$56, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$56, label, _$p));
 							return _el$55;
 						})(),
-						(0, import_web$55.createComponent)(SwitchItem$1, {
+						(0, import_web$56.createComponent)(SwitchItem$1, {
 							get checked() {
 								return draft().italic;
 							},
@@ -3060,17 +3081,17 @@ function TagStyler(props) {
 							hideBorder: true,
 							children: "Italic"
 						}),
-						(0, import_web$55.createComponent)(Divider$2, {
+						(0, import_web$56.createComponent)(Divider$2, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$55.createComponent)(Header$3, {
+						(0, import_web$56.createComponent)(Header$3, {
 							get tag() {
 								return HeaderTags$3.H5;
 							},
 							children: "Animation"
 						}),
-						(0, import_web$55.createComponent)(Text$3, {
+						(0, import_web$56.createComponent)(Text$3, {
 							style: {
 								color: "var(--text-muted)",
 								"font-size": "12px"
@@ -3078,33 +3099,33 @@ function TagStyler(props) {
 							children: "Colour and movement are separate — pick one of each, or just one."
 						}),
 						(() => {
-							const _el$62 = (0, import_web$53.getNextElement)(_tmpl$11), _el$63 = _el$62.firstChild, _el$64 = _el$63.nextSibling, _el$70 = _el$64.nextSibling, [_el$71, _co$19] = (0, import_web$51.getNextMarker)(_el$70.nextSibling), _el$72 = _el$71.nextSibling, [_el$73, _co$20] = (0, import_web$51.getNextMarker)(_el$72.nextSibling);
+							const _el$62 = (0, import_web$54.getNextElement)(_tmpl$11), _el$63 = _el$62.firstChild, _el$64 = _el$63.nextSibling, _el$70 = _el$64.nextSibling, [_el$71, _co$19] = (0, import_web$52.getNextMarker)(_el$70.nextSibling), _el$72 = _el$71.nextSibling, [_el$73, _co$20] = (0, import_web$52.getNextMarker)(_el$72.nextSibling);
 							_el$62.style.setProperty("margin-top", "10px");
-							(0, import_web$54.insert)(_el$64, (0, import_web$55.createComponent)(For$3, {
+							(0, import_web$55.insert)(_el$64, (0, import_web$56.createComponent)(For$3, {
 								each: COLOR_ANIMS,
 								children: (anim) => (() => {
-									const _el$92 = (0, import_web$53.getNextElement)(_tmpl$15);
+									const _el$92 = (0, import_web$54.getNextElement)(_tmpl$15);
 									_el$92.$$click = () => patch({ colorAnim: anim.id });
-									(0, import_web$54.insert)(_el$92, () => anim.label);
-									(0, import_web$49.effect)((_p$) => {
+									(0, import_web$55.insert)(_el$92, () => anim.label);
+									(0, import_web$50.effect)((_p$) => {
 										const _v$3 = `ftags-anim-option${draft().colorAnim === anim.id ? " ftags-anim-option--on" : ""}`, _v$4 = anim.note;
-										_v$3 !== _p$._v$3 && (0, import_web$46.className)(_el$92, _p$._v$3 = _v$3);
-										_v$4 !== _p$._v$4 && (0, import_web$45.setAttribute)(_el$92, "title", _p$._v$4 = _v$4);
+										_v$3 !== _p$._v$3 && (0, import_web$47.className)(_el$92, _p$._v$3 = _v$3);
+										_v$4 !== _p$._v$4 && (0, import_web$46.setAttribute)(_el$92, "title", _p$._v$4 = _v$4);
 										return _p$;
 									}, {
 										_v$3: undefined,
 										_v$4: undefined
 									});
-									(0, import_web$47.runHydrationEvents)();
+									(0, import_web$48.runHydrationEvents)();
 									return _el$92;
 								})()
 							}));
-							(0, import_web$54.insert)(_el$62, (0, import_web$55.createComponent)(Show$3, {
+							(0, import_web$55.insert)(_el$62, (0, import_web$56.createComponent)(Show$3, {
 								get when() {
-									return (0, import_web$52.memo)(() => draft().colorAnim === "flow")() && draft().fill !== "gradient";
+									return (0, import_web$53.memo)(() => draft().colorAnim === "flow")() && draft().fill !== "gradient";
 								},
 								get children() {
-									return (0, import_web$55.createComponent)(Text$3, {
+									return (0, import_web$56.createComponent)(Text$3, {
 										style: {
 											color: "var(--text-warning, var(--text-muted))",
 											"font-size": "12px"
@@ -3113,17 +3134,17 @@ function TagStyler(props) {
 									});
 								}
 							}), _el$71, _co$19);
-							(0, import_web$54.insert)(_el$62, (0, import_web$55.createComponent)(Show$3, {
+							(0, import_web$55.insert)(_el$62, (0, import_web$56.createComponent)(Show$3, {
 								get when() {
 									return draft().colorAnim !== "none";
 								},
 								get children() {
 									return [(() => {
-										const _el$65 = (0, import_web$53.getNextElement)(_tmpl$10), _el$66 = _el$65.firstChild, _el$68 = _el$66.nextSibling, [_el$69, _co$18] = (0, import_web$51.getNextMarker)(_el$68.nextSibling), _el$67 = _el$69.nextSibling;
-										(0, import_web$54.insert)(_el$65, () => draft().colorSpeed, _el$69, _co$18);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$65, label, _$p));
+										const _el$65 = (0, import_web$54.getNextElement)(_tmpl$10), _el$66 = _el$65.firstChild, _el$68 = _el$66.nextSibling, [_el$69, _co$18] = (0, import_web$52.getNextMarker)(_el$68.nextSibling), _el$67 = _el$69.nextSibling;
+										(0, import_web$55.insert)(_el$65, () => draft().colorSpeed, _el$69, _co$18);
+										(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$65, label, _$p));
 										return _el$65;
-									})(), (0, import_web$55.createComponent)(StepSlider, {
+									})(), (0, import_web$56.createComponent)(StepSlider, {
 										get value() {
 											return draft().colorSpeed;
 										},
@@ -3134,41 +3155,41 @@ function TagStyler(props) {
 									})];
 								}
 							}), _el$73, _co$20);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$63, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$63, label, _$p));
 							return _el$62;
 						})(),
 						(() => {
-							const _el$74 = (0, import_web$53.getNextElement)(_tmpl$13), _el$75 = _el$74.firstChild, _el$76 = _el$75.nextSibling, _el$82 = _el$76.nextSibling, [_el$83, _co$22] = (0, import_web$51.getNextMarker)(_el$82.nextSibling);
-							(0, import_web$54.insert)(_el$76, (0, import_web$55.createComponent)(For$3, {
+							const _el$74 = (0, import_web$54.getNextElement)(_tmpl$13), _el$75 = _el$74.firstChild, _el$76 = _el$75.nextSibling, _el$82 = _el$76.nextSibling, [_el$83, _co$22] = (0, import_web$52.getNextMarker)(_el$82.nextSibling);
+							(0, import_web$55.insert)(_el$76, (0, import_web$56.createComponent)(For$3, {
 								each: MOTIONS,
 								children: (anim) => (() => {
-									const _el$93 = (0, import_web$53.getNextElement)(_tmpl$15);
+									const _el$93 = (0, import_web$54.getNextElement)(_tmpl$15);
 									_el$93.$$click = () => patch({ motion: anim.id });
-									(0, import_web$54.insert)(_el$93, () => anim.label);
-									(0, import_web$49.effect)((_p$) => {
+									(0, import_web$55.insert)(_el$93, () => anim.label);
+									(0, import_web$50.effect)((_p$) => {
 										const _v$5 = `ftags-anim-option${draft().motion === anim.id ? " ftags-anim-option--on" : ""}`, _v$6 = anim.note;
-										_v$5 !== _p$._v$5 && (0, import_web$46.className)(_el$93, _p$._v$5 = _v$5);
-										_v$6 !== _p$._v$6 && (0, import_web$45.setAttribute)(_el$93, "title", _p$._v$6 = _v$6);
+										_v$5 !== _p$._v$5 && (0, import_web$47.className)(_el$93, _p$._v$5 = _v$5);
+										_v$6 !== _p$._v$6 && (0, import_web$46.setAttribute)(_el$93, "title", _p$._v$6 = _v$6);
 										return _p$;
 									}, {
 										_v$5: undefined,
 										_v$6: undefined
 									});
-									(0, import_web$47.runHydrationEvents)();
+									(0, import_web$48.runHydrationEvents)();
 									return _el$93;
 								})()
 							}));
-							(0, import_web$54.insert)(_el$74, (0, import_web$55.createComponent)(Show$3, {
+							(0, import_web$55.insert)(_el$74, (0, import_web$56.createComponent)(Show$3, {
 								get when() {
 									return draft().motion !== "none";
 								},
 								get children() {
 									return [(() => {
-										const _el$77 = (0, import_web$53.getNextElement)(_tmpl$12), _el$78 = _el$77.firstChild, _el$80 = _el$78.nextSibling, [_el$81, _co$21] = (0, import_web$51.getNextMarker)(_el$80.nextSibling), _el$79 = _el$81.nextSibling;
-										(0, import_web$54.insert)(_el$77, () => draft().motionSpeed, _el$81, _co$21);
-										(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$77, label, _$p));
+										const _el$77 = (0, import_web$54.getNextElement)(_tmpl$12), _el$78 = _el$77.firstChild, _el$80 = _el$78.nextSibling, [_el$81, _co$21] = (0, import_web$52.getNextMarker)(_el$80.nextSibling), _el$79 = _el$81.nextSibling;
+										(0, import_web$55.insert)(_el$77, () => draft().motionSpeed, _el$81, _co$21);
+										(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$77, label, _$p));
 										return _el$77;
-									})(), (0, import_web$55.createComponent)(StepSlider, {
+									})(), (0, import_web$56.createComponent)(StepSlider, {
 										get value() {
 											return draft().motionSpeed;
 										},
@@ -3179,14 +3200,14 @@ function TagStyler(props) {
 									})];
 								}
 							}), _el$83, _co$22);
-							(0, import_web$49.effect)((_$p) => (0, import_web$48.style)(_el$75, label, _$p));
+							(0, import_web$50.effect)((_$p) => (0, import_web$49.style)(_el$75, label, _$p));
 							return _el$74;
 						})()
 					];
 				} }),
-				(0, import_web$55.createComponent)(ModalFooter$3, { get children() {
-					const _el$84 = (0, import_web$53.getNextElement)(_tmpl$14), _el$85 = _el$84.firstChild, [_el$86, _co$23] = (0, import_web$51.getNextMarker)(_el$85.nextSibling), _el$87 = _el$86.nextSibling, [_el$88, _co$24] = (0, import_web$51.getNextMarker)(_el$87.nextSibling), _el$89 = _el$88.nextSibling, [_el$90, _co$25] = (0, import_web$51.getNextMarker)(_el$89.nextSibling);
-					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
+				(0, import_web$56.createComponent)(ModalFooter$3, { get children() {
+					const _el$84 = (0, import_web$54.getNextElement)(_tmpl$14), _el$85 = _el$84.firstChild, [_el$86, _co$23] = (0, import_web$52.getNextMarker)(_el$85.nextSibling), _el$87 = _el$86.nextSibling, [_el$88, _co$24] = (0, import_web$52.getNextMarker)(_el$87.nextSibling), _el$89 = _el$88.nextSibling, [_el$90, _co$25] = (0, import_web$52.getNextMarker)(_el$89.nextSibling);
+					(0, import_web$55.insert)(_el$84, (0, import_web$56.createComponent)(Button$3, {
 						get look() {
 							return ButtonLooks$3.OUTLINED;
 						},
@@ -3199,7 +3220,7 @@ function TagStyler(props) {
 						},
 						children: "Reset"
 					}), _el$86, _co$23);
-					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
+					(0, import_web$55.insert)(_el$84, (0, import_web$56.createComponent)(Button$3, {
 						get look() {
 							return ButtonLooks$3.OUTLINED;
 						},
@@ -3208,7 +3229,7 @@ function TagStyler(props) {
 						},
 						children: "Cancel"
 					}), _el$88, _co$24);
-					(0, import_web$54.insert)(_el$84, (0, import_web$55.createComponent)(Button$3, {
+					(0, import_web$55.insert)(_el$84, (0, import_web$56.createComponent)(Button$3, {
 						onClick: save,
 						children: "Save"
 					}), _el$90, _co$25);
@@ -3218,13 +3239,13 @@ function TagStyler(props) {
 		}
 	});
 }
-(0, import_web$44.delegateEvents)(["click"]);
+(0, import_web$45.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/openStyler.jsx
-var import_web$42 = __toESM(require_web(), 1);
+var import_web$43 = __toESM(require_web(), 1);
 const { ui: { openModal: openModal$2 } } = shelter;
-const openStyler = (tag) => openModal$2((props) => (0, import_web$42.createComponent)(TagStyler, {
+const openStyler = (tag) => openModal$2((props) => (0, import_web$43.createComponent)(TagStyler, {
 	tag,
 	get close() {
 		return props.close;
@@ -3233,7 +3254,6 @@ const openStyler = (tag) => openModal$2((props) => (0, import_web$42.createCompo
 
 //#endregion
 //#region plugins/friend-tags/ui/TagEditor.jsx
-var import_web$31 = __toESM(require_web(), 1);
 var import_web$32 = __toESM(require_web(), 1);
 var import_web$33 = __toESM(require_web(), 1);
 var import_web$34 = __toESM(require_web(), 1);
@@ -3244,7 +3264,8 @@ var import_web$38 = __toESM(require_web(), 1);
 var import_web$39 = __toESM(require_web(), 1);
 var import_web$40 = __toESM(require_web(), 1);
 var import_web$41 = __toESM(require_web(), 1);
-const _tmpl$$4 = /*#__PURE__*/ (0, import_web$31.template)(`<div class="ftags-editor-list"></div>`, 2), _tmpl$2$4 = /*#__PURE__*/ (0, import_web$31.template)(`<div class="ftags-add-row"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$3$3 = /*#__PURE__*/ (0, import_web$31.template)(`<div class="ftags-live-preview"><span class="ftags-live-label">Preview</span><!#><!/></div>`, 6), _tmpl$4$2 = /*#__PURE__*/ (0, import_web$31.template)(`<div style="display: flex; flex-direction: column; gap: 6px"></div>`, 2), _tmpl$5$1 = /*#__PURE__*/ (0, import_web$31.template)(`<div style="margin-top: 6px"></div>`, 2), _tmpl$6$1 = /*#__PURE__*/ (0, import_web$31.template)(`<div class="ftags-suggestions"></div>`, 2), _tmpl$7$1 = /*#__PURE__*/ (0, import_web$31.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/></div>`, 6), _tmpl$8$1 = /*#__PURE__*/ (0, import_web$31.template)(`<span class="ftags-empty">No tags yet — add one below.</span>`, 2), _tmpl$9 = /*#__PURE__*/ (0, import_web$31.template)(`<span class="ftags-editor-chip"><!#><!/><button>×</button></span>`, 6), _tmpl$0 = /*#__PURE__*/ (0, import_web$31.template)(`<div style="display: flex; align-items: center; gap: 8px"><!#><!/><div style="flex: 1"></div><!#><!/></div>`, 8);
+var import_web$42 = __toESM(require_web(), 1);
+const _tmpl$$4 = /*#__PURE__*/ (0, import_web$32.template)(`<div class="ftags-editor-list"></div>`, 2), _tmpl$2$4 = /*#__PURE__*/ (0, import_web$32.template)(`<div class="ftags-add-row"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$3$3 = /*#__PURE__*/ (0, import_web$32.template)(`<div class="ftags-live-preview"><span class="ftags-live-label">Preview</span><!#><!/></div>`, 6), _tmpl$4$2 = /*#__PURE__*/ (0, import_web$32.template)(`<div style="display: flex; flex-direction: column; gap: 6px"></div>`, 2), _tmpl$5$1 = /*#__PURE__*/ (0, import_web$32.template)(`<div style="margin-top: 6px"></div>`, 2), _tmpl$6$1 = /*#__PURE__*/ (0, import_web$32.template)(`<div class="ftags-suggestions"></div>`, 2), _tmpl$7$1 = /*#__PURE__*/ (0, import_web$32.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/></div>`, 6), _tmpl$8$1 = /*#__PURE__*/ (0, import_web$32.template)(`<span class="ftags-empty">No tags yet — add one below.</span>`, 2), _tmpl$9 = /*#__PURE__*/ (0, import_web$32.template)(`<span class="ftags-editor-chip"><!#><!/><button>×</button></span>`, 6), _tmpl$0 = /*#__PURE__*/ (0, import_web$32.template)(`<div style="display: flex; align-items: center; gap: 8px"><!#><!/><div style="flex: 1"></div><!#><!/></div>`, 8);
 const { flux: { storesFlat: { UserStore: UserStore$2 } }, ui: { Button: Button$2, ButtonColors: ButtonColors$2, ButtonLooks: ButtonLooks$2, ButtonSizes: ButtonSizes$1, Header: Header$2, HeaderTags: HeaderTags$2, ModalBody: ModalBody$2, ModalFooter: ModalFooter$2, ModalHeader: ModalHeader$2, ModalRoot: ModalRoot$2, ModalSizes: ModalSizes$2, Text: Text$2, TextArea: TextArea$1, TextBox: TextBox$1 }, solid: { For: For$2, Show: Show$2, createMemo: createMemo$3, createSignal: createSignal$2 } } = shelter;
 function TagEditor(props) {
 	const [draft, setDraft] = createSignal$2("");
@@ -3264,42 +3285,42 @@ function TagEditor(props) {
 		addTag(props.userId, draft());
 		setDraft("");
 	};
-	return (0, import_web$40.createComponent)(ModalRoot$2, {
+	return (0, import_web$41.createComponent)(ModalRoot$2, {
 		get size() {
 			return ModalSizes$2.SMALL;
 		},
 		get children() {
 			return [
-				(0, import_web$40.createComponent)(ModalHeader$2, {
+				(0, import_web$41.createComponent)(ModalHeader$2, {
 					get close() {
 						return props.close;
 					},
 					get children() {
-						return ["Tags for ", (0, import_web$41.memo)(() => name())];
+						return ["Tags for ", (0, import_web$42.memo)(() => name())];
 					}
 				}),
-				(0, import_web$40.createComponent)(ModalBody$2, { get children() {
+				(0, import_web$41.createComponent)(ModalBody$2, { get children() {
 					return [
 						(() => {
-							const _el$ = (0, import_web$38.getNextElement)(_tmpl$$4);
-							(0, import_web$39.insert)(_el$, (0, import_web$40.createComponent)(Show$2, {
+							const _el$ = (0, import_web$39.getNextElement)(_tmpl$$4);
+							(0, import_web$40.insert)(_el$, (0, import_web$41.createComponent)(Show$2, {
 								get when() {
 									return tags().length;
 								},
 								get fallback() {
-									return (0, import_web$38.getNextElement)(_tmpl$8$1);
+									return (0, import_web$39.getNextElement)(_tmpl$8$1);
 								},
 								get children() {
-									return (0, import_web$40.createComponent)(For$2, {
+									return (0, import_web$41.createComponent)(For$2, {
 										get each() {
 											return tags();
 										},
 										children: (tag) => (() => {
-											const _el$20 = (0, import_web$38.getNextElement)(_tmpl$9), _el$22 = _el$20.firstChild, [_el$23, _co$7] = (0, import_web$36.getNextMarker)(_el$22.nextSibling), _el$21 = _el$23.nextSibling;
-											(0, import_web$39.insert)(_el$20, tag, _el$23, _co$7);
+											const _el$20 = (0, import_web$39.getNextElement)(_tmpl$9), _el$22 = _el$20.firstChild, [_el$23, _co$7] = (0, import_web$37.getNextMarker)(_el$22.nextSibling), _el$21 = _el$23.nextSibling;
+											(0, import_web$40.insert)(_el$20, tag, _el$23, _co$7);
 											_el$21.$$click = () => removeTag(props.userId, tag);
-											(0, import_web$35.setAttribute)(_el$21, "aria-label", `Remove tag ${tag}`);
-											(0, import_web$33.effect)((_p$) => {
+											(0, import_web$36.setAttribute)(_el$21, "aria-label", `Remove tag ${tag}`);
+											(0, import_web$34.effect)((_p$) => {
 												const _v$ = colorOf(tag), _v$2 = textOn(colorOf(tag));
 												_v$ !== _p$._v$ && _el$20.style.setProperty("background", _p$._v$ = _v$);
 												_v$2 !== _p$._v$2 && _el$20.style.setProperty("color", _p$._v$2 = _v$2);
@@ -3308,7 +3329,7 @@ function TagEditor(props) {
 												_v$: undefined,
 												_v$2: undefined
 											});
-											(0, import_web$34.runHydrationEvents)();
+											(0, import_web$35.runHydrationEvents)();
 											return _el$20;
 										})()
 									});
@@ -3317,10 +3338,10 @@ function TagEditor(props) {
 							return _el$;
 						})(),
 						(() => {
-							const _el$2 = (0, import_web$38.getNextElement)(_tmpl$2$4), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$36.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$36.getNextMarker)(_el$5.nextSibling), _el$7 = _el$6.nextSibling, [_el$8, _co$3] = (0, import_web$36.getNextMarker)(_el$7.nextSibling);
+							const _el$2 = (0, import_web$39.getNextElement)(_tmpl$2$4), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$37.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$37.getNextMarker)(_el$5.nextSibling), _el$7 = _el$6.nextSibling, [_el$8, _co$3] = (0, import_web$37.getNextMarker)(_el$7.nextSibling);
 							const _ref$ = autocomplete.setAnchor;
-							typeof _ref$ === "function" ? (0, import_web$37.use)(_ref$, _el$2) : autocomplete.setAnchor = _el$2;
-							(0, import_web$39.insert)(_el$2, (0, import_web$40.createComponent)(TextBox$1, {
+							typeof _ref$ === "function" ? (0, import_web$38.use)(_ref$, _el$2) : autocomplete.setAnchor = _el$2;
+							(0, import_web$40.insert)(_el$2, (0, import_web$41.createComponent)(TextBox$1, {
 								get value() {
 									return draft();
 								},
@@ -3333,7 +3354,7 @@ function TagEditor(props) {
 									if (e.key === "Enter" && !e.defaultPrevented) commit();
 								}
 							}), _el$4, _co$);
-							(0, import_web$39.insert)(_el$2, (0, import_web$40.createComponent)(Button$2, {
+							(0, import_web$40.insert)(_el$2, (0, import_web$41.createComponent)(Button$2, {
 								onClick: commit,
 								get disabled() {
 									return !canAdd();
@@ -3343,16 +3364,16 @@ function TagEditor(props) {
 								},
 								children: "Add"
 							}), _el$6, _co$2);
-							(0, import_web$39.insert)(_el$2, (0, import_web$40.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$8, _co$3);
+							(0, import_web$40.insert)(_el$2, (0, import_web$41.createComponent)(EmojiAutocomplete, { controller: autocomplete }), _el$8, _co$3);
 							return _el$2;
 						})(),
-						(0, import_web$40.createComponent)(Show$2, {
+						(0, import_web$41.createComponent)(Show$2, {
 							get when() {
 								return draft();
 							},
 							get children() {
-								const _el$9 = (0, import_web$38.getNextElement)(_tmpl$3$3), _el$0 = _el$9.firstChild, _el$1 = _el$0.nextSibling, [_el$10, _co$4] = (0, import_web$36.getNextMarker)(_el$1.nextSibling);
-								(0, import_web$39.insert)(_el$9, (0, import_web$40.createComponent)(Chip, {
+								const _el$9 = (0, import_web$39.getNextElement)(_tmpl$3$3), _el$0 = _el$9.firstChild, _el$1 = _el$0.nextSibling, [_el$10, _co$4] = (0, import_web$37.getNextMarker)(_el$1.nextSibling);
+								(0, import_web$40.insert)(_el$9, (0, import_web$41.createComponent)(Chip, {
 									get tag() {
 										return draft();
 									},
@@ -3361,46 +3382,46 @@ function TagEditor(props) {
 								return _el$9;
 							}
 						}),
-						(0, import_web$40.createComponent)(Show$2, {
+						(0, import_web$41.createComponent)(Show$2, {
 							get when() {
 								return duplicate();
 							},
 							get children() {
-								return (0, import_web$40.createComponent)(Text$2, {
+								return (0, import_web$41.createComponent)(Text$2, {
 									style: {
 										color: "var(--text-danger)",
 										"font-size": "13px"
 									},
 									get children() {
-										return [(0, import_web$41.memo)(() => name()), " already has that tag."];
+										return [(0, import_web$42.memo)(() => name()), " already has that tag."];
 									}
 								});
 							}
 						}),
-						(0, import_web$40.createComponent)(Show$2, {
+						(0, import_web$41.createComponent)(Show$2, {
 							get when() {
 								return tags().length;
 							},
 							get children() {
-								return [(0, import_web$40.createComponent)(Header$2, {
+								return [(0, import_web$41.createComponent)(Header$2, {
 									get tag() {
 										return HeaderTags$2.H5;
 									},
 									margin: true,
 									children: "Appearance"
 								}), (() => {
-									const _el$11 = (0, import_web$38.getNextElement)(_tmpl$4$2);
-									(0, import_web$39.insert)(_el$11, (0, import_web$40.createComponent)(For$2, {
+									const _el$11 = (0, import_web$39.getNextElement)(_tmpl$4$2);
+									(0, import_web$40.insert)(_el$11, (0, import_web$41.createComponent)(For$2, {
 										get each() {
 											return tags();
 										},
 										children: (tag) => (() => {
-											const _el$24 = (0, import_web$38.getNextElement)(_tmpl$0), _el$26 = _el$24.firstChild, [_el$27, _co$8] = (0, import_web$36.getNextMarker)(_el$26.nextSibling), _el$25 = _el$27.nextSibling, _el$28 = _el$25.nextSibling, [_el$29, _co$9] = (0, import_web$36.getNextMarker)(_el$28.nextSibling);
-											(0, import_web$39.insert)(_el$24, (0, import_web$40.createComponent)(Chip, {
+											const _el$24 = (0, import_web$39.getNextElement)(_tmpl$0), _el$26 = _el$24.firstChild, [_el$27, _co$8] = (0, import_web$37.getNextMarker)(_el$26.nextSibling), _el$25 = _el$27.nextSibling, _el$28 = _el$25.nextSibling, [_el$29, _co$9] = (0, import_web$37.getNextMarker)(_el$28.nextSibling);
+											(0, import_web$40.insert)(_el$24, (0, import_web$41.createComponent)(Chip, {
 												tag,
 												animate: false
 											}), _el$27, _co$8);
-											(0, import_web$39.insert)(_el$24, (0, import_web$40.createComponent)(Button$2, {
+											(0, import_web$40.insert)(_el$24, (0, import_web$41.createComponent)(Button$2, {
 												get size() {
 													return ButtonSizes$1.TINY;
 												},
@@ -3417,14 +3438,14 @@ function TagEditor(props) {
 								})()];
 							}
 						}),
-						(0, import_web$40.createComponent)(Header$2, {
+						(0, import_web$41.createComponent)(Header$2, {
 							get tag() {
 								return HeaderTags$2.H5;
 							},
 							margin: true,
 							children: "Note"
 						}),
-						(0, import_web$40.createComponent)(Text$2, {
+						(0, import_web$41.createComponent)(Text$2, {
 							style: {
 								color: "var(--text-muted)",
 								"font-size": "12px"
@@ -3432,8 +3453,8 @@ function TagEditor(props) {
 							children: "Private to you, and never shown next to their name."
 						}),
 						(() => {
-							const _el$12 = (0, import_web$38.getNextElement)(_tmpl$5$1);
-							(0, import_web$39.insert)(_el$12, (0, import_web$40.createComponent)(TextArea$1, {
+							const _el$12 = (0, import_web$39.getNextElement)(_tmpl$5$1);
+							(0, import_web$40.insert)(_el$12, (0, import_web$41.createComponent)(TextArea$1, {
 								get value() {
 									return note();
 								},
@@ -3448,24 +3469,24 @@ function TagEditor(props) {
 							}));
 							return _el$12;
 						})(),
-						(0, import_web$40.createComponent)(Show$2, {
+						(0, import_web$41.createComponent)(Show$2, {
 							get when() {
 								return suggestions().length;
 							},
 							get children() {
-								return [(0, import_web$40.createComponent)(Header$2, {
+								return [(0, import_web$41.createComponent)(Header$2, {
 									get tag() {
 										return HeaderTags$2.H5;
 									},
 									margin: true,
 									children: "Existing tags"
 								}), (() => {
-									const _el$13 = (0, import_web$38.getNextElement)(_tmpl$6$1);
-									(0, import_web$39.insert)(_el$13, (0, import_web$40.createComponent)(For$2, {
+									const _el$13 = (0, import_web$39.getNextElement)(_tmpl$6$1);
+									(0, import_web$40.insert)(_el$13, (0, import_web$41.createComponent)(For$2, {
 										get each() {
 											return suggestions();
 										},
-										children: (t) => (0, import_web$40.createComponent)(Chip, {
+										children: (t) => (0, import_web$41.createComponent)(Chip, {
 											"class": "ftags-suggestion",
 											animate: false,
 											get tag() {
@@ -3483,14 +3504,14 @@ function TagEditor(props) {
 						})
 					];
 				} }),
-				(0, import_web$40.createComponent)(ModalFooter$2, { get children() {
-					const _el$14 = (0, import_web$38.getNextElement)(_tmpl$7$1), _el$15 = _el$14.firstChild, [_el$16, _co$5] = (0, import_web$36.getNextMarker)(_el$15.nextSibling), _el$17 = _el$16.nextSibling, [_el$18, _co$6] = (0, import_web$36.getNextMarker)(_el$17.nextSibling);
-					(0, import_web$39.insert)(_el$14, (0, import_web$40.createComponent)(Show$2, {
+				(0, import_web$41.createComponent)(ModalFooter$2, { get children() {
+					const _el$14 = (0, import_web$39.getNextElement)(_tmpl$7$1), _el$15 = _el$14.firstChild, [_el$16, _co$5] = (0, import_web$37.getNextMarker)(_el$15.nextSibling), _el$17 = _el$16.nextSibling, [_el$18, _co$6] = (0, import_web$37.getNextMarker)(_el$17.nextSibling);
+					(0, import_web$40.insert)(_el$14, (0, import_web$41.createComponent)(Show$2, {
 						get when() {
 							return tags().length;
 						},
 						get children() {
-							return (0, import_web$40.createComponent)(Button$2, {
+							return (0, import_web$41.createComponent)(Button$2, {
 								get look() {
 									return ButtonLooks$2.OUTLINED;
 								},
@@ -3502,7 +3523,7 @@ function TagEditor(props) {
 							});
 						}
 					}), _el$16, _co$5);
-					(0, import_web$39.insert)(_el$14, (0, import_web$40.createComponent)(Button$2, {
+					(0, import_web$40.insert)(_el$14, (0, import_web$41.createComponent)(Button$2, {
 						get onClick() {
 							return props.close;
 						},
@@ -3514,11 +3535,10 @@ function TagEditor(props) {
 		}
 	});
 }
-(0, import_web$32.delegateEvents)(["click"]);
+(0, import_web$33.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/ui/TagRow.jsx
-var import_web$19 = __toESM(require_web(), 1);
 var import_web$20 = __toESM(require_web(), 1);
 var import_web$21 = __toESM(require_web(), 1);
 var import_web$22 = __toESM(require_web(), 1);
@@ -3530,9 +3550,10 @@ var import_web$27 = __toESM(require_web(), 1);
 var import_web$28 = __toESM(require_web(), 1);
 var import_web$29 = __toESM(require_web(), 1);
 var import_web$30 = __toESM(require_web(), 1);
-const _tmpl$$3 = /*#__PURE__*/ (0, import_web$19.template)(`<span class="ftags-chip ftags-chip--more">+<!#><!/></span>`, 4), _tmpl$2$3 = /*#__PURE__*/ (0, import_web$19.template)(`<button class="ftags-add" aria-label="Edit tags for this user">+</button>`, 2), _tmpl$3$2 = /*#__PURE__*/ (0, import_web$19.template)(`<span><!#><!/><!#><!/><!#><!/></span>`, 8);
+var import_web$31 = __toESM(require_web(), 1);
+const _tmpl$$3 = /*#__PURE__*/ (0, import_web$20.template)(`<span class="ftags-chip ftags-chip--more">+<!#><!/></span>`, 4), _tmpl$2$3 = /*#__PURE__*/ (0, import_web$20.template)(`<button class="ftags-add" aria-label="Edit tags for this user">+</button>`, 2), _tmpl$3$2 = /*#__PURE__*/ (0, import_web$20.template)(`<span><!#><!/><!#><!/><!#><!/></span>`, 8);
 const { ui: { openModal: openModal$1 }, solid: { For: For$1, Show: Show$1, createMemo: createMemo$2 } } = shelter;
-const openTagEditor = (userId) => openModal$1((props) => (0, import_web$30.createComponent)(TagEditor, {
+const openTagEditor = (userId) => openModal$1((props) => (0, import_web$31.createComponent)(TagEditor, {
 	userId,
 	get close() {
 		return props.close;
@@ -3550,69 +3571,69 @@ function TagRow(props) {
 		e.preventDefault();
 		openTagEditor(props.userId);
 	};
-	return (0, import_web$30.createComponent)(Show$1, {
+	return (0, import_web$31.createComponent)(Show$1, {
 		get when() {
 			return props.show?.() ?? true;
 		},
 		get children() {
-			return (0, import_web$30.createComponent)(Show$1, {
+			return (0, import_web$31.createComponent)(Show$1, {
 				get when() {
 					return props.editable || tags().length;
 				},
 				get children() {
-					const _el$ = (0, import_web$24.getNextElement)(_tmpl$3$2), _el$7 = _el$.firstChild, [_el$8, _co$2] = (0, import_web$26.getNextMarker)(_el$7.nextSibling), _el$9 = _el$8.nextSibling, [_el$0, _co$3] = (0, import_web$26.getNextMarker)(_el$9.nextSibling), _el$1 = _el$0.nextSibling, [_el$10, _co$4] = (0, import_web$26.getNextMarker)(_el$1.nextSibling);
-					(0, import_web$27.insert)(_el$, (0, import_web$30.createComponent)(For$1, {
+					const _el$ = (0, import_web$25.getNextElement)(_tmpl$3$2), _el$7 = _el$.firstChild, [_el$8, _co$2] = (0, import_web$27.getNextMarker)(_el$7.nextSibling), _el$9 = _el$8.nextSibling, [_el$0, _co$3] = (0, import_web$27.getNextMarker)(_el$9.nextSibling), _el$1 = _el$0.nextSibling, [_el$10, _co$4] = (0, import_web$27.getNextMarker)(_el$1.nextSibling);
+					(0, import_web$28.insert)(_el$, (0, import_web$31.createComponent)(For$1, {
 						get each() {
 							return shown();
 						},
-						children: (tag) => (0, import_web$30.createComponent)(Chip, {
+						children: (tag) => (0, import_web$31.createComponent)(Chip, {
 							tag,
 							get onClick() {
 								return props.editable ? edit : undefined;
 							}
 						})
 					}), _el$8, _co$2);
-					(0, import_web$27.insert)(_el$, (0, import_web$30.createComponent)(Show$1, {
+					(0, import_web$28.insert)(_el$, (0, import_web$31.createComponent)(Show$1, {
 						get when() {
 							return overflow() > 0;
 						},
 						get children() {
-							const _el$2 = (0, import_web$24.getNextElement)(_tmpl$$3), _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, [_el$5, _co$] = (0, import_web$26.getNextMarker)(_el$4.nextSibling);
-							(0, import_web$28.addEventListener)(_el$2, "click", props.editable ? edit : undefined, true);
-							(0, import_web$27.insert)(_el$2, overflow, _el$5, _co$);
-							(0, import_web$23.effect)(() => (0, import_web$22.setAttribute)(_el$2, "title", tags().join(", ")));
-							(0, import_web$25.runHydrationEvents)();
+							const _el$2 = (0, import_web$25.getNextElement)(_tmpl$$3), _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, [_el$5, _co$] = (0, import_web$27.getNextMarker)(_el$4.nextSibling);
+							(0, import_web$29.addEventListener)(_el$2, "click", props.editable ? edit : undefined, true);
+							(0, import_web$28.insert)(_el$2, overflow, _el$5, _co$);
+							(0, import_web$24.effect)(() => (0, import_web$23.setAttribute)(_el$2, "title", tags().join(", ")));
+							(0, import_web$26.runHydrationEvents)();
 							return _el$2;
 						}
 					}), _el$0, _co$3);
-					(0, import_web$27.insert)(_el$, (0, import_web$30.createComponent)(Show$1, {
+					(0, import_web$28.insert)(_el$, (0, import_web$31.createComponent)(Show$1, {
 						get when() {
 							return props.editable;
 						},
 						get children() {
-							const _el$6 = (0, import_web$24.getNextElement)(_tmpl$2$3);
+							const _el$6 = (0, import_web$25.getNextElement)(_tmpl$2$3);
 							_el$6.$$click = edit;
-							(0, import_web$25.runHydrationEvents)();
+							(0, import_web$26.runHydrationEvents)();
 							return _el$6;
 						}
 					}), _el$10, _co$4);
-					(0, import_web$23.effect)(() => (0, import_web$21.className)(_el$, `ftags-row${props.compact ? " ftags-row--compact" : ""}${props.editable ? " ftags-row--editable" : ""}${!tags().length ? " ftags-row--empty" : ""}`));
+					(0, import_web$24.effect)(() => (0, import_web$22.className)(_el$, `ftags-row${props.compact ? " ftags-row--compact" : ""}${props.editable ? " ftags-row--editable" : ""}${!tags().length ? " ftags-row--empty" : ""}`));
 					return _el$;
 				}
 			});
 		}
 	});
 }
-(0, import_web$20.delegateEvents)(["click"]);
+(0, import_web$21.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/friend-tags/inject.jsx
-var import_web$14 = __toESM(require_web(), 1);
 var import_web$15 = __toESM(require_web(), 1);
 var import_web$16 = __toESM(require_web(), 1);
 var import_web$17 = __toESM(require_web(), 1);
 var import_web$18 = __toESM(require_web(), 1);
-const _tmpl$$2 = /*#__PURE__*/ (0, import_web$14.template)(`<span class="ftags-mount"></span>`, 2), _tmpl$2$2 = /*#__PURE__*/ (0, import_web$14.template)(`<div role="menuitem" tabindex="-1">Edit tags</div>`, 2);
+var import_web$19 = __toESM(require_web(), 1);
+const _tmpl$$2 = /*#__PURE__*/ (0, import_web$15.template)(`<span class="ftags-mount"></span>`, 2), _tmpl$2$2 = /*#__PURE__*/ (0, import_web$15.template)(`<div role="menuitem" tabindex="-1">Edit tags</div>`, 2);
 const { flux: { storesFlat: { UserStore: UserStore$1, ChannelStore, SelectedChannelStore } }, plugin: { store: store$1, scoped: scoped$1 }, ui: { ReactiveRoot }, util: { getFiber, reactFiberWalker, log }, observeDom } = shelter;
 const MARK = "ftags";
 const unhandled = (selector) => selector.split(",").map((part) => `${part.trim()}:not([data-${MARK}])`).join(", ");
@@ -3751,9 +3772,9 @@ function inject(element, surface) {
 		if (store$1.debug) log(`[friend-tags] ${surface.id}: no anchor matched, skipping`, "warn");
 		return;
 	}
-	const mount = (0, import_web$18.getNextElement)(_tmpl$$2);
-	mount.append((0, import_web$17.createComponent)(ReactiveRoot, { get children() {
-		return (0, import_web$17.createComponent)(TagRow, {
+	const mount = (0, import_web$19.getNextElement)(_tmpl$$2);
+	mount.append((0, import_web$18.createComponent)(ReactiveRoot, { get children() {
+		return (0, import_web$18.createComponent)(TagRow, {
 			get userId() {
 				return user.id;
 			},
@@ -3790,8 +3811,8 @@ function addContextMenuItem(menu) {
 	if (!items.length) return;
 	const template = items[items.length - 1];
 	const item = (() => {
-		const _el$2 = (0, import_web$18.getNextElement)(_tmpl$2$2);
-		(0, import_web$16.effect)(() => (0, import_web$15.className)(_el$2, template.className));
+		const _el$2 = (0, import_web$19.getNextElement)(_tmpl$2$2);
+		(0, import_web$17.effect)(() => (0, import_web$16.className)(_el$2, template.className));
 		return _el$2;
 	})();
 	item.addEventListener("click", () => {
@@ -3846,7 +3867,6 @@ function refreshInjections() {
 
 //#endregion
 //#region plugins/friend-tags/ui/TagManager.jsx
-var import_web$6 = __toESM(require_web(), 1);
 var import_web$7 = __toESM(require_web(), 1);
 var import_web$8 = __toESM(require_web(), 1);
 var import_web$9 = __toESM(require_web(), 1);
@@ -3854,7 +3874,8 @@ var import_web$10 = __toESM(require_web(), 1);
 var import_web$11 = __toESM(require_web(), 1);
 var import_web$12 = __toESM(require_web(), 1);
 var import_web$13 = __toESM(require_web(), 1);
-const _tmpl$$1 = /*#__PURE__*/ (0, import_web$6.template)(`<div style="display: flex; gap: 6px; align-items: center"><!#><!/><!#><!/></div>`, 6), _tmpl$2$1 = /*#__PURE__*/ (0, import_web$6.template)(`<span class="ftags-count"><!#><!/> <!#><!/></span>`, 6), _tmpl$3$1 = /*#__PURE__*/ (0, import_web$6.template)(`<div style="display: flex; gap: 6px"><!#><!/><!#><!/></div>`, 6), _tmpl$4$1 = /*#__PURE__*/ (0, import_web$6.template)(`<div class="ftags-manager-grid"></div>`, 2), _tmpl$5 = /*#__PURE__*/ (0, import_web$6.template)(`<span class="ftags-empty">No tags yet.</span>`, 2), _tmpl$6 = /*#__PURE__*/ (0, import_web$6.template)(`<span class="ftags-empty">Nobody is tagged yet.</span>`, 2), _tmpl$7 = /*#__PURE__*/ (0, import_web$6.template)(`<div class="ftags-user-row"><span class="ftags-user-name"></span><span class="ftags-user-tags"></span><!#><!/><!#><!/></div>`, 10), _tmpl$8 = /*#__PURE__*/ (0, import_web$6.template)(`<div style="width: 100%"><div style="display: flex; gap: 8px; align-items: center"><!#><!/><!#><!/></div><!#><!/></div>`, 10);
+var import_web$14 = __toESM(require_web(), 1);
+const _tmpl$$1 = /*#__PURE__*/ (0, import_web$7.template)(`<div style="display: flex; gap: 6px; align-items: center"><!#><!/><!#><!/></div>`, 6), _tmpl$2$1 = /*#__PURE__*/ (0, import_web$7.template)(`<span class="ftags-count"><!#><!/> <!#><!/></span>`, 6), _tmpl$3$1 = /*#__PURE__*/ (0, import_web$7.template)(`<div style="display: flex; gap: 6px"><!#><!/><!#><!/></div>`, 6), _tmpl$4$1 = /*#__PURE__*/ (0, import_web$7.template)(`<div class="ftags-manager-grid"></div>`, 2), _tmpl$5 = /*#__PURE__*/ (0, import_web$7.template)(`<span class="ftags-empty">No tags yet.</span>`, 2), _tmpl$6 = /*#__PURE__*/ (0, import_web$7.template)(`<span class="ftags-empty">Nobody is tagged yet.</span>`, 2), _tmpl$7 = /*#__PURE__*/ (0, import_web$7.template)(`<div class="ftags-user-row"><span class="ftags-user-name"></span><span class="ftags-user-tags"></span><!#><!/><!#><!/></div>`, 10), _tmpl$8 = /*#__PURE__*/ (0, import_web$7.template)(`<div style="width: 100%"><div style="display: flex; gap: 8px; align-items: center"><!#><!/><!#><!/></div><!#><!/></div>`, 10);
 const { flux: { storesFlat: { UserStore } }, ui: { Button: Button$1, ButtonColors: ButtonColors$1, ButtonLooks: ButtonLooks$1, ButtonSizes, Divider: Divider$1, Header: Header$1, HeaderTags: HeaderTags$1, ModalBody: ModalBody$1, ModalFooter: ModalFooter$1, ModalHeader: ModalHeader$1, ModalRoot: ModalRoot$1, ModalSizes: ModalSizes$1, Text: Text$1, TextBox, openConfirmationModal }, solid: { For, Show, createMemo: createMemo$1, createSignal: createSignal$1 } } = shelter;
 function TagRowEntry(props) {
 	const [renaming, setRenaming] = createSignal$1(false);
@@ -3864,7 +3885,7 @@ function TagRowEntry(props) {
 		setRenaming(false);
 	};
 	return [
-		(0, import_web$13.createComponent)(Button$1, {
+		(0, import_web$14.createComponent)(Button$1, {
 			get size() {
 				return ButtonSizes.TINY;
 			},
@@ -3874,12 +3895,12 @@ function TagRowEntry(props) {
 			onClick: () => openStyler(props.tag.label),
 			children: "Style"
 		}),
-		(0, import_web$13.createComponent)(Show, {
+		(0, import_web$14.createComponent)(Show, {
 			get when() {
 				return renaming();
 			},
 			get fallback() {
-				return (0, import_web$13.createComponent)(Chip, {
+				return (0, import_web$14.createComponent)(Chip, {
 					get tag() {
 						return props.tag.label;
 					},
@@ -3887,8 +3908,8 @@ function TagRowEntry(props) {
 				});
 			},
 			get children() {
-				const _el$ = (0, import_web$10.getNextElement)(_tmpl$$1), _el$2 = _el$.firstChild, [_el$3, _co$] = (0, import_web$11.getNextMarker)(_el$2.nextSibling), _el$4 = _el$3.nextSibling, [_el$5, _co$2] = (0, import_web$11.getNextMarker)(_el$4.nextSibling);
-				(0, import_web$12.insert)(_el$, (0, import_web$13.createComponent)(TextBox, {
+				const _el$ = (0, import_web$11.getNextElement)(_tmpl$$1), _el$2 = _el$.firstChild, [_el$3, _co$] = (0, import_web$12.getNextMarker)(_el$2.nextSibling), _el$4 = _el$3.nextSibling, [_el$5, _co$2] = (0, import_web$12.getNextMarker)(_el$4.nextSibling);
+				(0, import_web$13.insert)(_el$, (0, import_web$14.createComponent)(TextBox, {
 					get value() {
 						return draft();
 					},
@@ -3896,7 +3917,7 @@ function TagRowEntry(props) {
 					"aria-label": "Rename tag",
 					maxlength: 40
 				}), _el$3, _co$);
-				(0, import_web$12.insert)(_el$, (0, import_web$13.createComponent)(Button$1, {
+				(0, import_web$13.insert)(_el$, (0, import_web$14.createComponent)(Button$1, {
 					get size() {
 						return ButtonSizes.TINY;
 					},
@@ -3907,14 +3928,14 @@ function TagRowEntry(props) {
 			}
 		}),
 		(() => {
-			const _el$6 = (0, import_web$10.getNextElement)(_tmpl$2$1), _el$8 = _el$6.firstChild, [_el$9, _co$3] = (0, import_web$11.getNextMarker)(_el$8.nextSibling), _el$7 = _el$9.nextSibling, _el$0 = _el$7.nextSibling, [_el$1, _co$4] = (0, import_web$11.getNextMarker)(_el$0.nextSibling);
-			(0, import_web$12.insert)(_el$6, () => props.tag.count, _el$9, _co$3);
-			(0, import_web$12.insert)(_el$6, () => props.tag.count === 1 ? "person" : "people", _el$1, _co$4);
+			const _el$6 = (0, import_web$11.getNextElement)(_tmpl$2$1), _el$8 = _el$6.firstChild, [_el$9, _co$3] = (0, import_web$12.getNextMarker)(_el$8.nextSibling), _el$7 = _el$9.nextSibling, _el$0 = _el$7.nextSibling, [_el$1, _co$4] = (0, import_web$12.getNextMarker)(_el$0.nextSibling);
+			(0, import_web$13.insert)(_el$6, () => props.tag.count, _el$9, _co$3);
+			(0, import_web$13.insert)(_el$6, () => props.tag.count === 1 ? "person" : "people", _el$1, _co$4);
 			return _el$6;
 		})(),
 		(() => {
-			const _el$10 = (0, import_web$10.getNextElement)(_tmpl$3$1), _el$11 = _el$10.firstChild, [_el$12, _co$5] = (0, import_web$11.getNextMarker)(_el$11.nextSibling), _el$13 = _el$12.nextSibling, [_el$14, _co$6] = (0, import_web$11.getNextMarker)(_el$13.nextSibling);
-			(0, import_web$12.insert)(_el$10, (0, import_web$13.createComponent)(Button$1, {
+			const _el$10 = (0, import_web$11.getNextElement)(_tmpl$3$1), _el$11 = _el$10.firstChild, [_el$12, _co$5] = (0, import_web$12.getNextMarker)(_el$11.nextSibling), _el$13 = _el$12.nextSibling, [_el$14, _co$6] = (0, import_web$12.getNextMarker)(_el$13.nextSibling);
+			(0, import_web$13.insert)(_el$10, (0, import_web$14.createComponent)(Button$1, {
 				get size() {
 					return ButtonSizes.TINY;
 				},
@@ -3929,7 +3950,7 @@ function TagRowEntry(props) {
 					return renaming() ? "Cancel" : "Rename";
 				}
 			}), _el$12, _co$5);
-			(0, import_web$12.insert)(_el$10, (0, import_web$13.createComponent)(Button$1, {
+			(0, import_web$13.insert)(_el$10, (0, import_web$14.createComponent)(Button$1, {
 				get size() {
 					return ButtonSizes.TINY;
 				},
@@ -3968,21 +3989,21 @@ function TagManager(props) {
 			};
 		}).filter((entry) => !query || entry.name.toLowerCase().includes(query) || entry.tags.some((t) => t.toLowerCase().includes(query))).sort((a, b) => a.name.localeCompare(b.name));
 	});
-	return (0, import_web$13.createComponent)(ModalRoot$1, {
+	return (0, import_web$14.createComponent)(ModalRoot$1, {
 		get size() {
 			return ModalSizes$1.MEDIUM;
 		},
 		get children() {
 			return [
-				(0, import_web$13.createComponent)(ModalHeader$1, {
+				(0, import_web$14.createComponent)(ModalHeader$1, {
 					get close() {
 						return props.close;
 					},
 					children: "Manage tags"
 				}),
-				(0, import_web$13.createComponent)(ModalBody$1, { get children() {
+				(0, import_web$14.createComponent)(ModalBody$1, { get children() {
 					return [
-						(0, import_web$13.createComponent)(TextBox, {
+						(0, import_web$14.createComponent)(TextBox, {
 							get value() {
 								return filter();
 							},
@@ -3990,66 +4011,66 @@ function TagManager(props) {
 							placeholder: "Filter by tag or person…",
 							"aria-label": "Filter"
 						}),
-						(0, import_web$13.createComponent)(Header$1, {
+						(0, import_web$14.createComponent)(Header$1, {
 							get tag() {
 								return HeaderTags$1.H5;
 							},
 							margin: true,
 							children: "Tags"
 						}),
-						(0, import_web$13.createComponent)(Show, {
+						(0, import_web$14.createComponent)(Show, {
 							get when() {
 								return tags().length;
 							},
 							get fallback() {
-								return (0, import_web$10.getNextElement)(_tmpl$5);
+								return (0, import_web$11.getNextElement)(_tmpl$5);
 							},
 							get children() {
-								const _el$15 = (0, import_web$10.getNextElement)(_tmpl$4$1);
-								(0, import_web$12.insert)(_el$15, (0, import_web$13.createComponent)(For, {
+								const _el$15 = (0, import_web$11.getNextElement)(_tmpl$4$1);
+								(0, import_web$13.insert)(_el$15, (0, import_web$14.createComponent)(For, {
 									get each() {
 										return tags();
 									},
-									children: (tag) => (0, import_web$13.createComponent)(TagRowEntry, { tag })
+									children: (tag) => (0, import_web$14.createComponent)(TagRowEntry, { tag })
 								}));
 								return _el$15;
 							}
 						}),
-						(0, import_web$13.createComponent)(Divider$1, {
+						(0, import_web$14.createComponent)(Divider$1, {
 							mt: true,
 							mb: true
 						}),
-						(0, import_web$13.createComponent)(Header$1, {
+						(0, import_web$14.createComponent)(Header$1, {
 							get tag() {
 								return HeaderTags$1.H5;
 							},
 							children: "Tagged people"
 						}),
-						(0, import_web$13.createComponent)(Show, {
+						(0, import_web$14.createComponent)(Show, {
 							get when() {
 								return users().length;
 							},
 							get fallback() {
-								return (0, import_web$10.getNextElement)(_tmpl$6);
+								return (0, import_web$11.getNextElement)(_tmpl$6);
 							},
 							get children() {
-								return (0, import_web$13.createComponent)(For, {
+								return (0, import_web$14.createComponent)(For, {
 									get each() {
 										return users();
 									},
 									children: (entry) => (() => {
-										const _el$18 = (0, import_web$10.getNextElement)(_tmpl$7), _el$19 = _el$18.firstChild, _el$20 = _el$19.nextSibling, _el$21 = _el$20.nextSibling, [_el$22, _co$7] = (0, import_web$11.getNextMarker)(_el$21.nextSibling), _el$23 = _el$22.nextSibling, [_el$24, _co$8] = (0, import_web$11.getNextMarker)(_el$23.nextSibling);
-										(0, import_web$12.insert)(_el$19, () => entry.name);
-										(0, import_web$12.insert)(_el$20, (0, import_web$13.createComponent)(For, {
+										const _el$18 = (0, import_web$11.getNextElement)(_tmpl$7), _el$19 = _el$18.firstChild, _el$20 = _el$19.nextSibling, _el$21 = _el$20.nextSibling, [_el$22, _co$7] = (0, import_web$12.getNextMarker)(_el$21.nextSibling), _el$23 = _el$22.nextSibling, [_el$24, _co$8] = (0, import_web$12.getNextMarker)(_el$23.nextSibling);
+										(0, import_web$13.insert)(_el$19, () => entry.name);
+										(0, import_web$13.insert)(_el$20, (0, import_web$14.createComponent)(For, {
 											get each() {
 												return entry.tags;
 											},
-											children: (tag) => (0, import_web$13.createComponent)(Chip, {
+											children: (tag) => (0, import_web$14.createComponent)(Chip, {
 												tag,
 												animate: false
 											})
 										}));
-										(0, import_web$12.insert)(_el$18, (0, import_web$13.createComponent)(Button$1, {
+										(0, import_web$13.insert)(_el$18, (0, import_web$14.createComponent)(Button$1, {
 											get size() {
 												return ButtonSizes.TINY;
 											},
@@ -4059,7 +4080,7 @@ function TagManager(props) {
 											onClick: () => openTagEditor(entry.userId),
 											children: "Edit"
 										}), _el$22, _co$7);
-										(0, import_web$12.insert)(_el$18, (0, import_web$13.createComponent)(Button$1, {
+										(0, import_web$13.insert)(_el$18, (0, import_web$14.createComponent)(Button$1, {
 											get size() {
 												return ButtonSizes.TINY;
 											},
@@ -4072,18 +4093,18 @@ function TagManager(props) {
 											onClick: () => clearUser(entry.userId),
 											children: "Clear"
 										}), _el$24, _co$8);
-										(0, import_web$8.effect)(() => (0, import_web$7.setAttribute)(_el$19, "title", entry.userId));
+										(0, import_web$9.effect)(() => (0, import_web$8.setAttribute)(_el$19, "title", entry.userId));
 										return _el$18;
 									})()
 								});
 							}
 						}),
-						(0, import_web$13.createComponent)(Show, {
+						(0, import_web$14.createComponent)(Show, {
 							get when() {
-								return (0, import_web$9.memo)(() => !!!users().length)() && !tags().length;
+								return (0, import_web$10.memo)(() => !!!users().length)() && !tags().length;
 							},
 							get children() {
-								return (0, import_web$13.createComponent)(Text$1, {
+								return (0, import_web$14.createComponent)(Text$1, {
 									style: {
 										color: "var(--text-muted)",
 										"font-size": "13px"
@@ -4094,8 +4115,8 @@ function TagManager(props) {
 						})
 					];
 				} }),
-				(0, import_web$13.createComponent)(ModalFooter$1, { get children() {
-					return (0, import_web$13.createComponent)(ByIdAdder, {});
+				(0, import_web$14.createComponent)(ModalFooter$1, { get children() {
+					return (0, import_web$14.createComponent)(ByIdAdder, {});
 				} })
 			];
 		}
@@ -4110,8 +4131,8 @@ function ByIdAdder() {
 	const [id, setId] = createSignal$1("");
 	const valid = () => /^\d{17,20}$/.test(id().trim());
 	return (() => {
-		const _el$25 = (0, import_web$10.getNextElement)(_tmpl$8), _el$26 = _el$25.firstChild, _el$27 = _el$26.firstChild, [_el$28, _co$9] = (0, import_web$11.getNextMarker)(_el$27.nextSibling), _el$29 = _el$28.nextSibling, [_el$30, _co$0] = (0, import_web$11.getNextMarker)(_el$29.nextSibling), _el$31 = _el$26.nextSibling, [_el$32, _co$1] = (0, import_web$11.getNextMarker)(_el$31.nextSibling);
-		(0, import_web$12.insert)(_el$26, (0, import_web$13.createComponent)(TextBox, {
+		const _el$25 = (0, import_web$11.getNextElement)(_tmpl$8), _el$26 = _el$25.firstChild, _el$27 = _el$26.firstChild, [_el$28, _co$9] = (0, import_web$12.getNextMarker)(_el$27.nextSibling), _el$29 = _el$28.nextSibling, [_el$30, _co$0] = (0, import_web$12.getNextMarker)(_el$29.nextSibling), _el$31 = _el$26.nextSibling, [_el$32, _co$1] = (0, import_web$12.getNextMarker)(_el$31.nextSibling);
+		(0, import_web$13.insert)(_el$26, (0, import_web$14.createComponent)(TextBox, {
 			get value() {
 				return id();
 			},
@@ -4119,7 +4140,7 @@ function ByIdAdder() {
 			placeholder: "User ID",
 			"aria-label": "User ID"
 		}), _el$28, _co$9);
-		(0, import_web$12.insert)(_el$26, (0, import_web$13.createComponent)(Button$1, {
+		(0, import_web$13.insert)(_el$26, (0, import_web$14.createComponent)(Button$1, {
 			get disabled() {
 				return !valid();
 			},
@@ -4129,12 +4150,12 @@ function ByIdAdder() {
 			},
 			children: "Tag by ID"
 		}), _el$30, _co$0);
-		(0, import_web$12.insert)(_el$25, (0, import_web$13.createComponent)(Show, {
+		(0, import_web$13.insert)(_el$25, (0, import_web$14.createComponent)(Show, {
 			get when() {
-				return (0, import_web$9.memo)(() => !!id())() && !valid();
+				return (0, import_web$10.memo)(() => !!id())() && !valid();
 			},
 			get children() {
-				return (0, import_web$13.createComponent)(Text$1, {
+				return (0, import_web$14.createComponent)(Text$1, {
 					style: {
 						color: "var(--text-danger)",
 						"font-size": "13px"
@@ -4155,9 +4176,10 @@ var import_web$2 = __toESM(require_web(), 1);
 var import_web$3 = __toESM(require_web(), 1);
 var import_web$4 = __toESM(require_web(), 1);
 var import_web$5 = __toESM(require_web(), 1);
-const _tmpl$ = /*#__PURE__*/ (0, import_web.template)(`<div style="margin-top: 8px"></div>`, 2), _tmpl$2 = /*#__PURE__*/ (0, import_web.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><!#><!/><!#><!/><!#><!/></div>`, 8), _tmpl$3 = /*#__PURE__*/ (0, import_web.template)(`<div style="margin: 8px 0 4px"></div>`, 2), _tmpl$4 = /*#__PURE__*/ (0, import_web.template)(`<div style="display: flex; gap: 8px; margin-top: 10px"><!#><!/><!#><!/></div>`, 6);
+var import_web$6 = __toESM(require_web(), 1);
+const _tmpl$ = /*#__PURE__*/ (0, import_web.template)(`<div style="margin-top: 8px"></div>`, 2), _tmpl$2 = /*#__PURE__*/ (0, import_web.template)(`<div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%"><input type="file" accept=".gz,.json,application/json,application/gzip" style="display: none"><!#><!/><!#><!/><!#><!/><!#><!/><!#><!/></div>`, 13), _tmpl$3 = /*#__PURE__*/ (0, import_web.template)(`<div style="margin: 8px 0 4px"></div>`, 2), _tmpl$4 = /*#__PURE__*/ (0, import_web.template)(`<div style="display: flex; gap: 8px; margin-top: 10px"><!#><!/><!#><!/></div>`, 6);
 const { plugin: { store }, ui: { Button, ButtonColors, ButtonLooks, Divider, Header, HeaderTags, ModalBody, ModalFooter, ModalHeader, ModalRoot, ModalSizes, Slider, SwitchItem, Text, TextArea, ToastColors: ToastColors$1, openModal, showToast: showToast$1 }, solid: { createMemo, createSignal } } = shelter;
-const Toggle = (props) => (0, import_web$5.createComponent)(SwitchItem, {
+const Toggle = (props) => (0, import_web$6.createComponent)(SwitchItem, {
 	get checked() {
 		return props.checked;
 	},
@@ -4177,6 +4199,8 @@ const Toggle = (props) => (0, import_web$5.createComponent)(SwitchItem, {
 });
 function Backup(props) {
 	const [text, setText] = createSignal(exportData());
+	let picker;
+	const setPicker = (el) => picker = el;
 	const doImport = (merge) => {
 		let counts;
 		try {
@@ -4206,28 +4230,28 @@ function Backup(props) {
 		});
 		props.close();
 	};
-	return (0, import_web$5.createComponent)(ModalRoot, {
+	return (0, import_web$6.createComponent)(ModalRoot, {
 		get size() {
 			return ModalSizes.MEDIUM;
 		},
 		get children() {
 			return [
-				(0, import_web$5.createComponent)(ModalHeader, {
+				(0, import_web$6.createComponent)(ModalHeader, {
 					get close() {
 						return props.close;
 					},
 					children: "Backup & restore"
 				}),
-				(0, import_web$5.createComponent)(ModalBody, { get children() {
-					return [(0, import_web$5.createComponent)(Text, {
+				(0, import_web$6.createComponent)(ModalBody, { get children() {
+					return [(0, import_web$6.createComponent)(Text, {
 						style: {
 							color: "var(--header-secondary)",
 							"font-size": "14px"
 						},
 						children: "Copy this somewhere safe, or paste a previous backup in and import it."
 					}), (() => {
-						const _el$ = (0, import_web$3.getNextElement)(_tmpl$);
-						(0, import_web$4.insert)(_el$, (0, import_web$5.createComponent)(TextArea, {
+						const _el$ = (0, import_web$4.getNextElement)(_tmpl$);
+						(0, import_web$5.insert)(_el$, (0, import_web$6.createComponent)(TextArea, {
 							get value() {
 								return text();
 							},
@@ -4239,9 +4263,59 @@ function Backup(props) {
 						return _el$;
 					})()];
 				} }),
-				(0, import_web$5.createComponent)(ModalFooter, { get children() {
-					const _el$2 = (0, import_web$3.getNextElement)(_tmpl$2), _el$3 = _el$2.firstChild, [_el$4, _co$] = (0, import_web$2.getNextMarker)(_el$3.nextSibling), _el$5 = _el$4.nextSibling, [_el$6, _co$2] = (0, import_web$2.getNextMarker)(_el$5.nextSibling), _el$7 = _el$6.nextSibling, [_el$8, _co$3] = (0, import_web$2.getNextMarker)(_el$7.nextSibling);
-					(0, import_web$4.insert)(_el$2, (0, import_web$5.createComponent)(Button, {
+				(0, import_web$6.createComponent)(ModalFooter, { get children() {
+					const _el$2 = (0, import_web$4.getNextElement)(_tmpl$2), _el$3 = _el$2.firstChild, _el$4 = _el$3.nextSibling, [_el$5, _co$] = (0, import_web$2.getNextMarker)(_el$4.nextSibling), _el$6 = _el$5.nextSibling, [_el$7, _co$2] = (0, import_web$2.getNextMarker)(_el$6.nextSibling), _el$8 = _el$7.nextSibling, [_el$9, _co$3] = (0, import_web$2.getNextMarker)(_el$8.nextSibling), _el$0 = _el$9.nextSibling, [_el$1, _co$4] = (0, import_web$2.getNextMarker)(_el$0.nextSibling), _el$10 = _el$1.nextSibling, [_el$11, _co$5] = (0, import_web$2.getNextMarker)(_el$10.nextSibling);
+					_el$3.addEventListener("change", async (e) => {
+						const file = e.currentTarget.files?.[0];
+						e.currentTarget.value = "";
+						if (!file) return;
+						let counts;
+						try {
+							counts = await importFile(file, { merge: false });
+						} catch (err) {
+							showToast$1({
+								title: "Import failed",
+								content: String(err.message ?? err),
+								color: ToastColors$1.CRITICAL
+							});
+							return;
+						}
+						refreshInjections();
+						showToast$1({
+							title: "Friend Tags",
+							content: `Restored ${counts.tags} ${counts.tags === 1 ? "tag" : "tags"} across ${counts.users} ${counts.users === 1 ? "person" : "people"}.`,
+							color: ToastColors$1.SUCCESS
+						});
+						props.close();
+					});
+					(0, import_web$3.use)(setPicker, _el$3);
+					(0, import_web$5.insert)(_el$2, (0, import_web$6.createComponent)(Button, {
+						get look() {
+							return ButtonLooks.OUTLINED;
+						},
+						onClick: async () => {
+							const { blob, raw, gzipped } = await exportFile();
+							const link = document.createElement("a");
+							link.href = URL.createObjectURL(blob);
+							link.download = `friend-tags-${new Date().toISOString().slice(0, 10)}.json${gzipped ? ".gz" : ""}`;
+							link.click();
+							URL.revokeObjectURL(link.href);
+							showToast$1({
+								title: "Friend Tags",
+								content: gzipped ? `Saved — ${(blob.size / 1024).toFixed(1)} KB, down from ${(raw / 1024).toFixed(1)} KB.` : `Saved — ${(blob.size / 1024).toFixed(1)} KB.`,
+								color: ToastColors$1.SUCCESS
+							});
+						},
+						children: "Save file"
+					}), _el$5, _co$);
+					(0, import_web$5.insert)(_el$2, (0, import_web$6.createComponent)(Button, {
+						get look() {
+							return ButtonLooks.OUTLINED;
+						},
+						onClick: () => picker?.click(),
+						children: "Load file"
+					}), _el$7, _co$2);
+					(0, import_web$5.insert)(_el$2, (0, import_web$6.createComponent)(Button, {
 						get look() {
 							return ButtonLooks.OUTLINED;
 						},
@@ -4253,21 +4327,21 @@ function Backup(props) {
 							});
 						},
 						children: "Copy"
-					}), _el$4, _co$);
-					(0, import_web$4.insert)(_el$2, (0, import_web$5.createComponent)(Button, {
+					}), _el$9, _co$3);
+					(0, import_web$5.insert)(_el$2, (0, import_web$6.createComponent)(Button, {
 						get look() {
 							return ButtonLooks.OUTLINED;
 						},
 						onClick: () => doImport(true),
 						children: "Merge"
-					}), _el$6, _co$2);
-					(0, import_web$4.insert)(_el$2, (0, import_web$5.createComponent)(Button, {
+					}), _el$1, _co$4);
+					(0, import_web$5.insert)(_el$2, (0, import_web$6.createComponent)(Button, {
 						get color() {
 							return ButtonColors.RED;
 						},
 						onClick: () => doImport(false),
 						children: "Replace all"
-					}), _el$8, _co$3);
+					}), _el$11, _co$5);
 					return _el$2;
 				} })
 			];
@@ -4281,13 +4355,13 @@ function Settings() {
 		return `${tagCount} ${tagCount === 1 ? "tag" : "tags"} across ${userCount} ${userCount === 1 ? "person" : "people"}`;
 	});
 	return [
-		(0, import_web$5.createComponent)(Header, {
+		(0, import_web$6.createComponent)(Header, {
 			get tag() {
 				return HeaderTags.H5;
 			},
 			children: "Where to show tags"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.inFriends;
 			},
@@ -4295,7 +4369,7 @@ function Settings() {
 			note: "Hover someone in the friends list to add or edit their tags.",
 			children: "Friends list"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.inMessages;
 			},
@@ -4303,21 +4377,21 @@ function Settings() {
 			note: "Next to the username on every message, in servers and DMs.",
 			children: "Chat messages"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.inMembers;
 			},
 			onChange: (v) => store.inMembers = v,
 			children: "Server member list"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.inDms;
 			},
 			onChange: (v) => store.inDms = v,
 			children: "DM list"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.inProfiles;
 			},
@@ -4325,24 +4399,24 @@ function Settings() {
 			note: "Profile popouts and the full profile modal — also editable here.",
 			children: "Profiles"
 		}),
-		(0, import_web$5.createComponent)(Divider, {
+		(0, import_web$6.createComponent)(Divider, {
 			mt: true,
 			mb: true
 		}),
-		(0, import_web$5.createComponent)(Header, {
+		(0, import_web$6.createComponent)(Header, {
 			get tag() {
 				return HeaderTags.H5;
 			},
 			children: "Appearance"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.uppercase;
 			},
 			onChange: (v) => store.uppercase = v,
 			children: "Display tags in uppercase"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.animate;
 			},
@@ -4350,14 +4424,14 @@ function Settings() {
 			note: "Master switch for per-tag animations. Your OS “reduce motion” setting is always respected regardless.",
 			children: "Play tag animations"
 		}),
-		(0, import_web$5.createComponent)(Header, {
+		(0, import_web$6.createComponent)(Header, {
 			get tag() {
 				return HeaderTags.H5;
 			},
 			margin: true,
 			children: "Maximum tags shown per person"
 		}),
-		(0, import_web$5.createComponent)(Text, {
+		(0, import_web$6.createComponent)(Text, {
 			style: {
 				color: "var(--header-secondary)",
 				"font-size": "14px"
@@ -4365,8 +4439,8 @@ function Settings() {
 			children: "Any extras collapse into a “+n” pill you can hover. Set to 0 for no limit."
 		}),
 		(() => {
-			const _el$9 = (0, import_web$3.getNextElement)(_tmpl$3);
-			(0, import_web$4.insert)(_el$9, (0, import_web$5.createComponent)(Slider, {
+			const _el$12 = (0, import_web$4.getNextElement)(_tmpl$3);
+			(0, import_web$5.insert)(_el$12, (0, import_web$6.createComponent)(Slider, {
 				get value() {
 					return store.maxShown;
 				},
@@ -4376,19 +4450,19 @@ function Settings() {
 				step: 1,
 				tick: 1
 			}));
-			return _el$9;
+			return _el$12;
 		})(),
-		(0, import_web$5.createComponent)(Divider, {
+		(0, import_web$6.createComponent)(Divider, {
 			mt: true,
 			mb: true
 		}),
-		(0, import_web$5.createComponent)(Header, {
+		(0, import_web$6.createComponent)(Header, {
 			get tag() {
 				return HeaderTags.H5;
 			},
 			children: "Your tags"
 		}),
-		(0, import_web$5.createComponent)(Text, {
+		(0, import_web$6.createComponent)(Text, {
 			style: {
 				color: "var(--header-secondary)",
 				"font-size": "14px"
@@ -4398,33 +4472,33 @@ function Settings() {
 			}
 		}),
 		(() => {
-			const _el$0 = (0, import_web$3.getNextElement)(_tmpl$4), _el$1 = _el$0.firstChild, [_el$10, _co$4] = (0, import_web$2.getNextMarker)(_el$1.nextSibling), _el$11 = _el$10.nextSibling, [_el$12, _co$5] = (0, import_web$2.getNextMarker)(_el$11.nextSibling);
-			(0, import_web$4.insert)(_el$0, (0, import_web$5.createComponent)(Button, {
+			const _el$13 = (0, import_web$4.getNextElement)(_tmpl$4), _el$14 = _el$13.firstChild, [_el$15, _co$6] = (0, import_web$2.getNextMarker)(_el$14.nextSibling), _el$16 = _el$15.nextSibling, [_el$17, _co$7] = (0, import_web$2.getNextMarker)(_el$16.nextSibling);
+			(0, import_web$5.insert)(_el$13, (0, import_web$6.createComponent)(Button, {
 				grow: true,
 				onClick: () => openModal(TagManager),
 				children: "Manage tags"
-			}), _el$10, _co$4);
-			(0, import_web$4.insert)(_el$0, (0, import_web$5.createComponent)(Button, {
+			}), _el$15, _co$6);
+			(0, import_web$5.insert)(_el$13, (0, import_web$6.createComponent)(Button, {
 				grow: true,
 				get look() {
 					return ButtonLooks.OUTLINED;
 				},
 				onClick: () => openModal(Backup),
 				children: "Backup & restore"
-			}), _el$12, _co$5);
-			return _el$0;
+			}), _el$17, _co$7);
+			return _el$13;
 		})(),
-		(0, import_web$5.createComponent)(Divider, {
+		(0, import_web$6.createComponent)(Divider, {
 			mt: true,
 			mb: true
 		}),
-		(0, import_web$5.createComponent)(Header, {
+		(0, import_web$6.createComponent)(Header, {
 			get tag() {
 				return HeaderTags.H5;
 			},
 			children: "Accounts"
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.multiAccount;
 			},
@@ -4438,11 +4512,11 @@ function Settings() {
 			},
 			children: "Separate tags per account"
 		}),
-		(0, import_web$5.createComponent)(Divider, {
+		(0, import_web$6.createComponent)(Divider, {
 			mt: true,
 			mb: true
 		}),
-		(0, import_web$5.createComponent)(Text, {
+		(0, import_web$6.createComponent)(Text, {
 			style: {
 				color: "var(--text-muted)",
 				"font-size": "13px"
@@ -4451,7 +4525,7 @@ function Settings() {
 				return (0, import_web$1.memo)(() => !!customEmojiCount())() ? `${customEmojiCount()} custom emoji available to the picker.` : "No custom emoji found — the picker will only offer unicode ones. Discord may have moved its emoji API; turn on debug logging and let me know.";
 			}
 		}),
-		(0, import_web$5.createComponent)(Toggle, {
+		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {
 				return store.debug;
 			},
