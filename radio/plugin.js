@@ -1127,19 +1127,32 @@ const QUALITY_ORDER = [
 	"vorbis",
 	"mp3"
 ];
+let cacheRaw = null;
+let cacheParsed = [];
+let cacheStations = [];
+function raw() {
+	return typeof store.custom === "string" ? store.custom : "[]";
+}
 function readCustom() {
+	const current = raw();
+	if (current === cacheRaw) return cacheParsed;
 	try {
-		const parsed = JSON.parse(store.custom || "[]");
-		return Array.isArray(parsed) ? parsed : [];
+		const parsed = JSON.parse(current || "[]");
+		cacheParsed = Array.isArray(parsed) ? parsed : [];
 	} catch {
-		return [];
+		cacheParsed = [];
 	}
+	cacheRaw = current;
+	cacheStations = [];
+	return cacheParsed;
 }
 function writeCustom(list) {
 	store.custom = JSON.stringify(list);
 }
 function customStations() {
-	return readCustom().map((s) => ({
+	const list = readCustom();
+	if (cacheStations.length || !list.length) return cacheStations;
+	cacheStations = list.map((s) => ({
 		id: `custom-${s.id}`,
 		name: s.name || "Custom stream",
 		group: "Yours",
@@ -1149,9 +1162,11 @@ function customStations() {
 		streams: { mp3: s.url },
 		provider: { type: "none" }
 	}));
+	return cacheStations;
 }
 function allStations() {
-	return [...BUILT_IN, ...customStations()];
+	const custom = customStations();
+	return custom.length ? [...BUILT_IN, ...custom] : BUILT_IN;
 }
 function stationById(id) {
 	return allStations().find((s) => s.id === id) ?? null;
@@ -1643,7 +1658,7 @@ function Footer() {
 	})();
 }
 function Panel() {
-	let panel;
+	let panel$1;
 	const [pos, setPos] = createSignal$1({
 		top: 44,
 		right: 12
@@ -1658,7 +1673,7 @@ function Panel() {
 		});
 	};
 	const applyTheme = () => {
-		const root = panel?.closest(".rad-root");
+		const root = panel$1?.closest(".rad-root");
 		if (!root) return;
 		const light = !!anchorEl()?.closest(".theme-light");
 		root.classList.toggle("theme-light", light);
@@ -1668,7 +1683,7 @@ function Panel() {
 		place();
 		applyTheme();
 		const dismiss = (e) => {
-			if (panel?.contains(e.target)) return;
+			if (panel$1?.contains(e.target)) return;
 			if (anchorEl()?.contains(e.target)) return;
 			closePanel();
 		};
@@ -1688,8 +1703,8 @@ function Panel() {
 	});
 	return (() => {
 		const _el$35 = (0, import_web$23.getNextElement)(_tmpl$1), _el$36 = _el$35.firstChild, _el$37 = _el$36.firstChild, _el$38 = _el$37.firstChild, _el$39 = _el$38.nextSibling, _el$40 = _el$39.nextSibling, [_el$41, _co$8] = (0, import_web$22.getNextMarker)(_el$40.nextSibling), _el$43 = _el$37.nextSibling, [_el$44, _co$9] = (0, import_web$22.getNextMarker)(_el$43.nextSibling), _el$45 = _el$36.nextSibling, [_el$46, _co$0] = (0, import_web$22.getNextMarker)(_el$45.nextSibling);
-		const _ref$ = panel;
-		typeof _ref$ === "function" ? (0, import_web$16.use)(_ref$, _el$35) : panel = _el$35;
+		const _ref$ = panel$1;
+		typeof _ref$ === "function" ? (0, import_web$16.use)(_ref$, _el$35) : panel$1 = _el$35;
 		_el$37.$$click = () => view() === "stations" ? showPlayer() : showStations();
 		(0, import_web$24.insert)(_el$38, () => currentStation().name);
 		(0, import_web$24.insert)(_el$39, () => currentStation().group);
@@ -1766,10 +1781,10 @@ function PanelHost() {
 //#endregion
 //#region plugins/radio/inject.jsx
 var import_web$13 = __toESM(require_web(), 1);
-const { plugin: { scoped: scoped$1 }, ui: { ReactiveRoot } } = shelter;
+const { plugin: { scoped: scoped$1 }, solid: { createRoot }, ui: { ReactiveRoot } } = shelter;
 const GROUP = "[class*=\"trailing_\"]:not([data-radio])";
-const guards = new Set();
-let panelRoot = null;
+const injected = new Map();
+let panel = null;
 function isToolbarGroup(el) {
 	return !!el.querySelector("[class*=\"clickable_\"][role=\"button\"], [class*=\"iconWrapper\"]");
 }
@@ -1777,41 +1792,96 @@ function isToolbarGroup(el) {
 function nativeClass(group) {
 	return group.querySelector("[class*=\"clickable_\"][role=\"button\"]")?.getAttribute("class") ?? "";
 }
+/**
+* Render into a reactive root we can actually tear down.
+*
+* ReactiveRoot has no teardown. A detached node whose effects are still live
+* keeps recomputing on every signal change for the rest of the session, and
+* every store property it read holds a store-wide subscription — so each
+* orphaned button makes every later store write a little more expensive. That
+* cost is invisible for minutes and obvious after hours.
+*/
+function render(build) {
+	if (typeof createRoot !== "function") return {
+		el: (0, import_web$13.createComponent)(ReactiveRoot, { get children() {
+			return build();
+		} }),
+		dispose: () => {}
+	};
+	let dispose = () => {};
+	const el = createRoot((disposer) => {
+		dispose = disposer;
+		return build();
+	});
+	return {
+		el,
+		dispose
+	};
+}
+/**
+* Drop anything whose toolbar React has since thrown away.
+*
+* A detached element's own MutationObserver never fires, so a group can't clean
+* itself up — something outside has to notice. New groups only appear when old
+* ones are replaced, which makes injection the natural place to check, and
+* keeps this O(live groups) rather than a timer.
+*/
+function sweep() {
+	for (const [group, entry] of injected) {
+		if (group.isConnected) continue;
+		entry.guard.disconnect();
+		entry.dispose();
+		entry.mount.remove();
+		injected.delete(group);
+	}
+}
 function inject(group) {
-	if (group.dataset.radio || !isToolbarGroup(group)) return;
+	sweep();
+	if (injected.has(group) || group.dataset.radio || !isToolbarGroup(group)) return;
 	group.dataset.radio = "1";
 	const mount = document.createElement("div");
 	mount.className = "rad-mount";
-	mount.append((0, import_web$13.createComponent)(ReactiveRoot, { get children() {
-		return (0, import_web$13.createComponent)(ToolbarButton, { get native() {
-			return nativeClass(group);
-		} });
+	const { el, dispose } = render(() => (0, import_web$13.createComponent)(ToolbarButton, { get native() {
+		return nativeClass(group);
 	} }));
+	mount.append(el);
 	group.prepend(mount);
 	const guard = new MutationObserver(() => {
-		if (!group.isConnected) {
-			guard.disconnect();
-			guards.delete(guard);
-			return;
-		}
-		if (!mount.isConnected) group.prepend(mount);
+		if (group.isConnected && !mount.isConnected) group.prepend(mount);
 	});
 	guard.observe(group, { childList: true });
-	guards.add(guard);
+	injected.set(group, {
+		mount,
+		guard,
+		dispose
+	});
 }
 function startInjection() {
 	scoped$1.observeDom(GROUP, inject);
-	panelRoot = document.createElement("div");
-	panelRoot.className = "rad-root";
-	panelRoot.append((0, import_web$13.createComponent)(ReactiveRoot, { get children() {
-		return (0, import_web$13.createComponent)(PanelHost, {});
-	} }));
-	(document.querySelector("#app-mount") ?? document.body).append(panelRoot);
+	const root = document.createElement("div");
+	root.className = "rad-root";
+	const { el, dispose } = render(() => (0, import_web$13.createComponent)(PanelHost, {}));
+	root.append(el);
+	(document.querySelector("#app-mount") ?? document.body).append(root);
+	panel = {
+		root,
+		dispose
+	};
+}
+function stats() {
+	return {
+		mounts: injected.size,
+		panel: !!panel
+	};
 }
 function removeInjections() {
-	guards.forEach((guard) => guard.disconnect());
-	guards.clear();
-	panelRoot = null;
+	for (const entry of injected.values()) {
+		entry.guard.disconnect();
+		entry.dispose();
+	}
+	injected.clear();
+	panel?.dispose();
+	panel = null;
 	document.querySelectorAll(".rad-root, .rad-mount").forEach((el) => el.remove());
 	document.querySelectorAll("[data-radio]").forEach((el) => delete el.dataset.radio);
 }
@@ -2076,11 +2146,13 @@ function onLoad() {
 	onTrack(() => sync());
 	onPlaybackChange(() => sync());
 	startInjection();
+	window.__radio = { stats };
 }
 function onUnload() {
 	shutdown();
 	detach();
 	removeInjections();
+	delete window.__radio;
 }
 
 //#endregion
