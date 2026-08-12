@@ -122,15 +122,37 @@ export const QUALITIES = {
 
 const QUALITY_ORDER = ["opus", "vorbis", "mp3"];
 
+// Derived-value cache, keyed on the raw string it came from.
+//
+// The store read itself is deliberately NOT cached — it happens on every call,
+// which is what keeps the Solid subscription alive and the UI reactive. Only
+// the parse and the station objects built from it are reused, because
+// currentStation() sits under several reactive expressions and was otherwise
+// re-parsing JSON and rebuilding two dozen objects every time any of them ran.
+let cacheRaw = null;
+let cacheParsed = [];
+let cacheStations = [];
+
+function raw() {
+  return typeof store.custom === "string" ? store.custom : "[]";
+}
+
 /** The user's own stations, decoded from the store's JSON string. See data.js. */
 export function readCustom() {
+  const current = raw();
+  if (current === cacheRaw) return cacheParsed;
+
   try {
-    const parsed = JSON.parse(store.custom || "[]");
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(current || "[]");
+    cacheParsed = Array.isArray(parsed) ? parsed : [];
   } catch {
     // Corrupt or half-written value: an empty list beats a broken settings page.
-    return [];
+    cacheParsed = [];
   }
+
+  cacheRaw = current;
+  cacheStations = [];
+  return cacheParsed;
 }
 
 /** Replaces the whole list — the only kind of write the store persists. */
@@ -139,7 +161,11 @@ export function writeCustom(list) {
 }
 
 export function customStations() {
-  return readCustom().map((s) => ({
+  // readCustom() invalidates this whenever the underlying string changes.
+  const list = readCustom();
+  if (cacheStations.length || !list.length) return cacheStations;
+
+  cacheStations = list.map((s) => ({
     id: `custom-${s.id}`,
     name: s.name || "Custom stream",
     group: "Yours",
@@ -152,10 +178,15 @@ export function customStations() {
     // never exposes to script.
     provider: { type: "none" },
   }));
+
+  return cacheStations;
 }
 
 export function allStations() {
-  return [...BUILT_IN, ...customStations()];
+  const custom = customStations();
+  // Overwhelmingly the common case, and it avoids copying the built-in list on
+  // every station lookup.
+  return custom.length ? [...BUILT_IN, ...custom] : BUILT_IN;
 }
 
 export function stationById(id) {

@@ -2,7 +2,7 @@
 // defaults that everything else reads.
 import "./data";
 import css from "./styles";
-import { removeInjections, startInjection } from "./inject";
+import { removeInjections, startInjection, stats } from "./inject";
 import * as mediasession from "./mediasession";
 import { onTrack } from "./nowplaying";
 import { onPlaybackChange, shutdown } from "./session";
@@ -22,6 +22,12 @@ export function onLoad() {
   onPlaybackChange(() => mediasession.sync());
 
   startInjection();
+
+  // Diagnostic surface. A slow client after hours is impossible to attribute
+  // without a number, and `mounts` is the one that would climb if this plugin
+  // were leaking toolbar buttons. It should sit at 1 no matter how long Discord
+  // has been open or how much you've navigated around.
+  window.__radio = { stats };
 }
 
 export function onUnload() {
@@ -30,6 +36,7 @@ export function onUnload() {
   shutdown();
   mediasession.detach();
   removeInjections();
+  delete window.__radio;
 }
 
 export { default as settings } from "./settings";
