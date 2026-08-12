@@ -5,11 +5,40 @@ My plugins for [shelter](https://shelter.uwu.network).
 
 ## Install
 
-Add this URL in shelter's plugin list:
+Add either URL in shelter's plugin list:
 
 ```
 https://netcore10.github.io/shelter-plugins/friend-tags
+https://netcore10.github.io/shelter-plugins/radio
 ```
+
+## Radio
+
+An internet radio in Discord's toolbar. The broadcast icon sits next to Inbox
+and Help; clicking it opens a player.
+
+Stations, each with live now-playing info pulled from the station's own API:
+
+| Station | What you get |
+|---|---|
+| **LISTEN.moe** — J-POP, K-POP | Album art, both scripts, progress, listener count, who requested the track |
+| **r/a/dio** | Anime and J-pop, progress, listener count, the DJ when one is on air |
+| **Nightwave Plaza** | Vaporwave, album art, progress, listener count |
+| **Nightride FM** ×6 | Synthwave — Nightride, ChillSynth, Datawave, Spacesynth, Darksynth, REKT |
+| **SomaFM** ×10 | Groove Salad, Drone Zone, Space Station, Lush, Vaporwaves, DEF CON, Secret Agent, Underground 80s, Indie Pop Rocks!, Metal Detector |
+
+You can add any other stream in settings — a direct Icecast or SHOUTcast MP3,
+AAC or Ogg URL. Those play fine but show no track info: a bare stream carries
+its metadata inside the audio connection, where an `<audio>` element never
+exposes it to the page.
+
+Other settings: volume, romanised vs original titles, stream quality for
+LISTEN.moe (Opus, Vorbis or MP3), and whether to drive your system's media
+controls so the media keys pause it.
+
+The connection to a station's API is only held while you're listening or have
+the panel open, so an idle client isn't polling anything.
+
 ## Friend Tags
 
 Add custom tags to people from your friends list, then see those tags practically everywhere

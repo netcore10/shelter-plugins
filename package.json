@@ -2,10 +2,14 @@
   "name": "shelter-plugins",
   "private": true,
   "type": "module",
-  "workspaces": ["plugins/*"],
+  "workspaces": [
+    "plugins/*"
+  ],
   "scripts": {
     "dev": "lune dev plugins/friend-tags",
-    "build": "lune ci"
+    "build": "lune ci",
+    "dev:radio": "lune dev plugins/radio",
+    "dev:friend-tags": "lune dev plugins/friend-tags"
   },
   "devDependencies": {
     "@uwu/lune": "^1.6.2",
