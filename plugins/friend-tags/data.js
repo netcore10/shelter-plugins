@@ -200,6 +200,39 @@ export async function restoreFromBackup() {
   return recovered;
 }
 
+/**
+ * Everything, gzipped, as a Blob to save to disk.
+ *
+ * Tag data is very repetitive JSON — the same tag names and style objects over
+ * and over — which is what gzip is best at, so the file lands at a fraction of
+ * the raw size. CompressionStream is built into the browser, so there's no
+ * library to ship.
+ */
+export async function exportFile() {
+  const json = exportData();
+
+  if (typeof CompressionStream !== "function") {
+    // Older engine: still produce something that restores, just bigger.
+    return { blob: new Blob([json], { type: "application/json" }), raw: json.length, gzipped: false };
+  }
+
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+  const blob = await new Response(stream).blob();
+  return { blob, raw: json.length, gzipped: true };
+}
+
+/** Read a file written by exportFile — gzipped or plain — and import it. */
+export async function importFile(file, options) {
+  const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+  const gzipped = head[0] === 0x1f && head[1] === 0x8b; // gzip magic number
+
+  const json = gzipped
+    ? await new Response(file.stream().pipeThrough(new DecompressionStream("gzip"))).text()
+    : await file.text();
+
+  return importData(json, options);
+}
+
 /** Force a backup now, e.g. straight after an import. */
 export const backupNow = () => scheduleBackup();
 

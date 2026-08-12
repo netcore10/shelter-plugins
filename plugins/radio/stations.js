@@ -122,12 +122,24 @@ export const QUALITIES = {
 
 const QUALITY_ORDER = ["opus", "vorbis", "mp3"];
 
-/**
- * Stations the user added themselves. They're stored as one top-level array so
- * that editing means replacing the whole thing — nested writes don't persist.
- */
+/** The user's own stations, decoded from the store's JSON string. See data.js. */
+export function readCustom() {
+  try {
+    const parsed = JSON.parse(store.custom || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // Corrupt or half-written value: an empty list beats a broken settings page.
+    return [];
+  }
+}
+
+/** Replaces the whole list — the only kind of write the store persists. */
+export function writeCustom(list) {
+  store.custom = JSON.stringify(list);
+}
+
 export function customStations() {
-  return (store.custom ?? []).map((s) => ({
+  return readCustom().map((s) => ({
     id: `custom-${s.id}`,
     name: s.name || "Custom stream",
     group: "Yours",

@@ -1,5 +1,5 @@
 import { store } from "./data";
-import { QUALITIES, currentStation, qualitiesFor } from "./stations";
+import { QUALITIES, currentStation, qualitiesFor, readCustom, writeCustom } from "./stations";
 import { selectQuality } from "./session";
 import { setVolume } from "./player";
 import Segmented from "./ui/Segmented";
@@ -33,17 +33,16 @@ function CustomStations() {
     const trimmed = url().trim();
     if (!trimmed) return;
 
-    store.custom = [
-      ...(store.custom ?? []),
-      { id: `${Date.now().toString(36)}`, name: name().trim() || "Custom stream", url: trimmed },
-    ];
+    writeCustom([
+      ...readCustom(),
+      { id: Date.now().toString(36), name: name().trim() || "Custom stream", url: trimmed },
+    ]);
 
     setName("");
     setUrl("");
   };
 
-  // Replaced wholesale rather than spliced: only top-level writes persist.
-  const remove = (id) => (store.custom = (store.custom ?? []).filter((s) => s.id !== id));
+  const remove = (id) => writeCustom(readCustom().filter((s) => s.id !== id));
 
   return (
     <>
@@ -55,7 +54,7 @@ function CustomStations() {
           now-playing info for these; a bare stream doesn't expose it to the page.
         </div>
 
-        <For each={store.custom ?? []}>
+        <For each={readCustom()}>
           {(station) => (
             <div class="rad-custom">
               <div class="rad-custom-text">

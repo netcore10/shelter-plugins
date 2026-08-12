@@ -6,7 +6,9 @@ import {
   allUserTags,
   currentAccountId,
   exportData,
+  exportFile,
   importData,
+  importFile,
   seedCurrentAccount,
 } from "../data";
 
@@ -51,6 +53,8 @@ const Toggle = (props) => (
 
 function Backup(props) {
   const [text, setText] = createSignal(exportData());
+  let picker;
+  const setPicker = (el) => (picker = el);
 
   const doImport = (merge) => {
     let counts;
@@ -104,6 +108,66 @@ function Backup(props) {
 
       <ModalFooter>
         <div style="display: flex; gap: 8px; justify-content: flex-end; width: 100%">
+          {/* Hidden picker, driven by the Load file button. */}
+          <input
+            type="file"
+            accept=".gz,.json,application/json,application/gzip"
+            style="display: none"
+            ref={setPicker}
+            onChange={async (e) => {
+              const file = e.currentTarget.files?.[0];
+              e.currentTarget.value = ""; // let the same file be picked again
+              if (!file) return;
+
+              let counts;
+              try {
+                counts = await importFile(file, { merge: false });
+              } catch (err) {
+                showToast({
+                  title: "Import failed",
+                  content: String(err.message ?? err),
+                  color: ToastColors.CRITICAL,
+                });
+                return;
+              }
+
+              refreshInjections();
+              showToast({
+                title: "Friend Tags",
+                content: `Restored ${counts.tags} ${counts.tags === 1 ? "tag" : "tags"} across ${counts.users} ${
+                  counts.users === 1 ? "person" : "people"
+                }.`,
+                color: ToastColors.SUCCESS,
+              });
+              props.close();
+            }}
+          />
+
+          <Button
+            look={ButtonLooks.OUTLINED}
+            onClick={async () => {
+              const { blob, raw, gzipped } = await exportFile();
+
+              const link = document.createElement("a");
+              link.href = URL.createObjectURL(blob);
+              link.download = `friend-tags-${new Date().toISOString().slice(0, 10)}.json${gzipped ? ".gz" : ""}`;
+              link.click();
+              URL.revokeObjectURL(link.href);
+
+              showToast({
+                title: "Friend Tags",
+                content: gzipped
+                  ? `Saved — ${(blob.size / 1024).toFixed(1)} KB, down from ${(raw / 1024).toFixed(1)} KB.`
+                  : `Saved — ${(blob.size / 1024).toFixed(1)} KB.`,
+                color: ToastColors.SUCCESS,
+              });
+            }}
+          >
+            Save file
+          </Button>
+          <Button look={ButtonLooks.OUTLINED} onClick={() => picker?.click()}>
+            Load file
+          </Button>
           <Button
             look={ButtonLooks.OUTLINED}
             onClick={() => {
