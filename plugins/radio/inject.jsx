@@ -38,15 +38,25 @@ function nativeClass(group) {
  * cost is invisible for minutes and obvious after hours.
  */
 function render(build) {
+  // Always wrap in a real element.
+  //
+  // A component that returns control flow — PanelHost returns a <Show> —
+  // compiles to a memo *function*, not a DOM node, and Node.append() stringifies
+  // anything that isn't a node. So the panel silently never rendered while the
+  // toolbar button, which returns a plain <div>, was fine. ReactiveRoot did this
+  // wrapping internally; raw createRoot hands back whatever the component
+  // returned, so the wrapping has to happen here.
+  const wrapped = () => <div class="rad-host">{build()}</div>;
+
   if (typeof createRoot !== "function") {
     // Older shelter: no disposal available, so at least keep it working.
-    return { el: <ReactiveRoot>{build()}</ReactiveRoot>, dispose: () => {} };
+    return { el: <ReactiveRoot>{wrapped()}</ReactiveRoot>, dispose: () => {} };
   }
 
   let dispose = () => {};
   const el = createRoot((disposer) => {
     dispose = disposer;
-    return build();
+    return wrapped();
   });
 
   return { el, dispose };

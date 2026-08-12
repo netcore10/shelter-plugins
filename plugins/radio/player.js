@@ -41,6 +41,14 @@ function element() {
   audio.volume = (store.volume ?? 35) / 100;
   audio.muted = !!store.muted;
 
+  // Kept in the document rather than floating detached. Chromium is much more
+  // reliable about handing a media element to the OS transport controls — the
+  // media keys on a keyboard or headset — when the element is actually in the
+  // page. A detached one plays fine but often never registers.
+  audio.setAttribute("aria-hidden", "true");
+  audio.style.display = "none";
+  document.body.append(audio);
+
   audio.addEventListener("playing", () => {
     retries = 0;
     setLoading(false);
@@ -170,6 +178,7 @@ export function destroy() {
   if (audio) {
     audio.removeEventListener("error", recover);
     audio.removeEventListener("ended", recover);
+    audio.remove();
     audio = null;
   }
 }

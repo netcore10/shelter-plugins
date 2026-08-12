@@ -22,7 +22,7 @@
 // variables in scope at all.
 
 export default `
-.rad-mount { display: contents; }
+.rad-mount, .rad-host { display: contents; }
 
 .rad-root {
   --rad-fb-bg: #111214;

@@ -115,7 +115,7 @@ export default function Settings() {
       <Toggle
         checked={store.mediaSession}
         onChange={(v) => (store.mediaSession = v)}
-        note="Show what's playing in your system's media controls, and let media keys pause it."
+        note="Show what's playing in your system's media controls, so media keys and headset buttons can pause it. Needs a client that forwards media keys to the OS: the desktop app and browsers do, clients built on the system webview (Dorion) generally don't, and there's nothing this plugin can do about that."
         hideBorder
       >
         Use system media controls

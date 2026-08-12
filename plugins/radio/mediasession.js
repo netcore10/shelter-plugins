@@ -15,7 +15,21 @@ export function sync() {
   const ms = navigator.mediaSession;
   if (!ms) return;
 
-  if (!store.mediaSession || !player.active()) return clear();
+  if (!store.mediaSession) return clear();
+
+  // Paused rather than cleared: keeping the metadata leaves the OS control on
+  // screen, which is what lets the play key start us again. Clearing it removes
+  // the control entirely and the key goes back to whatever played last.
+  if (!player.active()) {
+    attach();
+    ms.playbackState = "paused";
+    return;
+  }
+
+  // Re-assert on every state change. The handlers are a single page-wide slot,
+  // so Discord or any other plugin that touches them replaces ours outright —
+  // and the failure is silent, showing up only as a dead media key.
+  attach();
 
   const now = track();
   const station = currentStation();
