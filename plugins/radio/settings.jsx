@@ -9,6 +9,22 @@ const {
   ui: { Button, ButtonColors, ButtonSizes, Divider, Header, HeaderTags, Slider, SwitchItem, TextBox },
 } = shelter;
 
+// `checked` is the documented prop; `value` is what older shelter builds read.
+// Passing both keeps the switch working either way — with only `checked`, a
+// build that wants `value` renders a switch that never reflects its own state,
+// which looks exactly like a toggle you can't click. Same fix as friend-tags.
+const Toggle = (props) => (
+  <SwitchItem
+    checked={props.checked}
+    value={props.checked}
+    onChange={props.onChange}
+    note={props.note}
+    hideBorder={props.hideBorder}
+  >
+    {props.children}
+  </SwitchItem>
+);
+
 function CustomStations() {
   const [name, setName] = createSignal("");
   const [url, setUrl] = createSignal("");
@@ -89,22 +105,22 @@ export default function Settings() {
         </div>
       </Show>
 
-      <SwitchItem
+      <Toggle
         checked={store.romaji}
         onChange={(v) => (store.romaji = v)}
         note="Show romanised titles and artist names where the station provides them, instead of the original script."
       >
         Prefer romanised names
-      </SwitchItem>
+      </Toggle>
 
-      <SwitchItem
+      <Toggle
         checked={store.mediaSession}
         onChange={(v) => (store.mediaSession = v)}
         note="Show what's playing in your system's media controls, and let media keys pause it."
         hideBorder
       >
         Use system media controls
-      </SwitchItem>
+      </Toggle>
 
       <Divider mt mb />
 
