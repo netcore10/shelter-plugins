@@ -1886,6 +1886,26 @@ var import_web$4 = __toESM(require_web(), 1);
 var import_web$5 = __toESM(require_web(), 1);
 const _tmpl$ = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Any direct stream URL works — an Icecast or SHOUTcast MP3, AAC or Ogg endpoint. There's no now-playing info for these; a bare stream doesn't expose it to the page.</div><!#><!/><div class="rad-custom"><!#><!/><!#><!/><!#><!/></div></div>`, 14), _tmpl$2 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-custom"><div class="rad-custom-text"><div></div><div class="rad-custom-url"></div></div><!#><!/></div>`, 10), _tmpl$3 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Volume</div><!#><!/></div>`, 6), _tmpl$4 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Stream quality — <!#><!/></div><!#><!/></div>`, 8);
 const { solid: { createSignal, For, Show }, ui: { Button, ButtonColors, ButtonSizes, Divider, Header, HeaderTags, Slider, SwitchItem, TextBox } } = shelter;
+const Toggle = (props) => (0, import_web$5.createComponent)(SwitchItem, {
+	get checked() {
+		return props.checked;
+	},
+	get value() {
+		return props.checked;
+	},
+	get onChange() {
+		return props.onChange;
+	},
+	get note() {
+		return props.note;
+	},
+	get hideBorder() {
+		return props.hideBorder;
+	},
+	get children() {
+		return props.children;
+	}
+});
 function CustomStations() {
 	const [name, setName] = createSignal("");
 	const [url, setUrl] = createSignal("");
@@ -1998,7 +2018,7 @@ function Settings() {
 				return _el$20;
 			}
 		}),
-		(0, import_web$5.createComponent)(SwitchItem, {
+		(0, import_web$5.createComponent)(Toggle, {
 			get checked() {
 				return store.romaji;
 			},
@@ -2006,7 +2026,7 @@ function Settings() {
 			note: "Show romanised titles and artist names where the station provides them, instead of the original script.",
 			children: "Prefer romanised names"
 		}),
-		(0, import_web$5.createComponent)(SwitchItem, {
+		(0, import_web$5.createComponent)(Toggle, {
 			get checked() {
 				return store.mediaSession;
 			},
