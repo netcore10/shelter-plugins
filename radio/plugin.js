@@ -570,6 +570,7 @@ const { solid: { createSignal: createSignal$5 }, ui: { showToast, ToastColors } 
 const [playing, setPlaying] = createSignal$5(false);
 const [loading, setLoading] = createSignal$5(false);
 const active = () => playing() || loading();
+const isLive = () => !!audio && !audio.paused && !!audio.getAttribute("src");
 let audio = null;
 let retryTimer = null;
 let retries = 0;
@@ -656,6 +657,14 @@ function play(url) {
 			color: ToastColors.DANGER
 		});
 	});
+}
+function pause$1() {
+	clearTimeout(retryTimer);
+	retries = 0;
+	generation++;
+	setPlaying(false);
+	setLoading(false);
+	audio?.pause();
 }
 function stop$1() {
 	clearTimeout(retryTimer);
@@ -1240,13 +1249,18 @@ function start() {
 	syncMetadata();
 	playbackHook();
 }
+function pause() {
+	pause$1();
+	syncMetadata();
+	playbackHook();
+}
 function stop() {
 	stop$1();
 	syncMetadata();
 	playbackHook();
 }
 function toggle() {
-	if (active()) stop();
+	if (active() || isLive()) pause();
 else start();
 }
 function selectStation(id) {
@@ -1930,7 +1944,7 @@ function clear() {
 }
 const ACTIONS = {
 	play: () => start(),
-	pause: () => stop(),
+	pause: () => pause(),
 	stop: () => stop()
 };
 function attach() {
