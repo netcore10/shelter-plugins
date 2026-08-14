@@ -1,0 +1,5 @@
+{
+  "name": "Back & Forward",
+  "author": "netcore",
+  "description": "Adds the back and forward navigation buttons from the Discord desktop app to clients that don't have them, in their usual spot at the top left."
+}

@@ -5,12 +5,26 @@ My plugins for [shelter](https://shelter.uwu.network).
 
 ## Install
 
-Add either URL in shelter's plugin list:
+Add any of these URLs in shelter's plugin list:
 
 ```
 https://netcore10.github.io/shelter-plugins/friend-tags
 https://netcore10.github.io/shelter-plugins/radio
+https://netcore10.github.io/shelter-plugins/nav-buttons
 ```
+
+## Back & Forward
+
+Adds the back and forward navigation buttons from the Discord desktop app to
+clients that don't have them, in their usual spot at the top left.
+
+Useful on clients like Dorion, which route navigation through normal browser
+history — the same thing your mouse's back and forward buttons already do — but
+don't draw the buttons themselves.
+
+They grey out at the ends of the history stack the way Discord's own pair does,
+and the plugin skips injecting entirely on a client that already has them, so
+it's safe to leave enabled everywhere.
 
 ## Radio
 
