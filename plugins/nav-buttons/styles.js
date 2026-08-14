@@ -8,6 +8,10 @@ export default `
   display: flex;
   align-items: center;
   gap: 2px;
+  /* Never grow or shrink the bar. As a foreign child in a flex row written for
+     a fixed set of children, anything else lets us push Discord's own layout
+     around — which is what collapsed the window. */
+  flex: 0 0 auto;
   /* The top bar is a window drag region in desktop clients. Without this a
      click reads as the start of a window drag and never reaches the button. */
   -webkit-app-region: no-drag;

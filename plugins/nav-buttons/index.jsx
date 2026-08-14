@@ -4,11 +4,18 @@ const {
   plugin: { scoped },
 } = shelter;
 
-// Discord's top-bar leading group — the slot the desktop app puts its
-// back/forward buttons in. `leading_` on its own isn't unique across the
-// client, so the group also has to sit opposite a `trailing_` one, which is a
-// pairing only the top bar has. Class names are hashed and change between
-// builds, hence the substring matching.
+// The top bar, measured in the real client rather than guessed from class
+// stems (which put these on the channel header twice):
+//
+//   bar_c38106 theme-dark theme-darker images-dark
+//     ├ leading_c38106     empty, measures 0x0 — where these belong
+//     ├ title_c38106
+//     └ trailing_c38106    the icon buttons, 96x24
+//
+// So the gate is the shape of the bar itself: a `bar_` element whose direct
+// children include both a title and a trailing group. `leading_` and
+// `trailing_` are reused elsewhere in Discord; that three-part structure is
+// not.
 const GROUP = '[class*="leading_"]:not([data-navbtns])';
 
 // Discord's own arrow glyphs, so the pair is indistinguishable from the ones
@@ -20,68 +27,17 @@ const FORWARD =
 
 const mounts = new Set();
 
-let originalPush = null;
-let maxIndex = 0;
-
-// --- history position -------------------------------------------------------
-//
-// Navigation itself is just history.back()/forward(): this client already
-// routes the mouse's own back/forward buttons that way, so the SPA picks it up.
-//
-// Knowing whether there's anywhere to go is the harder half. Discord's router
-// keeps a react-router style `idx` on history.state, which is what tells us
-// we're at the start of the stack. When it isn't there we leave both buttons
-// live rather than guess and disable a control that would have worked.
-
-function index() {
-  const idx = history.state?.idx;
-  return typeof idx === "number" ? idx : null;
-}
-
-function setDisabled(button, disabled) {
-  button.setAttribute("aria-disabled", String(disabled));
-  button.setAttribute("tabindex", disabled ? "-1" : "0");
-}
-
-function refresh() {
-  const idx = index();
-
-  for (const { back, forward } of mounts) {
-    setDisabled(back, idx !== null && idx <= 0);
-    setDisabled(forward, idx !== null && idx >= maxIndex);
-  }
-}
-
-function onPop() {
-  const idx = index();
-  if (idx !== null && idx > maxIndex) maxIndex = idx;
-  refresh();
-}
-
-function patchHistory() {
-  originalPush = history.pushState;
-
-  // pushState fires no event of its own, and a push discards everything ahead
-  // of the current entry — so this is the only moment we can learn that going
-  // forward just stopped being possible.
-  history.pushState = function (...args) {
-    const result = originalPush.apply(this, args);
-    maxIndex = index() ?? maxIndex;
-    refresh();
-    return result;
-  };
-
-  addEventListener("popstate", onPop);
-}
-
 // --- buttons ----------------------------------------------------------------
-
-function go(delta, button) {
-  if (button.getAttribute("aria-disabled") === "true") return;
-
-  if (delta < 0) history.back();
-  else history.forward();
-}
+//
+// Both buttons are always live. Discord's own pair greys out at the ends of the
+// history stack, but nothing exposes the position needed to do that honestly:
+// history has a length but no index, popstate doesn't say which way it moved,
+// and this client's router keeps no index of its own. Tracking it meant
+// patching pushState and replaceState to stamp entries — a lot of machinery
+// whose only failure mode was disabling a button that would have worked.
+//
+// A back press at the bottom of the stack simply does nothing, which is a much
+// better outcome than a dead-looking button.
 
 function button(label, path, delta) {
   const el = (
@@ -92,14 +48,30 @@ function button(label, path, delta) {
     </div>
   );
 
-  el.addEventListener("click", () => go(delta, el));
+  const go = () => (delta < 0 ? history.back() : history.forward());
+
+  el.addEventListener("click", go);
   el.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
     e.preventDefault();
-    go(delta, el);
+    go();
   });
 
   return el;
+}
+
+// --- injection --------------------------------------------------------------
+
+/**
+ * Is this the window's top bar, and not one of the other places Discord reuses
+ * these class stems? Checks the bar's own shape: `bar_` (not `toolbar_`, hence
+ * the word boundary) with a title and a trailing group as direct children.
+ */
+function isTopBar(leading) {
+  const bar = leading.parentElement;
+  if (!bar || !/(^|\s)bar_/.test(bar.className)) return false;
+
+  return !!bar.querySelector(':scope > [class*="title_"]') && !!bar.querySelector(':scope > [class*="trailing_"]');
 }
 
 /** Drop anything whose top bar React has since thrown away. */
@@ -112,49 +84,52 @@ function sweep() {
   }
 }
 
-/**
- * The two ends of the top bar. Rather than assume they're direct siblings —
- * which would silently inject nothing the day Discord adds a wrapper — look for
- * the trailing group from a shared ancestor a few levels up.
- */
-function inTopBar(group) {
-  let node = group.parentElement;
-
-  for (let depth = 0; node && depth < 3; depth++, node = node.parentElement) {
-    if (node.querySelector('[class*="trailing_"]')) return true;
-  }
-
-  return false;
-}
-
-function inject(group) {
+function inject(leading) {
   sweep();
 
-  if (group.dataset.navbtns || !inTopBar(group)) return;
+  if (leading.dataset.navbtns || !isTopBar(leading)) return;
+
+  const bar = leading.parentElement;
+
   // A client that already ships the buttons doesn't need a second pair.
-  if (group.querySelector('[class*="backForwardButtons"]')) return;
+  if (bar.querySelector('[class*="backForwardButtons"]')) return;
 
-  group.dataset.navbtns = "1";
-
-  const back = button("Go back", BACK, -1);
-  const forward = button("Go forward", FORWARD, 1);
+  leading.dataset.navbtns = "1";
 
   const root = document.createElement("div");
   root.className = "nav-btns";
-  root.append(back, forward);
-  group.prepend(root);
+  root.append(button("Go back", BACK, -1), button("Go forward", FORWARD, 1));
+
+  let host = leading;
+  host.prepend(root);
 
   // React owns this container and re-renders it without knowing we're here.
   // observeDom only fires again if the whole group is rebuilt, so when React
   // drops just our node we put it back ourselves. Teardown is sweep()'s job —
   // an observer on a detached node never fires, so it can't clean itself up.
   const guard = new MutationObserver(() => {
-    if (group.isConnected && !root.isConnected) group.prepend(root);
+    if (host.isConnected && !root.isConnected) host.prepend(root);
   });
-  guard.observe(group, { childList: true });
+  guard.observe(host, { childList: true });
 
-  mounts.add({ root, back, forward, guard });
-  refresh();
+  // The leading group is empty and measures 0x0 here, so it may be pinned to
+  // zero width or clipping its overflow. Rather than restyle Discord's element
+  // and risk breaking the bar, check whether it actually gave us any width and
+  // sit directly in the bar if it didn't. Measured after a frame, because
+  // nothing has been laid out at this point.
+  requestAnimationFrame(() => {
+    if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
+
+    host = bar;
+    bar.insertBefore(root, bar.firstChild);
+
+    // Follow the move, or the guard would be watching a container the buttons
+    // no longer live in.
+    guard.disconnect();
+    guard.observe(host, { childList: true });
+  });
+
+  mounts.add({ root, guard });
 }
 
 // --- lifecycle --------------------------------------------------------------
@@ -162,20 +137,10 @@ function inject(group) {
 export function onLoad() {
   // Note: injectCss lives under scoped.ui, not on scoped directly.
   scoped.ui.injectCss(css);
-
-  maxIndex = index() ?? 0;
-  patchHistory();
-
   scoped.observeDom(GROUP, inject);
 }
 
 export function onUnload() {
-  // Only safe because nothing else is expected to patch this. If another plugin
-  // wrapped pushState after us, restoring the original drops their wrapper too.
-  if (originalPush) history.pushState = originalPush;
-  originalPush = null;
-  removeEventListener("popstate", onPop);
-
   for (const entry of mounts) entry.guard.disconnect();
   mounts.clear();
 

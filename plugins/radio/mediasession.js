@@ -55,9 +55,12 @@ export function clear() {
   ms.playbackState = "none";
 }
 
+// pause() rather than stop(): a full teardown ends the media session, and the
+// play key would then have nothing to resume — with no window to click, that
+// leaves no way back at all.
 const ACTIONS = {
   play: () => session.start(),
-  pause: () => session.stop(),
+  pause: () => session.pause(),
   stop: () => session.stop(),
 };
 

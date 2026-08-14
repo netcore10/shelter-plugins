@@ -147,6 +147,28 @@ export function play(url) {
   });
 }
 
+/**
+ * Pause without dropping the source.
+ *
+ * stop() tears the source down so a resume starts live rather than minutes
+ * behind — but that also ends the OS media session, and the play key then has
+ * nothing to resume. With Discord installed as a PWA that key may be the only
+ * way back, since there's no window to click.
+ *
+ * Keeping the element loaded keeps the session alive. Resuming is still live
+ * because play() always sets a fresh source.
+ */
+export function pause() {
+  clearTimeout(retryTimer);
+  retries = 0;
+  generation++;
+
+  setPlaying(false);
+  setLoading(false);
+
+  audio?.pause();
+}
+
 export function stop() {
   clearTimeout(retryTimer);
   retries = 0;

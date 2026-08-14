@@ -22,9 +22,16 @@ Useful on clients like Dorion, which route navigation through normal browser
 history — the same thing your mouse's back and forward buttons already do — but
 don't draw the buttons themselves.
 
-They grey out at the ends of the history stack the way Discord's own pair does,
-and the plugin skips injecting entirely on a client that already has them, so
+The plugin skips injecting entirely on a client that already has the buttons, so
 it's safe to leave enabled everywhere.
+
+Both buttons are always live — they don't grey out at the ends of the history
+stack. Nothing exposes the position needed to do that honestly: `history` has a
+length but no index, `popstate` doesn't say which direction it moved, and this
+client's router keeps no index of its own. Tracking it meant patching
+`pushState` and `replaceState` to stamp every entry, which is a lot of
+machinery whose only failure mode was grey­ing out a button that would have
+worked. A press at the end of the stack just does nothing instead.
 
 ## Radio
 
@@ -48,7 +55,23 @@ exposes it to the page.
 
 Other settings: volume, romanised vs original titles, stream quality for
 LISTEN.moe (Opus, Vorbis or MP3), and whether to drive your system's media
-controls so the media keys pause it.
+controls.
+
+### Media keys
+
+**Use system media controls** needs the client to register with the OS, which
+not every client does. Dorion on its own doesn't — Windows never shows a media
+control for it, for the radio or for any other audio.
+
+Equicord's **WebPWA** plugin fixes that: it makes Discord installable as an app
+(PWA), which brings notification badges, global key-binds and Discord's custom
+title bar with it. With that enabled, media keys and headset buttons reach the
+radio.
+
+Pausing deliberately keeps the audio element loaded rather than tearing it down.
+Dropping the source ends the OS media session, and the play key would then have
+nothing to resume — which matters most as a PWA, where there may be no window to
+click. Resuming still starts from live, because play always sets a fresh source.
 
 The connection to a station's API is only held while you're listening or have
 the panel open, so an idle client isn't polling anything.

@@ -76,6 +76,17 @@ export function start() {
   playbackHook();
 }
 
+/**
+ * The everyday "off". Keeps the audio element loaded so the OS media session
+ * survives and its play key can start us again — see player.pause().
+ */
+export function pause() {
+  player.pause();
+  syncMetadata();
+  playbackHook();
+}
+
+/** A full teardown. For shutdown and switching stations, not for the play button. */
 export function stop() {
   player.stop();
   syncMetadata();
@@ -83,7 +94,8 @@ export function stop() {
 }
 
 export function toggle() {
-  if (player.active()) stop();
+  // isLive() as well, since our own signals can drift from the element.
+  if (player.active() || player.isLive()) pause();
   else start();
 }
 
