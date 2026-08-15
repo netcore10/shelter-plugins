@@ -18,6 +18,7 @@ const {
 // not.
 const GROUP = '[class*="leading_"]:not([data-navbtns])';
 
+
 // Discord's own arrow glyphs, so the pair is indistinguishable from the ones
 // the desktop app draws.
 const BACK =
@@ -112,12 +113,12 @@ function inject(leading) {
   });
   guard.observe(host, { childList: true });
 
-  // The leading group is empty and measures 0x0 here, so it may be pinned to
-  // zero width or clipping its overflow. Rather than restyle Discord's element
-  // and risk breaking the bar, check whether it actually gave us any width and
-  // sit directly in the bar if it didn't. Measured after a frame, because
-  // nothing has been laid out at this point.
+  // Measured after a frame, because nothing has been laid out at this point.
   requestAnimationFrame(() => {
+    // The leading group can measure 0x0 in clients that collapse the top bar.
+    // If it gave us no width, sit directly in the bar instead. The bar's own
+    // height is left alone: whatever collapses it also resets it, and fighting
+    // that belongs upstream, not here.
     if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
 
     host = bar;
