@@ -22,6 +22,23 @@ export const active = () => playing() || loading();
  */
 export const isLive = () => !!audio && !audio.paused && !!audio.getAttribute("src");
 
+/** Diagnostics for "it says it's playing but I hear nothing". */
+export function state() {
+  if (!audio) return { element: false };
+
+  return {
+    element: true,
+    src: audio.currentSrc || null,
+    paused: audio.paused,
+    muted: audio.muted,
+    volume: audio.volume,
+    currentTime: audio.currentTime,
+    readyState: audio.readyState, // 0 = nothing loaded
+    networkState: audio.networkState, // 3 = no source
+    error: audio.error?.code ?? null,
+  };
+}
+
 let audio = null;
 let retryTimer = null;
 let retries = 0;
@@ -115,6 +132,33 @@ function teardownSource() {
   audio.pause();
   audio.removeAttribute("src");
   audio.load();
+}
+
+/**
+ * Resume a merely-paused element, without touching its source.
+ *
+ * Reloading the source is what kills the OS media session — which is exactly
+ * what the play key is driving, so a play handler that reloads destroys the
+ * thing that invoked it. Resuming in place keeps the session intact.
+ *
+ * The stream stays close to live: a paused element stops reading, so the
+ * connection either continues from the live point or dies and trips recover(),
+ * which reloads properly. Returns false when there's nothing to resume.
+ */
+export function resume() {
+  if (!audio?.getAttribute("src")) return false;
+
+  const token = ++generation;
+  setLoading(true);
+
+  audio.play().catch((err) => {
+    if (token !== generation || err?.name === "AbortError") return;
+
+    setLoading(false);
+    setPlaying(false);
+  });
+
+  return true;
 }
 
 export function play(url) {

@@ -184,8 +184,7 @@ export function customStations() {
 
 export function allStations() {
   const custom = customStations();
-  // Overwhelmingly the common case, and it avoids copying the built-in list on
-  // every station lookup.
+  // Avoids copying the built-in list on every station lookup.
   return custom.length ? [...BUILT_IN, ...custom] : BUILT_IN;
 }
 

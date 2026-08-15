@@ -5,7 +5,8 @@ import { anchorEl, closePanel, panelOpen, showPlayer, showStations, toggle, view
 import { currentStation } from "../stations";
 import Artwork from "./Artwork";
 import StationList from "./StationList";
-import { Bars, CaretIcon, PauseIcon, PlayIcon, VolumeIcon } from "./icons";
+import { Bars, CaretIcon, GearIcon, PauseIcon, PlayIcon, VolumeIcon } from "./icons";
+import openSettings from "./openSettings";
 
 const {
   solid: { createEffect, createMemo, createSignal, onCleanup, onMount, Show },
@@ -263,6 +264,20 @@ export default function Panel() {
             <Bars />
           </div>
         </Show>
+
+        {/* Close first: the panel dismisses on any outside pointerdown, and
+            leaving it open behind the modal means it swallows the next click. */}
+        <button
+          type="button"
+          class="rad-head-btn"
+          aria-label="Radio settings"
+          onClick={() => {
+            closePanel();
+            openSettings();
+          }}
+        >
+          <GearIcon />
+        </button>
       </div>
 
       {/* One element per branch. Show memoizes whatever `children` evaluates

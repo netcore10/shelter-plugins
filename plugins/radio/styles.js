@@ -171,6 +171,19 @@ export default `
   white-space: nowrap;
 }
 
+.rad-head-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--rad-muted);
+}
+
+.rad-head-btn:hover { color: var(--rad-text); }
+
 .rad-station .rad-caret {
   flex: 0 0 auto;
   opacity: .55;

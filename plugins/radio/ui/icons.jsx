@@ -34,6 +34,17 @@ export const PauseIcon = () => (
   </svg>
 );
 
+export const GearIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      fill="currentColor"
+      fill-rule="evenodd"
+      d="M10.56 2.2a1 1 0 0 0-.9.74l-.36 1.4a7.9 7.9 0 0 0-1.6.93l-1.38-.43a1 1 0 0 0-1.16.45l-1.44 2.5a1 1 0 0 0 .19 1.22l1.06.98a8 8 0 0 0 0 1.84l-1.06.98a1 1 0 0 0-.19 1.22l1.44 2.5a1 1 0 0 0 1.16.45l1.38-.43c.5.38 1.03.7 1.6.93l.36 1.4a1 1 0 0 0 .97.75h2.88a1 1 0 0 0 .97-.75l.36-1.4c.57-.23 1.1-.55 1.6-.93l1.38.43a1 1 0 0 0 1.16-.45l1.44-2.5a1 1 0 0 0-.19-1.22l-1.06-.98a8 8 0 0 0 0-1.84l1.06-.98a1 1 0 0 0 .19-1.22l-1.44-2.5a1 1 0 0 0-1.16-.45l-1.38.43a7.9 7.9 0 0 0-1.6-.93l-.36-1.4a1 1 0 0 0-.97-.75h-2.88ZM12 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Z"
+      clip-rule="evenodd"
+    />
+  </svg>
+);
+
 export const VolumeIcon = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" fill="currentColor" />

@@ -71,7 +71,11 @@ export function showPlayer() {
 // --- playback -------------------------------------------------------------
 
 export function start() {
-  player.play(streamUrl(currentStation()));
+  // Resume in place when the element is only paused. Reloading the source
+  // destroys the OS media session, and that session is what the play key is
+  // driving — so a play handler that reloads tears down its own caller.
+  if (!player.resume()) player.play(streamUrl(currentStation()));
+
   syncMetadata();
   playbackHook();
 }

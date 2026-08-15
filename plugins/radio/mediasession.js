@@ -55,13 +55,35 @@ export function clear() {
   ms.playbackState = "none";
 }
 
+// Last action the OS sent us, for diagnosing which half of the chain is broken:
+// whether a key press reaches this plugin at all, or reaches it and then fails.
+let lastAction = null;
+
+export function debug() {
+  const ms = navigator.mediaSession;
+
+  return {
+    lastAction,
+    state: ms?.playbackState ?? "(no mediaSession)",
+    title: ms?.metadata?.title ?? null,
+    enabled: !!store.mediaSession,
+    playing: player.active(),
+  };
+}
+
+function handle(name, run) {
+  lastAction = { name, at: new Date().toLocaleTimeString() };
+  console.log("[radio] media key:", name);
+  run();
+}
+
 // pause() rather than stop(): a full teardown ends the media session, and the
 // play key would then have nothing to resume — with no window to click, that
 // leaves no way back at all.
 const ACTIONS = {
-  play: () => session.start(),
-  pause: () => session.pause(),
-  stop: () => session.stop(),
+  play: () => handle("play", () => session.start()),
+  pause: () => handle("pause", () => session.pause()),
+  stop: () => handle("stop", () => session.stop()),
 };
 
 export function attach() {
