@@ -83,6 +83,19 @@ const SURFACES = [
     enabled: () => store.inDms,
   },
   {
+    id: "dmHeader",
+    // The big name above "This is the beginning of your direct message history
+    // with X" — the empty state at the top of a DM.
+    //
+    // The text variant is load-bearing: every message header in the chat is
+    // also an h3 with a "header_" class, so matching on that alone put the DM
+    // user's tags on every message in the conversation, including your own.
+    selector: 'h3[class*="header_"][data-text-variant^="heading-xxl"]',
+    anchors: [],
+    resolve: resolveOpenDmUser,
+    enabled: () => store.inDmHeader,
+  },
+  {
     id: "profiles",
     // Profile popouts and the full profile modal.
     selector: '[class*="userPopoutOuter"] [class*="usernameRow"], [class*="userProfileModalInner"] [class*="usernameRow"]',
@@ -120,6 +133,34 @@ function resolveDmUser(element) {
   if (!channelId) return;
 
   const channel = ChannelStore.getChannel(channelId);
+  // Group DMs have several recipients and no single user to tag.
+  if (channel?.recipients?.length !== 1) return;
+
+  return UserStore.getUser(channel.recipients[0]);
+}
+
+/**
+ * The user whose DM is currently open, for the heading above an empty DM.
+ *
+ * Resolved from the selected channel rather than the fiber, for the same reason
+ * as resolveDmUser: the heading itself carries no user, so a walk would climb
+ * until it found someone else's.
+ *
+ * `h3[class*="header_"]` is not unique to this heading, so the chat area is
+ * required too — without it, a DM's tags would land on unrelated headings
+ * elsewhere in the client whenever a DM happened to be open.
+ */
+function resolveOpenDmUser(element) {
+  if (!element.closest('[class*="chat_"]')) return;
+
+  // Belt and braces against the message-header collision: those carry the
+  // author's own username element, and tagging them would put the DM user's
+  // tags on everybody's messages.
+  if (element.querySelector('[id^="message-username-"]')) return;
+
+  const channelId = SelectedChannelStore.getChannelId();
+  const channel = channelId && ChannelStore.getChannel(channelId);
+
   // Group DMs have several recipients and no single user to tag.
   if (channel?.recipients?.length !== 1) return;
 

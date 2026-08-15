@@ -38,6 +38,7 @@ store.inFriends ??= true;
 store.inMessages ??= true;
 store.inMembers ??= true;
 store.inDms ??= true;
+store.inDmHeader ??= true;
 store.inProfiles ??= true;
 store.inVoice ??= true;
 

@@ -227,6 +227,14 @@ export default function Settings() {
       </Toggle>
 
       <Toggle
+        checked={store.inDmHeader}
+        onChange={(v) => (store.inDmHeader = v)}
+        note="The name above “This is the beginning of your direct message history…”."
+      >
+        DM header
+      </Toggle>
+
+      <Toggle
         checked={store.inProfiles}
         onChange={(v) => (store.inProfiles = v)}
         note="Profile popouts and the full profile modal — also editable here."

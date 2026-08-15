@@ -226,6 +226,28 @@ html.theme-light .ftags-preview-pop {
   max-width: 100%;
 }
 
+/* Hover preview.
+   In the DM list a tag is capped at 40% and usually ellipsed, which makes it
+   hard to read at a glance. Hovering the row lifts the cap so the full tag
+   shows; the name truncates for as long as the pointer is there, which is a
+   fair trade when the row is the thing being pointed at.
+   Anchored to the same containers the surfaces themselves match. A child
+   combinator through the mount doesn't work — ReactiveRoot sits between the
+   mount and the chip — and a universal descendant form would match body, which
+   is always hovered, expanding every chip permanently. */
+.ftags-row--compact {
+  transition: max-width 120ms ease;
+}
+
+[data-list-item-id^="private-channels-uid_"]:hover .ftags-row--compact,
+[class*="memberInner"]:hover .ftags-row--compact {
+  max-width: 85%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ftags-row--compact { transition: none; }
+}
+
 .ftags-add {
   display: inline-flex;
   align-items: center;
