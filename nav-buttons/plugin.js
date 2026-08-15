@@ -75,6 +75,9 @@ var styles_default = `
   background: none;
   color: var(--interactive-normal, var(--text-secondary, #b5bac1));
 }
+
+/* The top-bar height fix lives in index.jsx, not here: the 0px is an inline
+   style on <html>, and no stylesheet rule outranks that. */
 `;
 
 //#endregion

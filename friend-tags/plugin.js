@@ -283,6 +283,7 @@ store$2.inFriends ??= true;
 store$2.inMessages ??= true;
 store$2.inMembers ??= true;
 store$2.inDms ??= true;
+store$2.inDmHeader ??= true;
 store$2.inProfiles ??= true;
 store$2.inVoice ??= true;
 store$2.uppercase ??= true;
@@ -915,6 +916,28 @@ html.theme-light .ftags-preview-pop {
   text-overflow: ellipsis;
   display: inline-block;
   max-width: 100%;
+}
+
+/* Hover preview.
+   In the DM list a tag is capped at 40% and usually ellipsed, which makes it
+   hard to read at a glance. Hovering the row lifts the cap so the full tag
+   shows; the name truncates for as long as the pointer is there, which is a
+   fair trade when the row is the thing being pointed at.
+   Anchored to the same containers the surfaces themselves match. A child
+   combinator through the mount doesn't work — ReactiveRoot sits between the
+   mount and the chip — and a universal descendant form would match body, which
+   is always hovered, expanding every chip permanently. */
+.ftags-row--compact {
+  transition: max-width 120ms ease;
+}
+
+[data-list-item-id^="private-channels-uid_"]:hover .ftags-row--compact,
+[class*="memberInner"]:hover .ftags-row--compact {
+  max-width: 85%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ftags-row--compact { transition: none; }
 }
 
 .ftags-add {
@@ -3676,6 +3699,13 @@ const SURFACES = [
 		enabled: () => store$1.inDms
 	},
 	{
+		id: "dmHeader",
+		selector: "h3[class*=\"header_\"][data-text-variant^=\"heading-xxl\"]",
+		anchors: [],
+		resolve: resolveOpenDmUser,
+		enabled: () => store$1.inDmHeader
+	},
+	{
 		id: "profiles",
 		selector: "[class*=\"userPopoutOuter\"] [class*=\"usernameRow\"], [class*=\"userProfileModalInner\"] [class*=\"usernameRow\"]",
 		anchors: [],
@@ -3704,6 +3734,25 @@ function resolveDmUser(element) {
 	const channelId = /\/channels\/@me\/(\d+)\b/.exec(href)?.[1];
 	if (!channelId) return;
 	const channel = ChannelStore.getChannel(channelId);
+	if (channel?.recipients?.length !== 1) return;
+	return UserStore$1.getUser(channel.recipients[0]);
+}
+/**
+* The user whose DM is currently open, for the heading above an empty DM.
+*
+* Resolved from the selected channel rather than the fiber, for the same reason
+* as resolveDmUser: the heading itself carries no user, so a walk would climb
+* until it found someone else's.
+*
+* `h3[class*="header_"]` is not unique to this heading, so the chat area is
+* required too — without it, a DM's tags would land on unrelated headings
+* elsewhere in the client whenever a DM happened to be open.
+*/
+function resolveOpenDmUser(element) {
+	if (!element.closest("[class*=\"chat_\"]")) return;
+	if (element.querySelector("[id^=\"message-username-\"]")) return;
+	const channelId = SelectedChannelStore.getChannelId();
+	const channel = channelId && ChannelStore.getChannel(channelId);
 	if (channel?.recipients?.length !== 1) return;
 	return UserStore$1.getUser(channel.recipients[0]);
 }
@@ -4390,6 +4439,14 @@ function Settings() {
 			},
 			onChange: (v) => store.inDms = v,
 			children: "DM list"
+		}),
+		(0, import_web$6.createComponent)(Toggle, {
+			get checked() {
+				return store.inDmHeader;
+			},
+			onChange: (v) => store.inDmHeader = v,
+			note: "The name above “This is the beginning of your direct message history…”.",
+			children: "DM header"
 		}),
 		(0, import_web$6.createComponent)(Toggle, {
 			get checked() {

@@ -199,6 +199,19 @@ var styles_default = `
   white-space: nowrap;
 }
 
+.rad-head-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--rad-muted);
+}
+
+.rad-head-btn:hover { color: var(--rad-text); }
+
 .rad-station .rad-caret {
   flex: 0 0 auto;
   opacity: .55;
@@ -571,6 +584,20 @@ const [playing, setPlaying] = createSignal$5(false);
 const [loading, setLoading] = createSignal$5(false);
 const active = () => playing() || loading();
 const isLive = () => !!audio && !audio.paused && !!audio.getAttribute("src");
+function state() {
+	if (!audio) return { element: false };
+	return {
+		element: true,
+		src: audio.currentSrc || null,
+		paused: audio.paused,
+		muted: audio.muted,
+		volume: audio.volume,
+		currentTime: audio.currentTime,
+		readyState: audio.readyState,
+		networkState: audio.networkState,
+		error: audio.error?.code ?? null
+	};
+}
 let audio = null;
 let retryTimer = null;
 let retries = 0;
@@ -630,6 +657,17 @@ function teardownSource() {
 	audio.pause();
 	audio.removeAttribute("src");
 	audio.load();
+}
+function resume() {
+	if (!audio?.getAttribute("src")) return false;
+	const token = ++generation;
+	setLoading(true);
+	audio.play().catch((err) => {
+		if (token !== generation || err?.name === "AbortError") return;
+		setLoading(false);
+		setPlaying(false);
+	});
+	return true;
 }
 function play(url) {
 	if (!url) {
@@ -1245,7 +1283,7 @@ function showPlayer() {
 	setView("player");
 }
 function start() {
-	play(streamUrl(currentStation()));
+	if (!resume()) play(streamUrl(currentStation()));
 	syncMetadata();
 	playbackHook();
 }
@@ -1288,34 +1326,34 @@ function shutdown() {
 
 //#endregion
 //#region plugins/radio/ui/icons.jsx
-var import_web$54 = __toESM(require_web(), 1);
 var import_web$55 = __toESM(require_web(), 1);
 var import_web$56 = __toESM(require_web(), 1);
 var import_web$57 = __toESM(require_web(), 1);
 var import_web$58 = __toESM(require_web(), 1);
 var import_web$59 = __toESM(require_web(), 1);
-const _tmpl$$7 = /*#__PURE__*/ (0, import_web$54.template)(`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="2.3" fill="currentColor"></circle><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 15.4a4.8 4.8 0 0 0 0-6.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M5.7 5.7a8.9 8.9 0 0 0 0 12.6M18.3 18.3a8.9 8.9 0 0 0 0-12.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 8), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$54.template)(`<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.4a1 1 0 0 1 1.52-.85l9 6.6a1 1 0 0 1 0 1.7l-9 6.6a1 1 0 0 1-1.52-.85V5.4Z" fill="currentColor"></path></svg>`, 4), _tmpl$3$3 = /*#__PURE__*/ (0, import_web$54.template)(`<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"></rect><rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"></rect></svg>`, 6), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$54.template)(`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" fill="currentColor"></path><!#><!/></svg>`, 6), _tmpl$5$1 = /*#__PURE__*/ (0, import_web$54.template)(`<svg><path d="m16 9.5 4.5 5M20.5 9.5 16 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 4, true), _tmpl$6$1 = /*#__PURE__*/ (0, import_web$54.template)(`<svg><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 4, true), _tmpl$7$1 = /*#__PURE__*/ (0, import_web$54.template)(`<svg class="rad-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`, 4), _tmpl$8$1 = /*#__PURE__*/ (0, import_web$54.template)(`<div class="rad-bars" aria-hidden="true"><i></i><i></i><i></i></div>`, 8);
-const BroadcastIcon = () => (0, import_web$59.getNextElement)(_tmpl$$7);
-const PlayIcon = () => (0, import_web$59.getNextElement)(_tmpl$2$6);
-const PauseIcon = () => (0, import_web$59.getNextElement)(_tmpl$3$3);
+var import_web$60 = __toESM(require_web(), 1);
+const _tmpl$$7 = /*#__PURE__*/ (0, import_web$55.template)(`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="2.3" fill="currentColor"></circle><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 15.4a4.8 4.8 0 0 0 0-6.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M5.7 5.7a8.9 8.9 0 0 0 0 12.6M18.3 18.3a8.9 8.9 0 0 0 0-12.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 8), _tmpl$2$6 = /*#__PURE__*/ (0, import_web$55.template)(`<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.4a1 1 0 0 1 1.52-.85l9 6.6a1 1 0 0 1 0 1.7l-9 6.6a1 1 0 0 1-1.52-.85V5.4Z" fill="currentColor"></path></svg>`, 4), _tmpl$3$3 = /*#__PURE__*/ (0, import_web$55.template)(`<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"></rect><rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"></rect></svg>`, 6), _tmpl$4$3 = /*#__PURE__*/ (0, import_web$55.template)(`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.56 2.2a1 1 0 0 0-.9.74l-.36 1.4a7.9 7.9 0 0 0-1.6.93l-1.38-.43a1 1 0 0 0-1.16.45l-1.44 2.5a1 1 0 0 0 .19 1.22l1.06.98a8 8 0 0 0 0 1.84l-1.06.98a1 1 0 0 0-.19 1.22l1.44 2.5a1 1 0 0 0 1.16.45l1.38-.43c.5.38 1.03.7 1.6.93l.36 1.4a1 1 0 0 0 .97.75h2.88a1 1 0 0 0 .97-.75l.36-1.4c.57-.23 1.1-.55 1.6-.93l1.38.43a1 1 0 0 0 1.16-.45l1.44-2.5a1 1 0 0 0-.19-1.22l-1.06-.98a8 8 0 0 0 0-1.84l1.06-.98a1 1 0 0 0 .19-1.22l-1.44-2.5a1 1 0 0 0-1.16-.45l-1.38.43a7.9 7.9 0 0 0-1.6-.93l-.36-1.4a1 1 0 0 0-.97-.75h-2.88ZM12 15.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Z" clip-rule="evenodd"></path></svg>`, 4), _tmpl$5$1 = /*#__PURE__*/ (0, import_web$55.template)(`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5h3.2L12 5.6v12.8L7.2 14.5H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z" fill="currentColor"></path><!#><!/></svg>`, 6), _tmpl$6$1 = /*#__PURE__*/ (0, import_web$55.template)(`<svg><path d="m16 9.5 4.5 5M20.5 9.5 16 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 4, true), _tmpl$7$1 = /*#__PURE__*/ (0, import_web$55.template)(`<svg><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>`, 4, true), _tmpl$8$1 = /*#__PURE__*/ (0, import_web$55.template)(`<svg class="rad-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>`, 4), _tmpl$9$1 = /*#__PURE__*/ (0, import_web$55.template)(`<div class="rad-bars" aria-hidden="true"><i></i><i></i><i></i></div>`, 8);
+const BroadcastIcon = () => (0, import_web$60.getNextElement)(_tmpl$$7);
+const PlayIcon = () => (0, import_web$60.getNextElement)(_tmpl$2$6);
+const PauseIcon = () => (0, import_web$60.getNextElement)(_tmpl$3$3);
+const GearIcon = () => (0, import_web$60.getNextElement)(_tmpl$4$3);
 const VolumeIcon = (props) => (() => {
-	const _el$4 = (0, import_web$59.getNextElement)(_tmpl$4$3), _el$5 = _el$4.firstChild, _el$6 = _el$5.nextSibling, [_el$7, _co$] = (0, import_web$56.getNextMarker)(_el$6.nextSibling);
-	(0, import_web$57.insert)(_el$4, (() => {
-		const _c$ = (0, import_web$58.memo)(() => !!props.muted);
-		return () => _c$() ? (0, import_web$59.getNextElement)(_tmpl$5$1) : (0, import_web$59.getNextElement)(_tmpl$6$1);
-	})(), _el$7, _co$);
-	return _el$4;
+	const _el$5 = (0, import_web$60.getNextElement)(_tmpl$5$1), _el$6 = _el$5.firstChild, _el$7 = _el$6.nextSibling, [_el$8, _co$] = (0, import_web$57.getNextMarker)(_el$7.nextSibling);
+	(0, import_web$58.insert)(_el$5, (() => {
+		const _c$ = (0, import_web$59.memo)(() => !!props.muted);
+		return () => _c$() ? (0, import_web$60.getNextElement)(_tmpl$6$1) : (0, import_web$60.getNextElement)(_tmpl$7$1);
+	})(), _el$8, _co$);
+	return _el$5;
 })();
 const CaretIcon = (props) => (() => {
-	const _el$0 = (0, import_web$59.getNextElement)(_tmpl$7$1);
-	(0, import_web$55.effect)(() => _el$0.style.setProperty("transform", props.up ? "rotate(180deg)" : "none"));
-	return _el$0;
+	const _el$1 = (0, import_web$60.getNextElement)(_tmpl$8$1);
+	(0, import_web$56.effect)(() => _el$1.style.setProperty("transform", props.up ? "rotate(180deg)" : "none"));
+	return _el$1;
 })();
-const Bars = () => (0, import_web$59.getNextElement)(_tmpl$8$1);
+const Bars = () => (0, import_web$60.getNextElement)(_tmpl$9$1);
 
 //#endregion
 //#region plugins/radio/ui/ToolbarButton.jsx
-var import_web$45 = __toESM(require_web(), 1);
 var import_web$46 = __toESM(require_web(), 1);
 var import_web$47 = __toESM(require_web(), 1);
 var import_web$48 = __toESM(require_web(), 1);
@@ -1324,57 +1362,58 @@ var import_web$50 = __toESM(require_web(), 1);
 var import_web$51 = __toESM(require_web(), 1);
 var import_web$52 = __toESM(require_web(), 1);
 var import_web$53 = __toESM(require_web(), 1);
-const _tmpl$$6 = /*#__PURE__*/ (0, import_web$45.template)(`<div></div>`, 2), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$45.template)(`<div role="button" tabindex="0" aria-label="Radio"></div>`, 2);
+var import_web$54 = __toESM(require_web(), 1);
+const _tmpl$$6 = /*#__PURE__*/ (0, import_web$46.template)(`<div></div>`, 2), _tmpl$2$5 = /*#__PURE__*/ (0, import_web$46.template)(`<div role="button" tabindex="0" aria-label="Radio"></div>`, 2);
 const { solid: { Show: Show$4 } } = shelter;
 function ToolbarButton(props) {
 	const activate = (e) => togglePanel(e.currentTarget);
 	return (() => {
-		const _el$ = (0, import_web$51.getNextElement)(_tmpl$2$5);
+		const _el$ = (0, import_web$52.getNextElement)(_tmpl$2$5);
 		_el$.$$keydown = (e) => {
 			if (e.key !== "Enter" && e.key !== " ") return;
 			e.preventDefault();
 			activate(e);
 		};
 		_el$.$$click = activate;
-		(0, import_web$52.insert)(_el$, (0, import_web$53.createComponent)(Show$4, {
+		(0, import_web$53.insert)(_el$, (0, import_web$54.createComponent)(Show$4, {
 			get when() {
 				return playing();
 			},
 			get fallback() {
-				return (0, import_web$53.createComponent)(BroadcastIcon, {});
+				return (0, import_web$54.createComponent)(BroadcastIcon, {});
 			},
 			get children() {
-				const _el$2 = (0, import_web$51.getNextElement)(_tmpl$$6);
-				(0, import_web$52.insert)(_el$2, (0, import_web$53.createComponent)(Bars, {}));
-				(0, import_web$50.effect)(() => _el$2.style.setProperty("color", currentStation().accent));
+				const _el$2 = (0, import_web$52.getNextElement)(_tmpl$$6);
+				(0, import_web$53.insert)(_el$2, (0, import_web$54.createComponent)(Bars, {}));
+				(0, import_web$51.effect)(() => _el$2.style.setProperty("color", currentStation().accent));
 				return _el$2;
 			}
 		}));
-		(0, import_web$50.effect)((_p$) => {
+		(0, import_web$51.effect)((_p$) => {
 			const _v$ = `rad-btn ${props.native ?? ""}`, _v$2 = panelOpen();
-			_v$ !== _p$._v$ && (0, import_web$48.className)(_el$, _p$._v$ = _v$);
-			_v$2 !== _p$._v$2 && (0, import_web$47.setAttribute)(_el$, "aria-expanded", _p$._v$2 = _v$2);
+			_v$ !== _p$._v$ && (0, import_web$49.className)(_el$, _p$._v$ = _v$);
+			_v$2 !== _p$._v$2 && (0, import_web$48.setAttribute)(_el$, "aria-expanded", _p$._v$2 = _v$2);
 			return _p$;
 		}, {
 			_v$: undefined,
 			_v$2: undefined
 		});
-		(0, import_web$49.runHydrationEvents)();
+		(0, import_web$50.runHydrationEvents)();
 		return _el$;
 	})();
 }
-(0, import_web$46.delegateEvents)(["click", "keydown"]);
+(0, import_web$47.delegateEvents)(["click", "keydown"]);
 
 //#endregion
 //#region plugins/radio/ui/Artwork.jsx
-var import_web$38 = __toESM(require_web(), 1);
 var import_web$39 = __toESM(require_web(), 1);
 var import_web$40 = __toESM(require_web(), 1);
 var import_web$41 = __toESM(require_web(), 1);
 var import_web$42 = __toESM(require_web(), 1);
 var import_web$43 = __toESM(require_web(), 1);
 var import_web$44 = __toESM(require_web(), 1);
-const _tmpl$$5 = /*#__PURE__*/ (0, import_web$38.template)(`<img alt="" loading="lazy">`, 1), _tmpl$2$4 = /*#__PURE__*/ (0, import_web$38.template)(`<div aria-hidden="true"></div>`, 2);
+var import_web$45 = __toESM(require_web(), 1);
+const _tmpl$$5 = /*#__PURE__*/ (0, import_web$39.template)(`<img alt="" loading="lazy">`, 1), _tmpl$2$4 = /*#__PURE__*/ (0, import_web$39.template)(`<div aria-hidden="true"></div>`, 2);
 const { solid: { createSignal: createSignal$2, createMemo: createMemo$1, Show: Show$3 } } = shelter;
 function Artwork(props) {
 	const [broken, setBroken] = createSignal$2(null);
@@ -1382,17 +1421,17 @@ function Artwork(props) {
 		const candidate = props.src || props.station?.logo || null;
 		return candidate && candidate !== broken() ? candidate : null;
 	});
-	return (0, import_web$40.createComponent)(Show$3, {
+	return (0, import_web$41.createComponent)(Show$3, {
 		get when() {
 			return src();
 		},
 		get fallback() {
 			return (() => {
-				const _el$2 = (0, import_web$44.getNextElement)(_tmpl$2$4);
-				(0, import_web$39.insert)(_el$2, () => (props.station?.name ?? "?").trim().charAt(0).toUpperCase());
-				(0, import_web$43.effect)((_p$) => {
+				const _el$2 = (0, import_web$45.getNextElement)(_tmpl$2$4);
+				(0, import_web$40.insert)(_el$2, () => (props.station?.name ?? "?").trim().charAt(0).toUpperCase());
+				(0, import_web$44.effect)((_p$) => {
 					const _v$3 = `${props.class} rad-art-blank`, _v$4 = props.station?.accent ?? "#5865f2";
-					_v$3 !== _p$._v$3 && (0, import_web$42.className)(_el$2, _p$._v$3 = _v$3);
+					_v$3 !== _p$._v$3 && (0, import_web$43.className)(_el$2, _p$._v$3 = _v$3);
 					_v$4 !== _p$._v$4 && _el$2.style.setProperty("background", _p$._v$4 = _v$4);
 					return _p$;
 				}, {
@@ -1403,12 +1442,12 @@ function Artwork(props) {
 			})();
 		},
 		get children() {
-			const _el$ = (0, import_web$44.getNextElement)(_tmpl$$5);
+			const _el$ = (0, import_web$45.getNextElement)(_tmpl$$5);
 			_el$.addEventListener("error", () => setBroken(src()));
-			(0, import_web$43.effect)((_p$) => {
+			(0, import_web$44.effect)((_p$) => {
 				const _v$ = props.class, _v$2 = src();
-				_v$ !== _p$._v$ && (0, import_web$42.className)(_el$, _p$._v$ = _v$);
-				_v$2 !== _p$._v$2 && (0, import_web$41.setAttribute)(_el$, "src", _p$._v$2 = _v$2);
+				_v$ !== _p$._v$ && (0, import_web$43.className)(_el$, _p$._v$ = _v$);
+				_v$2 !== _p$._v$2 && (0, import_web$42.setAttribute)(_el$, "src", _p$._v$2 = _v$2);
 				return _p$;
 			}, {
 				_v$: undefined,
@@ -1421,7 +1460,6 @@ function Artwork(props) {
 
 //#endregion
 //#region plugins/radio/ui/StationList.jsx
-var import_web$29 = __toESM(require_web(), 1);
 var import_web$30 = __toESM(require_web(), 1);
 var import_web$31 = __toESM(require_web(), 1);
 var import_web$32 = __toESM(require_web(), 1);
@@ -1430,43 +1468,44 @@ var import_web$34 = __toESM(require_web(), 1);
 var import_web$35 = __toESM(require_web(), 1);
 var import_web$36 = __toESM(require_web(), 1);
 var import_web$37 = __toESM(require_web(), 1);
-const _tmpl$$4 = /*#__PURE__*/ (0, import_web$29.template)(`<div class="rad-list"></div>`, 2), _tmpl$2$3 = /*#__PURE__*/ (0, import_web$29.template)(`<div class="rad-group"></div>`, 2), _tmpl$3$2 = /*#__PURE__*/ (0, import_web$29.template)(`<div class="rad-item-genre"></div>`, 2), _tmpl$4$2 = /*#__PURE__*/ (0, import_web$29.template)(`<button type="button" class="rad-item"><!#><!/><div class="rad-item-text"><div class="rad-item-name"></div><!#><!/></div></button>`, 10);
+var import_web$38 = __toESM(require_web(), 1);
+const _tmpl$$4 = /*#__PURE__*/ (0, import_web$30.template)(`<div class="rad-list"></div>`, 2), _tmpl$2$3 = /*#__PURE__*/ (0, import_web$30.template)(`<div class="rad-group"></div>`, 2), _tmpl$3$2 = /*#__PURE__*/ (0, import_web$30.template)(`<div class="rad-item-genre"></div>`, 2), _tmpl$4$2 = /*#__PURE__*/ (0, import_web$30.template)(`<button type="button" class="rad-item"><!#><!/><div class="rad-item-text"><div class="rad-item-name"></div><!#><!/></div></button>`, 10);
 const { solid: { For: For$2, Show: Show$2 } } = shelter;
 function StationList() {
 	return (() => {
-		const _el$ = (0, import_web$35.getNextElement)(_tmpl$$4);
-		(0, import_web$36.insert)(_el$, (0, import_web$37.createComponent)(For$2, {
+		const _el$ = (0, import_web$36.getNextElement)(_tmpl$$4);
+		(0, import_web$37.insert)(_el$, (0, import_web$38.createComponent)(For$2, {
 			get each() {
 				return groupedStations();
 			},
 			children: (group) => [(() => {
-				const _el$2 = (0, import_web$35.getNextElement)(_tmpl$2$3);
-				(0, import_web$36.insert)(_el$2, () => group.name);
+				const _el$2 = (0, import_web$36.getNextElement)(_tmpl$2$3);
+				(0, import_web$37.insert)(_el$2, () => group.name);
 				return _el$2;
-			})(), (0, import_web$37.createComponent)(For$2, {
+			})(), (0, import_web$38.createComponent)(For$2, {
 				get each() {
 					return group.stations;
 				},
 				children: (station) => (() => {
-					const _el$3 = (0, import_web$35.getNextElement)(_tmpl$4$2), _el$9 = _el$3.firstChild, [_el$0, _co$2] = (0, import_web$34.getNextMarker)(_el$9.nextSibling), _el$4 = _el$0.nextSibling, _el$5 = _el$4.firstChild, _el$7 = _el$5.nextSibling, [_el$8, _co$] = (0, import_web$34.getNextMarker)(_el$7.nextSibling);
+					const _el$3 = (0, import_web$36.getNextElement)(_tmpl$4$2), _el$9 = _el$3.firstChild, [_el$0, _co$2] = (0, import_web$35.getNextMarker)(_el$9.nextSibling), _el$4 = _el$0.nextSibling, _el$5 = _el$4.firstChild, _el$7 = _el$5.nextSibling, [_el$8, _co$] = (0, import_web$35.getNextMarker)(_el$7.nextSibling);
 					_el$3.$$click = () => selectStation(station.id);
-					(0, import_web$36.insert)(_el$3, (0, import_web$37.createComponent)(Artwork, {
+					(0, import_web$37.insert)(_el$3, (0, import_web$38.createComponent)(Artwork, {
 						"class": "rad-item-art",
 						station
 					}), _el$0, _co$2);
-					(0, import_web$36.insert)(_el$5, () => station.name);
-					(0, import_web$36.insert)(_el$4, (0, import_web$37.createComponent)(Show$2, {
+					(0, import_web$37.insert)(_el$5, () => station.name);
+					(0, import_web$37.insert)(_el$4, (0, import_web$38.createComponent)(Show$2, {
 						get when() {
 							return station.genre;
 						},
 						get children() {
-							const _el$6 = (0, import_web$35.getNextElement)(_tmpl$3$2);
-							(0, import_web$36.insert)(_el$6, () => station.genre);
+							const _el$6 = (0, import_web$36.getNextElement)(_tmpl$3$2);
+							(0, import_web$37.insert)(_el$6, () => station.genre);
 							return _el$6;
 						}
 					}), _el$8, _co$);
-					(0, import_web$32.effect)(() => (0, import_web$31.setAttribute)(_el$3, "aria-current", store.station === station.id));
-					(0, import_web$33.runHydrationEvents)();
+					(0, import_web$33.effect)(() => (0, import_web$32.setAttribute)(_el$3, "aria-current", store.station === station.id));
+					(0, import_web$34.runHydrationEvents)();
 					return _el$3;
 				})()
 			})]
@@ -1474,15 +1513,10 @@ function StationList() {
 		return _el$;
 	})();
 }
-(0, import_web$30.delegateEvents)(["click"]);
+(0, import_web$31.delegateEvents)(["click"]);
 
 //#endregion
-//#region plugins/radio/ui/Panel.jsx
-var import_web$17 = __toESM(require_web(), 1);
-var import_web$18 = __toESM(require_web(), 1);
-var import_web$19 = __toESM(require_web(), 1);
-var import_web$20 = __toESM(require_web(), 1);
-var import_web$21 = __toESM(require_web(), 1);
+//#region plugins/radio/ui/Segmented.jsx
 var import_web$22 = __toESM(require_web(), 1);
 var import_web$23 = __toESM(require_web(), 1);
 var import_web$24 = __toESM(require_web(), 1);
@@ -1490,8 +1524,242 @@ var import_web$25 = __toESM(require_web(), 1);
 var import_web$26 = __toESM(require_web(), 1);
 var import_web$27 = __toESM(require_web(), 1);
 var import_web$28 = __toESM(require_web(), 1);
-const _tmpl$$3 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-sub"></div>`, 2), _tmpl$2$2 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-alt"></div>`, 2), _tmpl$3$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-alt">from <!#><!/></div>`, 4), _tmpl$4$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-tag"></div>`, 2), _tmpl$5 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-track"><!#><!/><div class="rad-meta"><div class="rad-title"></div><!#><!/><!#><!/><!#><!/><!#><!/></div></div>`, 16), _tmpl$6 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-progress"><div class="rad-bar"><span></span></div><div class="rad-times"><span></span><span></span></div></div>`, 12), _tmpl$7 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-controls"><button type="button" class="rad-play"></button><div class="rad-volume"><button type="button" class="rad-mute"></button><!#><!/></div></div>`, 10), _tmpl$8 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-spinner"></div>`, 2), _tmpl$9 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-foot"><span class="rad-dot"></span><span class="rad-foot-text"></span></div>`, 6), _tmpl$0 = /*#__PURE__*/ (0, import_web$17.template)(`<div></div>`, 2), _tmpl$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-panel" role="dialog" aria-label="Radio"><div class="rad-head"><button type="button" class="rad-station" aria-label="Choose a station"><span class="rad-station-name"></span><span class="rad-station-group"></span><!#><!/></button><!#><!/></div><!#><!/></div>`, 16), _tmpl$10 = /*#__PURE__*/ (0, import_web$17.template)(`<div><div class="rad-body"><!#><!/><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$11 = /*#__PURE__*/ (0, import_web$17.template)(`<div><!#><!/><!#><!/></div>`, 6);
-const { solid: { createEffect, createMemo, createSignal: createSignal$1, onCleanup, onMount, Show: Show$1 }, ui: { Slider: Slider$1 } } = shelter;
+var import_web$29 = __toESM(require_web(), 1);
+const _tmpl$$3 = /*#__PURE__*/ (0, import_web$22.template)(`<div class="rad-seg" role="group"></div>`, 2), _tmpl$2$2 = /*#__PURE__*/ (0, import_web$22.template)(`<button type="button"></button>`, 2);
+const { solid: { For: For$1 } } = shelter;
+function Segmented(props) {
+	return (() => {
+		const _el$ = (0, import_web$27.getNextElement)(_tmpl$$3);
+		(0, import_web$28.insert)(_el$, (0, import_web$29.createComponent)(For$1, {
+			get each() {
+				return props.options;
+			},
+			children: (option) => (() => {
+				const _el$2 = (0, import_web$27.getNextElement)(_tmpl$2$2);
+				_el$2.$$click = () => props.onSelect(option.value);
+				(0, import_web$28.insert)(_el$2, () => option.label);
+				(0, import_web$25.effect)((_p$) => {
+					const _v$ = props.value === option.value, _v$2 = option.hint;
+					_v$ !== _p$._v$ && (0, import_web$24.setAttribute)(_el$2, "aria-pressed", _p$._v$ = _v$);
+					_v$2 !== _p$._v$2 && (0, import_web$24.setAttribute)(_el$2, "title", _p$._v$2 = _v$2);
+					return _p$;
+				}, {
+					_v$: undefined,
+					_v$2: undefined
+				});
+				(0, import_web$26.runHydrationEvents)();
+				return _el$2;
+			})()
+		}));
+		return _el$;
+	})();
+}
+(0, import_web$23.delegateEvents)(["click"]);
+
+//#endregion
+//#region plugins/radio/settings.jsx
+var import_web$17 = __toESM(require_web(), 1);
+var import_web$18 = __toESM(require_web(), 1);
+var import_web$19 = __toESM(require_web(), 1);
+var import_web$20 = __toESM(require_web(), 1);
+var import_web$21 = __toESM(require_web(), 1);
+const _tmpl$$2 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Any direct stream URL works — an Icecast or SHOUTcast MP3, AAC or Ogg endpoint. There's no now-playing info for these; a bare stream doesn't expose it to the page.</div><!#><!/><div class="rad-custom"><!#><!/><!#><!/><!#><!/></div></div>`, 14), _tmpl$2$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-custom"><div class="rad-custom-text"><div></div><div class="rad-custom-url"></div></div><!#><!/></div>`, 10), _tmpl$3$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Volume</div><!#><!/></div>`, 6), _tmpl$4$1 = /*#__PURE__*/ (0, import_web$17.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Stream quality — <!#><!/></div><!#><!/></div>`, 8);
+const { solid: { createSignal: createSignal$1, For, Show: Show$1 }, ui: { Button, ButtonColors, ButtonSizes, Divider, Header, HeaderTags, Slider: Slider$1, SwitchItem, TextBox } } = shelter;
+const Toggle = (props) => (0, import_web$21.createComponent)(SwitchItem, {
+	get checked() {
+		return props.checked;
+	},
+	get value() {
+		return props.checked;
+	},
+	get onChange() {
+		return props.onChange;
+	},
+	get note() {
+		return props.note;
+	},
+	get hideBorder() {
+		return props.hideBorder;
+	},
+	get children() {
+		return props.children;
+	}
+});
+function CustomStations() {
+	const [name, setName] = createSignal$1("");
+	const [url, setUrl] = createSignal$1("");
+	const add = () => {
+		const trimmed = url().trim();
+		if (!trimmed) return;
+		writeCustom([...readCustom(), {
+			id: Date.now().toString(36),
+			name: name().trim() || "Custom stream",
+			url: trimmed
+		}]);
+		setName("");
+		setUrl("");
+	};
+	const remove = (id) => writeCustom(readCustom().filter((s) => s.id !== id));
+	return [(0, import_web$21.createComponent)(Header, {
+		get tag() {
+			return HeaderTags.H3;
+		},
+		children: "Your stations"
+	}), (() => {
+		const _el$ = (0, import_web$18.getNextElement)(_tmpl$$2), _el$2 = _el$.firstChild, _el$0 = _el$2.nextSibling, [_el$1, _co$4] = (0, import_web$19.getNextMarker)(_el$0.nextSibling), _el$3 = _el$1.nextSibling, _el$4 = _el$3.firstChild, [_el$5, _co$] = (0, import_web$19.getNextMarker)(_el$4.nextSibling), _el$6 = _el$5.nextSibling, [_el$7, _co$2] = (0, import_web$19.getNextMarker)(_el$6.nextSibling), _el$8 = _el$7.nextSibling, [_el$9, _co$3] = (0, import_web$19.getNextMarker)(_el$8.nextSibling);
+		(0, import_web$20.insert)(_el$, (0, import_web$21.createComponent)(For, {
+			get each() {
+				return readCustom();
+			},
+			children: (station) => (() => {
+				const _el$10 = (0, import_web$18.getNextElement)(_tmpl$2$1), _el$11 = _el$10.firstChild, _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling, _el$14 = _el$11.nextSibling, [_el$15, _co$5] = (0, import_web$19.getNextMarker)(_el$14.nextSibling);
+				(0, import_web$20.insert)(_el$12, () => station.name);
+				(0, import_web$20.insert)(_el$13, () => station.url);
+				(0, import_web$20.insert)(_el$10, (0, import_web$21.createComponent)(Button, {
+					get size() {
+						return ButtonSizes.SMALL;
+					},
+					get color() {
+						return ButtonColors.RED;
+					},
+					onClick: () => remove(station.id),
+					children: "Remove"
+				}), _el$15, _co$5);
+				return _el$10;
+			})()
+		}), _el$1, _co$4);
+		(0, import_web$20.insert)(_el$3, (0, import_web$21.createComponent)(TextBox, {
+			placeholder: "Name",
+			get value() {
+				return name();
+			},
+			onInput: setName
+		}), _el$5, _co$);
+		(0, import_web$20.insert)(_el$3, (0, import_web$21.createComponent)(TextBox, {
+			placeholder: "https://…",
+			get value() {
+				return url();
+			},
+			onInput: setUrl
+		}), _el$7, _co$2);
+		(0, import_web$20.insert)(_el$3, (0, import_web$21.createComponent)(Button, {
+			get size() {
+				return ButtonSizes.SMALL;
+			},
+			onClick: add,
+			children: "Add"
+		}), _el$9, _co$3);
+		return _el$;
+	})()];
+}
+function Settings() {
+	const qualities = () => qualitiesFor(currentStation());
+	return [
+		(0, import_web$21.createComponent)(Header, {
+			get tag() {
+				return HeaderTags.H3;
+			},
+			children: "Playback"
+		}),
+		(() => {
+			const _el$16 = (0, import_web$18.getNextElement)(_tmpl$3$1), _el$17 = _el$16.firstChild, _el$18 = _el$17.nextSibling, [_el$19, _co$6] = (0, import_web$19.getNextMarker)(_el$18.nextSibling);
+			(0, import_web$20.insert)(_el$16, (0, import_web$21.createComponent)(Slider$1, {
+				min: 0,
+				max: 100,
+				step: 1,
+				get value() {
+					return store.volume;
+				},
+				onInput: setVolume
+			}), _el$19, _co$6);
+			return _el$16;
+		})(),
+		(0, import_web$21.createComponent)(Show$1, {
+			get when() {
+				return qualities().length > 1;
+			},
+			get children() {
+				const _el$20 = (0, import_web$18.getNextElement)(_tmpl$4$1), _el$21 = _el$20.firstChild, _el$22 = _el$21.firstChild, _el$23 = _el$22.nextSibling, [_el$24, _co$7] = (0, import_web$19.getNextMarker)(_el$23.nextSibling), _el$25 = _el$21.nextSibling, [_el$26, _co$8] = (0, import_web$19.getNextMarker)(_el$25.nextSibling);
+				(0, import_web$20.insert)(_el$21, () => currentStation().name, _el$24, _co$7);
+				(0, import_web$20.insert)(_el$20, (0, import_web$21.createComponent)(Segmented, {
+					get value() {
+						return store.quality;
+					},
+					onSelect: selectQuality,
+					get options() {
+						return qualities().map((q) => ({
+							value: q,
+							label: QUALITIES[q].label,
+							hint: QUALITIES[q].hint
+						}));
+					}
+				}), _el$26, _co$8);
+				return _el$20;
+			}
+		}),
+		(0, import_web$21.createComponent)(Toggle, {
+			get checked() {
+				return store.romaji;
+			},
+			onChange: (v) => store.romaji = v,
+			note: "Show romanised titles and artist names where the station provides them, instead of the original script.",
+			children: "Prefer romanised names"
+		}),
+		(0, import_web$21.createComponent)(Toggle, {
+			get checked() {
+				return store.mediaSession;
+			},
+			onChange: (v) => store.mediaSession = v,
+			note: "Show what's playing in your system's media controls, so media keys and headset buttons can pause it. Needs a client that forwards media keys to the OS: the desktop app and browsers do, clients built on the system webview (Dorion) generally don't, and there's nothing this plugin can do about that.",
+			hideBorder: true,
+			children: "Use system media controls"
+		}),
+		(0, import_web$21.createComponent)(Divider, {
+			mt: true,
+			mb: true
+		}),
+		(0, import_web$21.createComponent)(CustomStations, {})
+	];
+}
+
+//#endregion
+//#region plugins/radio/ui/openSettings.jsx
+var import_web$16 = __toESM(require_web(), 1);
+const { ui: { openModal, ModalRoot, ModalHeader, ModalBody, ModalSizes } } = shelter;
+function openSettings() {
+	openModal((props) => (0, import_web$16.createComponent)(ModalRoot, {
+		get size() {
+			return ModalSizes.MEDIUM;
+		},
+		get children() {
+			return [(0, import_web$16.createComponent)(ModalHeader, {
+				get close() {
+					return props.close;
+				},
+				children: "Radio"
+			}), (0, import_web$16.createComponent)(ModalBody, { get children() {
+				return (0, import_web$16.createComponent)(Settings, {});
+			} })];
+		}
+	}));
+}
+
+//#endregion
+//#region plugins/radio/ui/Panel.jsx
+var import_web$4 = __toESM(require_web(), 1);
+var import_web$5 = __toESM(require_web(), 1);
+var import_web$6 = __toESM(require_web(), 1);
+var import_web$7 = __toESM(require_web(), 1);
+var import_web$8 = __toESM(require_web(), 1);
+var import_web$9 = __toESM(require_web(), 1);
+var import_web$10 = __toESM(require_web(), 1);
+var import_web$11 = __toESM(require_web(), 1);
+var import_web$12 = __toESM(require_web(), 1);
+var import_web$13 = __toESM(require_web(), 1);
+var import_web$14 = __toESM(require_web(), 1);
+var import_web$15 = __toESM(require_web(), 1);
+const _tmpl$$1 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-sub"></div>`, 2), _tmpl$2 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-alt"></div>`, 2), _tmpl$3 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-alt">from <!#><!/></div>`, 4), _tmpl$4 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-tag"></div>`, 2), _tmpl$5 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-track"><!#><!/><div class="rad-meta"><div class="rad-title"></div><!#><!/><!#><!/><!#><!/><!#><!/></div></div>`, 16), _tmpl$6 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-progress"><div class="rad-bar"><span></span></div><div class="rad-times"><span></span><span></span></div></div>`, 12), _tmpl$7 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-controls"><button type="button" class="rad-play"></button><div class="rad-volume"><button type="button" class="rad-mute"></button><!#><!/></div></div>`, 10), _tmpl$8 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-spinner"></div>`, 2), _tmpl$9 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-foot"><span class="rad-dot"></span><span class="rad-foot-text"></span></div>`, 6), _tmpl$0 = /*#__PURE__*/ (0, import_web$4.template)(`<div></div>`, 2), _tmpl$1 = /*#__PURE__*/ (0, import_web$4.template)(`<div class="rad-panel" role="dialog" aria-label="Radio"><div class="rad-head"><button type="button" class="rad-station" aria-label="Choose a station"><span class="rad-station-name"></span><span class="rad-station-group"></span><!#><!/></button><!#><!/><button type="button" class="rad-head-btn" aria-label="Radio settings"></button></div><!#><!/></div>`, 18), _tmpl$10 = /*#__PURE__*/ (0, import_web$4.template)(`<div><div class="rad-body"><!#><!/><!#><!/><!#><!/></div><!#><!/></div>`, 12), _tmpl$11 = /*#__PURE__*/ (0, import_web$4.template)(`<div><!#><!/><!#><!/></div>`, 6);
+const { solid: { createEffect, createMemo, createSignal, onCleanup, onMount, Show }, ui: { Slider } } = shelter;
 const pad = (n) => String(Math.floor(n)).padStart(2, "0");
 const clock = (seconds) => `${Math.floor(seconds / 60)}:${pad(seconds % 60)}`;
 function NowPlaying() {
@@ -1513,8 +1781,8 @@ function NowPlaying() {
 		return other && other !== primary() ? other : null;
 	});
 	return (() => {
-		const _el$ = (0, import_web$26.getNextElement)(_tmpl$5), _el$17 = _el$.firstChild, [_el$18, _co$6] = (0, import_web$25.getNextMarker)(_el$17.nextSibling), _el$2 = _el$18.nextSibling, _el$3 = _el$2.firstChild, _el$1 = _el$3.nextSibling, [_el$10, _co$2] = (0, import_web$25.getNextMarker)(_el$1.nextSibling), _el$11 = _el$10.nextSibling, [_el$12, _co$3] = (0, import_web$25.getNextMarker)(_el$11.nextSibling), _el$13 = _el$12.nextSibling, [_el$14, _co$4] = (0, import_web$25.getNextMarker)(_el$13.nextSibling), _el$15 = _el$14.nextSibling, [_el$16, _co$5] = (0, import_web$25.getNextMarker)(_el$15.nextSibling);
-		(0, import_web$27.insert)(_el$, (0, import_web$28.createComponent)(Artwork, {
+		const _el$ = (0, import_web$13.getNextElement)(_tmpl$5), _el$17 = _el$.firstChild, [_el$18, _co$6] = (0, import_web$12.getNextMarker)(_el$17.nextSibling), _el$2 = _el$18.nextSibling, _el$3 = _el$2.firstChild, _el$1 = _el$3.nextSibling, [_el$10, _co$2] = (0, import_web$12.getNextMarker)(_el$1.nextSibling), _el$11 = _el$10.nextSibling, [_el$12, _co$3] = (0, import_web$12.getNextMarker)(_el$11.nextSibling), _el$13 = _el$12.nextSibling, [_el$14, _co$4] = (0, import_web$12.getNextMarker)(_el$13.nextSibling), _el$15 = _el$14.nextSibling, [_el$16, _co$5] = (0, import_web$12.getNextMarker)(_el$15.nextSibling);
+		(0, import_web$14.insert)(_el$, (0, import_web$15.createComponent)(Artwork, {
 			"class": "rad-art",
 			get src() {
 				return track()?.art;
@@ -1523,45 +1791,45 @@ function NowPlaying() {
 				return station();
 			}
 		}), _el$18, _co$6);
-		(0, import_web$27.insert)(_el$3, primary);
-		(0, import_web$27.insert)(_el$2, (0, import_web$28.createComponent)(Show$1, {
+		(0, import_web$14.insert)(_el$3, primary);
+		(0, import_web$14.insert)(_el$2, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return secondary();
 			},
 			get children() {
-				const _el$4 = (0, import_web$26.getNextElement)(_tmpl$$3);
-				(0, import_web$27.insert)(_el$4, secondary);
+				const _el$4 = (0, import_web$13.getNextElement)(_tmpl$$1);
+				(0, import_web$14.insert)(_el$4, secondary);
 				return _el$4;
 			}
 		}), _el$10, _co$2);
-		(0, import_web$27.insert)(_el$2, (0, import_web$28.createComponent)(Show$1, {
+		(0, import_web$14.insert)(_el$2, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return alternate();
 			},
 			get children() {
-				const _el$5 = (0, import_web$26.getNextElement)(_tmpl$2$2);
-				(0, import_web$27.insert)(_el$5, alternate);
+				const _el$5 = (0, import_web$13.getNextElement)(_tmpl$2);
+				(0, import_web$14.insert)(_el$5, alternate);
 				return _el$5;
 			}
 		}), _el$12, _co$3);
-		(0, import_web$27.insert)(_el$2, (0, import_web$28.createComponent)(Show$1, {
+		(0, import_web$14.insert)(_el$2, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return track()?.source;
 			},
 			get children() {
-				const _el$6 = (0, import_web$26.getNextElement)(_tmpl$3$1), _el$7 = _el$6.firstChild, _el$8 = _el$7.nextSibling, [_el$9, _co$] = (0, import_web$25.getNextMarker)(_el$8.nextSibling);
-				(0, import_web$27.insert)(_el$6, () => track().source, _el$9, _co$);
+				const _el$6 = (0, import_web$13.getNextElement)(_tmpl$3), _el$7 = _el$6.firstChild, _el$8 = _el$7.nextSibling, [_el$9, _co$] = (0, import_web$12.getNextMarker)(_el$8.nextSibling);
+				(0, import_web$14.insert)(_el$6, () => track().source, _el$9, _co$);
 				return _el$6;
 			}
 		}), _el$14, _co$4);
-		(0, import_web$27.insert)(_el$2, (0, import_web$28.createComponent)(Show$1, {
+		(0, import_web$14.insert)(_el$2, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return track()?.event;
 			},
 			get children() {
-				const _el$0 = (0, import_web$26.getNextElement)(_tmpl$4$1);
-				(0, import_web$27.insert)(_el$0, () => track().event);
-				(0, import_web$24.effect)(() => _el$0.style.setProperty("background", station().accent));
+				const _el$0 = (0, import_web$13.getNextElement)(_tmpl$4);
+				(0, import_web$14.insert)(_el$0, () => track().event);
+				(0, import_web$11.effect)(() => _el$0.style.setProperty("background", station().accent));
 				return _el$0;
 			}
 		}), _el$16, _co$5);
@@ -1569,7 +1837,7 @@ function NowPlaying() {
 	})();
 }
 function Progress() {
-	const [now, setNow] = createSignal$1(Date.now());
+	const [now, setNow] = createSignal(Date.now());
 	const duration = () => track()?.duration || 0;
 	const hasBar = () => duration() > 0 && !!track()?.startedAt;
 	createEffect(() => {
@@ -1582,15 +1850,15 @@ function Progress() {
 		if (!started) return 0;
 		return Math.max(0, Math.min(duration(), (now() - started) / 1e3));
 	});
-	return (0, import_web$28.createComponent)(Show$1, {
+	return (0, import_web$15.createComponent)(Show, {
 		get when() {
 			return hasBar();
 		},
 		get children() {
-			const _el$19 = (0, import_web$26.getNextElement)(_tmpl$6), _el$20 = _el$19.firstChild, _el$21 = _el$20.firstChild, _el$22 = _el$20.nextSibling, _el$23 = _el$22.firstChild, _el$24 = _el$23.nextSibling;
-			(0, import_web$27.insert)(_el$23, () => clock(elapsed()));
-			(0, import_web$27.insert)(_el$24, () => clock(duration()));
-			(0, import_web$24.effect)((_p$) => {
+			const _el$19 = (0, import_web$13.getNextElement)(_tmpl$6), _el$20 = _el$19.firstChild, _el$21 = _el$20.firstChild, _el$22 = _el$20.nextSibling, _el$23 = _el$22.firstChild, _el$24 = _el$23.nextSibling;
+			(0, import_web$14.insert)(_el$23, () => clock(elapsed()));
+			(0, import_web$14.insert)(_el$24, () => clock(duration()));
+			(0, import_web$11.effect)((_p$) => {
 				const _v$ = `${Math.min(100, elapsed() / duration() * 100)}%`, _v$2 = currentStation().accent;
 				_v$ !== _p$._v$ && _el$21.style.setProperty("width", _p$._v$ = _v$);
 				_v$2 !== _p$._v$2 && _el$21.style.setProperty("background", _p$._v$2 = _v$2);
@@ -1605,34 +1873,34 @@ function Progress() {
 }
 function Controls() {
 	return (() => {
-		const _el$25 = (0, import_web$26.getNextElement)(_tmpl$7), _el$26 = _el$25.firstChild, _el$27 = _el$26.nextSibling, _el$28 = _el$27.firstChild, _el$29 = _el$28.nextSibling, [_el$30, _co$7] = (0, import_web$25.getNextMarker)(_el$29.nextSibling);
-		(0, import_web$23.addEventListener)(_el$26, "click", toggle, true);
-		(0, import_web$27.insert)(_el$26, (0, import_web$28.createComponent)(Show$1, {
+		const _el$25 = (0, import_web$13.getNextElement)(_tmpl$7), _el$26 = _el$25.firstChild, _el$27 = _el$26.nextSibling, _el$28 = _el$27.firstChild, _el$29 = _el$28.nextSibling, [_el$30, _co$7] = (0, import_web$12.getNextMarker)(_el$29.nextSibling);
+		(0, import_web$10.addEventListener)(_el$26, "click", toggle, true);
+		(0, import_web$14.insert)(_el$26, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return !loading();
 			},
 			get fallback() {
-				return (0, import_web$26.getNextElement)(_tmpl$8);
+				return (0, import_web$13.getNextElement)(_tmpl$8);
 			},
 			get children() {
-				return (0, import_web$28.createComponent)(Show$1, {
+				return (0, import_web$15.createComponent)(Show, {
 					get when() {
 						return playing();
 					},
 					get fallback() {
-						return (0, import_web$28.createComponent)(PlayIcon, {});
+						return (0, import_web$15.createComponent)(PlayIcon, {});
 					},
 					get children() {
-						return (0, import_web$28.createComponent)(PauseIcon, {});
+						return (0, import_web$15.createComponent)(PauseIcon, {});
 					}
 				});
 			}
 		}));
 		_el$28.$$click = () => setMuted(!store.muted);
-		(0, import_web$27.insert)(_el$28, (0, import_web$28.createComponent)(VolumeIcon, { get muted() {
+		(0, import_web$14.insert)(_el$28, (0, import_web$15.createComponent)(VolumeIcon, { get muted() {
 			return store.muted || store.volume === 0;
 		} }));
-		(0, import_web$27.insert)(_el$27, (0, import_web$28.createComponent)(Slider$1, {
+		(0, import_web$14.insert)(_el$27, (0, import_web$15.createComponent)(Slider, {
 			min: 0,
 			max: 100,
 			step: 1,
@@ -1641,18 +1909,18 @@ function Controls() {
 			},
 			onInput: setVolume
 		}), _el$30, _co$7);
-		(0, import_web$24.effect)((_p$) => {
+		(0, import_web$11.effect)((_p$) => {
 			const _v$3 = currentStation().accent, _v$4 = playing() ? "Pause" : "Play", _v$5 = store.muted ? "Unmute" : "Mute";
 			_v$3 !== _p$._v$3 && _el$26.style.setProperty("background", _p$._v$3 = _v$3);
-			_v$4 !== _p$._v$4 && (0, import_web$20.setAttribute)(_el$26, "aria-label", _p$._v$4 = _v$4);
-			_v$5 !== _p$._v$5 && (0, import_web$20.setAttribute)(_el$28, "aria-label", _p$._v$5 = _v$5);
+			_v$4 !== _p$._v$4 && (0, import_web$7.setAttribute)(_el$26, "aria-label", _p$._v$4 = _v$4);
+			_v$5 !== _p$._v$5 && (0, import_web$7.setAttribute)(_el$28, "aria-label", _p$._v$5 = _v$5);
 			return _p$;
 		}, {
 			_v$3: undefined,
 			_v$4: undefined,
 			_v$5: undefined
 		});
-		(0, import_web$21.runHydrationEvents)();
+		(0, import_web$8.runHydrationEvents)();
 		return _el$25;
 	})();
 }
@@ -1669,15 +1937,15 @@ function Footer() {
 		return parts.join(" · ") || currentStation().name;
 	});
 	return (() => {
-		const _el$32 = (0, import_web$26.getNextElement)(_tmpl$9), _el$33 = _el$32.firstChild, _el$34 = _el$33.nextSibling;
-		(0, import_web$27.insert)(_el$34, detail);
-		(0, import_web$24.effect)(() => (0, import_web$20.setAttribute)(_el$33, "data-status", status()));
+		const _el$32 = (0, import_web$13.getNextElement)(_tmpl$9), _el$33 = _el$32.firstChild, _el$34 = _el$33.nextSibling;
+		(0, import_web$14.insert)(_el$34, detail);
+		(0, import_web$11.effect)(() => (0, import_web$7.setAttribute)(_el$33, "data-status", status()));
 		return _el$32;
 	})();
 }
 function Panel() {
 	let panel$1;
-	const [pos, setPos] = createSignal$1({
+	const [pos, setPos] = createSignal({
 		top: 44,
 		right: 12
 	});
@@ -1720,38 +1988,43 @@ function Panel() {
 		});
 	});
 	return (() => {
-		const _el$35 = (0, import_web$26.getNextElement)(_tmpl$1), _el$36 = _el$35.firstChild, _el$37 = _el$36.firstChild, _el$38 = _el$37.firstChild, _el$39 = _el$38.nextSibling, _el$40 = _el$39.nextSibling, [_el$41, _co$8] = (0, import_web$25.getNextMarker)(_el$40.nextSibling), _el$43 = _el$37.nextSibling, [_el$44, _co$9] = (0, import_web$25.getNextMarker)(_el$43.nextSibling), _el$45 = _el$36.nextSibling, [_el$46, _co$0] = (0, import_web$25.getNextMarker)(_el$45.nextSibling);
+		const _el$35 = (0, import_web$13.getNextElement)(_tmpl$1), _el$36 = _el$35.firstChild, _el$37 = _el$36.firstChild, _el$38 = _el$37.firstChild, _el$39 = _el$38.nextSibling, _el$40 = _el$39.nextSibling, [_el$41, _co$8] = (0, import_web$12.getNextMarker)(_el$40.nextSibling), _el$44 = _el$37.nextSibling, [_el$45, _co$9] = (0, import_web$12.getNextMarker)(_el$44.nextSibling), _el$43 = _el$45.nextSibling, _el$46 = _el$36.nextSibling, [_el$47, _co$0] = (0, import_web$12.getNextMarker)(_el$46.nextSibling);
 		const _ref$ = panel$1;
-		typeof _ref$ === "function" ? (0, import_web$19.use)(_ref$, _el$35) : panel$1 = _el$35;
+		typeof _ref$ === "function" ? (0, import_web$6.use)(_ref$, _el$35) : panel$1 = _el$35;
 		_el$37.$$click = () => view() === "stations" ? showPlayer() : showStations();
-		(0, import_web$27.insert)(_el$38, () => currentStation().name);
-		(0, import_web$27.insert)(_el$39, () => currentStation().group);
-		(0, import_web$27.insert)(_el$37, (0, import_web$28.createComponent)(CaretIcon, { get up() {
+		(0, import_web$14.insert)(_el$38, () => currentStation().name);
+		(0, import_web$14.insert)(_el$39, () => currentStation().group);
+		(0, import_web$14.insert)(_el$37, (0, import_web$15.createComponent)(CaretIcon, { get up() {
 			return view() === "stations";
 		} }), _el$41, _co$8);
-		(0, import_web$27.insert)(_el$36, (0, import_web$28.createComponent)(Show$1, {
+		(0, import_web$14.insert)(_el$36, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return playing();
 			},
 			get children() {
-				const _el$42 = (0, import_web$26.getNextElement)(_tmpl$0);
-				(0, import_web$27.insert)(_el$42, (0, import_web$28.createComponent)(Bars, {}));
-				(0, import_web$24.effect)(() => _el$42.style.setProperty("color", currentStation().accent));
+				const _el$42 = (0, import_web$13.getNextElement)(_tmpl$0);
+				(0, import_web$14.insert)(_el$42, (0, import_web$15.createComponent)(Bars, {}));
+				(0, import_web$11.effect)(() => _el$42.style.setProperty("color", currentStation().accent));
 				return _el$42;
 			}
-		}), _el$44, _co$9);
-		(0, import_web$27.insert)(_el$35, (0, import_web$28.createComponent)(Show$1, {
+		}), _el$45, _co$9);
+		_el$43.$$click = () => {
+			closePanel();
+			openSettings();
+		};
+		(0, import_web$14.insert)(_el$43, (0, import_web$15.createComponent)(GearIcon, {}));
+		(0, import_web$14.insert)(_el$35, (0, import_web$15.createComponent)(Show, {
 			get when() {
 				return view() === "player";
 			},
 			get fallback() {
-				return (0, import_web$28.createComponent)(StationView, {});
+				return (0, import_web$15.createComponent)(StationView, {});
 			},
 			get children() {
-				return (0, import_web$28.createComponent)(PlayerView, {});
+				return (0, import_web$15.createComponent)(PlayerView, {});
 			}
-		}), _el$46, _co$0);
-		(0, import_web$24.effect)((_p$) => {
+		}), _el$47, _co$0);
+		(0, import_web$11.effect)((_p$) => {
 			const _v$6 = `${pos().top}px`, _v$7 = `${pos().right}px`, _v$8 = currentStation().accent;
 			_v$6 !== _p$._v$6 && _el$35.style.setProperty("top", _p$._v$6 = _v$6);
 			_v$7 !== _p$._v$7 && _el$35.style.setProperty("right", _p$._v$7 = _v$7);
@@ -1762,47 +2035,47 @@ function Panel() {
 			_v$7: undefined,
 			_v$8: undefined
 		});
-		(0, import_web$21.runHydrationEvents)();
+		(0, import_web$8.runHydrationEvents)();
 		return _el$35;
 	})();
 }
 function PlayerView() {
 	return (() => {
-		const _el$47 = (0, import_web$26.getNextElement)(_tmpl$10), _el$48 = _el$47.firstChild, _el$49 = _el$48.firstChild, [_el$50, _co$1] = (0, import_web$25.getNextMarker)(_el$49.nextSibling), _el$51 = _el$50.nextSibling, [_el$52, _co$10] = (0, import_web$25.getNextMarker)(_el$51.nextSibling), _el$53 = _el$52.nextSibling, [_el$54, _co$11] = (0, import_web$25.getNextMarker)(_el$53.nextSibling), _el$55 = _el$48.nextSibling, [_el$56, _co$12] = (0, import_web$25.getNextMarker)(_el$55.nextSibling);
-		(0, import_web$27.insert)(_el$48, (0, import_web$28.createComponent)(NowPlaying, {}), _el$50, _co$1);
-		(0, import_web$27.insert)(_el$48, (0, import_web$28.createComponent)(Progress, {}), _el$52, _co$10);
-		(0, import_web$27.insert)(_el$48, (0, import_web$28.createComponent)(Controls, {}), _el$54, _co$11);
-		(0, import_web$27.insert)(_el$47, (0, import_web$28.createComponent)(Footer, {}), _el$56, _co$12);
-		return _el$47;
+		const _el$48 = (0, import_web$13.getNextElement)(_tmpl$10), _el$49 = _el$48.firstChild, _el$50 = _el$49.firstChild, [_el$51, _co$1] = (0, import_web$12.getNextMarker)(_el$50.nextSibling), _el$52 = _el$51.nextSibling, [_el$53, _co$10] = (0, import_web$12.getNextMarker)(_el$52.nextSibling), _el$54 = _el$53.nextSibling, [_el$55, _co$11] = (0, import_web$12.getNextMarker)(_el$54.nextSibling), _el$56 = _el$49.nextSibling, [_el$57, _co$12] = (0, import_web$12.getNextMarker)(_el$56.nextSibling);
+		(0, import_web$14.insert)(_el$49, (0, import_web$15.createComponent)(NowPlaying, {}), _el$51, _co$1);
+		(0, import_web$14.insert)(_el$49, (0, import_web$15.createComponent)(Progress, {}), _el$53, _co$10);
+		(0, import_web$14.insert)(_el$49, (0, import_web$15.createComponent)(Controls, {}), _el$55, _co$11);
+		(0, import_web$14.insert)(_el$48, (0, import_web$15.createComponent)(Footer, {}), _el$57, _co$12);
+		return _el$48;
 	})();
 }
 function StationView() {
 	return (() => {
-		const _el$57 = (0, import_web$26.getNextElement)(_tmpl$11), _el$58 = _el$57.firstChild, [_el$59, _co$13] = (0, import_web$25.getNextMarker)(_el$58.nextSibling), _el$60 = _el$59.nextSibling, [_el$61, _co$14] = (0, import_web$25.getNextMarker)(_el$60.nextSibling);
-		(0, import_web$27.insert)(_el$57, (0, import_web$28.createComponent)(StationList, {}), _el$59, _co$13);
-		(0, import_web$27.insert)(_el$57, (0, import_web$28.createComponent)(Footer, {}), _el$61, _co$14);
-		return _el$57;
+		const _el$58 = (0, import_web$13.getNextElement)(_tmpl$11), _el$59 = _el$58.firstChild, [_el$60, _co$13] = (0, import_web$12.getNextMarker)(_el$59.nextSibling), _el$61 = _el$60.nextSibling, [_el$62, _co$14] = (0, import_web$12.getNextMarker)(_el$61.nextSibling);
+		(0, import_web$14.insert)(_el$58, (0, import_web$15.createComponent)(StationList, {}), _el$60, _co$13);
+		(0, import_web$14.insert)(_el$58, (0, import_web$15.createComponent)(Footer, {}), _el$62, _co$14);
+		return _el$58;
 	})();
 }
 function PanelHost() {
-	return (0, import_web$28.createComponent)(Show$1, {
+	return (0, import_web$15.createComponent)(Show, {
 		get when() {
 			return panelOpen();
 		},
 		get children() {
-			return (0, import_web$28.createComponent)(Panel, {});
+			return (0, import_web$15.createComponent)(Panel, {});
 		}
 	});
 }
-(0, import_web$18.delegateEvents)(["click"]);
+(0, import_web$5.delegateEvents)(["click"]);
 
 //#endregion
 //#region plugins/radio/inject.jsx
-var import_web$13 = __toESM(require_web(), 1);
-var import_web$14 = __toESM(require_web(), 1);
-var import_web$15 = __toESM(require_web(), 1);
-var import_web$16 = __toESM(require_web(), 1);
-const _tmpl$$2 = /*#__PURE__*/ (0, import_web$13.template)(`<div class="rad-host"></div>`, 2);
+var import_web = __toESM(require_web(), 1);
+var import_web$1 = __toESM(require_web(), 1);
+var import_web$2 = __toESM(require_web(), 1);
+var import_web$3 = __toESM(require_web(), 1);
+const _tmpl$ = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-host"></div>`, 2);
 const { plugin: { scoped: scoped$1 }, solid: { createRoot }, ui: { ReactiveRoot } } = shelter;
 const GROUP = "[class*=\"trailing_\"]:not([data-radio])";
 const injected = new Map();
@@ -1825,12 +2098,12 @@ function nativeClass(group) {
 */
 function render(build) {
 	const wrapped = () => (() => {
-		const _el$ = (0, import_web$15.getNextElement)(_tmpl$$2);
-		(0, import_web$16.insert)(_el$, build);
+		const _el$ = (0, import_web$2.getNextElement)(_tmpl$);
+		(0, import_web$3.insert)(_el$, build);
 		return _el$;
 	})();
 	if (typeof createRoot !== "function") return {
-		el: (0, import_web$14.createComponent)(ReactiveRoot, { get children() {
+		el: (0, import_web$1.createComponent)(ReactiveRoot, { get children() {
 			return wrapped();
 		} }),
 		dispose: () => {}
@@ -1868,7 +2141,7 @@ function inject(group) {
 	group.dataset.radio = "1";
 	const mount = document.createElement("div");
 	mount.className = "rad-mount";
-	const { el, dispose } = render(() => (0, import_web$14.createComponent)(ToolbarButton, { get native() {
+	const { el, dispose } = render(() => (0, import_web$1.createComponent)(ToolbarButton, { get native() {
 		return nativeClass(group);
 	} }));
 	mount.append(el);
@@ -1887,7 +2160,7 @@ function startInjection() {
 	scoped$1.observeDom(GROUP, inject);
 	const root = document.createElement("div");
 	root.className = "rad-root";
-	const { el, dispose } = render(() => (0, import_web$14.createComponent)(PanelHost, {}));
+	const { el, dispose } = render(() => (0, import_web$1.createComponent)(PanelHost, {}));
 	root.append(el);
 	(document.querySelector("#app-mount") ?? document.body).append(root);
 	panel = {
@@ -1942,10 +2215,29 @@ function clear() {
 	ms.metadata = null;
 	ms.playbackState = "none";
 }
+let lastAction = null;
+function debug() {
+	const ms = navigator.mediaSession;
+	return {
+		lastAction,
+		state: ms?.playbackState ?? "(no mediaSession)",
+		title: ms?.metadata?.title ?? null,
+		enabled: !!store.mediaSession,
+		playing: active()
+	};
+}
+function handle(name, run) {
+	lastAction = {
+		name,
+		at: new Date().toLocaleTimeString()
+	};
+	console.log("[radio] media key:", name);
+	run();
+}
 const ACTIONS = {
-	play: () => start(),
-	pause: () => pause(),
-	stop: () => stop()
+	play: () => handle("play", () => start()),
+	pause: () => handle("pause", () => pause()),
+	stop: () => handle("stop", () => stop())
 };
 function attach() {
 	const ms = navigator.mediaSession;
@@ -1964,213 +2256,6 @@ function detach() {
 }
 
 //#endregion
-//#region plugins/radio/ui/Segmented.jsx
-var import_web$5 = __toESM(require_web(), 1);
-var import_web$6 = __toESM(require_web(), 1);
-var import_web$7 = __toESM(require_web(), 1);
-var import_web$8 = __toESM(require_web(), 1);
-var import_web$9 = __toESM(require_web(), 1);
-var import_web$10 = __toESM(require_web(), 1);
-var import_web$11 = __toESM(require_web(), 1);
-var import_web$12 = __toESM(require_web(), 1);
-const _tmpl$$1 = /*#__PURE__*/ (0, import_web$5.template)(`<div class="rad-seg" role="group"></div>`, 2), _tmpl$2$1 = /*#__PURE__*/ (0, import_web$5.template)(`<button type="button"></button>`, 2);
-const { solid: { For: For$1 } } = shelter;
-function Segmented(props) {
-	return (() => {
-		const _el$ = (0, import_web$10.getNextElement)(_tmpl$$1);
-		(0, import_web$11.insert)(_el$, (0, import_web$12.createComponent)(For$1, {
-			get each() {
-				return props.options;
-			},
-			children: (option) => (() => {
-				const _el$2 = (0, import_web$10.getNextElement)(_tmpl$2$1);
-				_el$2.$$click = () => props.onSelect(option.value);
-				(0, import_web$11.insert)(_el$2, () => option.label);
-				(0, import_web$8.effect)((_p$) => {
-					const _v$ = props.value === option.value, _v$2 = option.hint;
-					_v$ !== _p$._v$ && (0, import_web$7.setAttribute)(_el$2, "aria-pressed", _p$._v$ = _v$);
-					_v$2 !== _p$._v$2 && (0, import_web$7.setAttribute)(_el$2, "title", _p$._v$2 = _v$2);
-					return _p$;
-				}, {
-					_v$: undefined,
-					_v$2: undefined
-				});
-				(0, import_web$9.runHydrationEvents)();
-				return _el$2;
-			})()
-		}));
-		return _el$;
-	})();
-}
-(0, import_web$6.delegateEvents)(["click"]);
-
-//#endregion
-//#region plugins/radio/settings.jsx
-var import_web = __toESM(require_web(), 1);
-var import_web$1 = __toESM(require_web(), 1);
-var import_web$2 = __toESM(require_web(), 1);
-var import_web$3 = __toESM(require_web(), 1);
-var import_web$4 = __toESM(require_web(), 1);
-const _tmpl$ = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Any direct stream URL works — an Icecast or SHOUTcast MP3, AAC or Ogg endpoint. There's no now-playing info for these; a bare stream doesn't expose it to the page.</div><!#><!/><div class="rad-custom"><!#><!/><!#><!/><!#><!/></div></div>`, 14), _tmpl$2 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-custom"><div class="rad-custom-text"><div></div><div class="rad-custom-url"></div></div><!#><!/></div>`, 10), _tmpl$3 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Volume</div><!#><!/></div>`, 6), _tmpl$4 = /*#__PURE__*/ (0, import_web.template)(`<div class="rad-settings-row"><div class="rad-settings-label">Stream quality — <!#><!/></div><!#><!/></div>`, 8);
-const { solid: { createSignal, For, Show }, ui: { Button, ButtonColors, ButtonSizes, Divider, Header, HeaderTags, Slider, SwitchItem, TextBox } } = shelter;
-const Toggle = (props) => (0, import_web$4.createComponent)(SwitchItem, {
-	get checked() {
-		return props.checked;
-	},
-	get value() {
-		return props.checked;
-	},
-	get onChange() {
-		return props.onChange;
-	},
-	get note() {
-		return props.note;
-	},
-	get hideBorder() {
-		return props.hideBorder;
-	},
-	get children() {
-		return props.children;
-	}
-});
-function CustomStations() {
-	const [name, setName] = createSignal("");
-	const [url, setUrl] = createSignal("");
-	const add = () => {
-		const trimmed = url().trim();
-		if (!trimmed) return;
-		writeCustom([...readCustom(), {
-			id: Date.now().toString(36),
-			name: name().trim() || "Custom stream",
-			url: trimmed
-		}]);
-		setName("");
-		setUrl("");
-	};
-	const remove = (id) => writeCustom(readCustom().filter((s) => s.id !== id));
-	return [(0, import_web$4.createComponent)(Header, {
-		get tag() {
-			return HeaderTags.H3;
-		},
-		children: "Your stations"
-	}), (() => {
-		const _el$ = (0, import_web$1.getNextElement)(_tmpl$), _el$2 = _el$.firstChild, _el$0 = _el$2.nextSibling, [_el$1, _co$4] = (0, import_web$2.getNextMarker)(_el$0.nextSibling), _el$3 = _el$1.nextSibling, _el$4 = _el$3.firstChild, [_el$5, _co$] = (0, import_web$2.getNextMarker)(_el$4.nextSibling), _el$6 = _el$5.nextSibling, [_el$7, _co$2] = (0, import_web$2.getNextMarker)(_el$6.nextSibling), _el$8 = _el$7.nextSibling, [_el$9, _co$3] = (0, import_web$2.getNextMarker)(_el$8.nextSibling);
-		(0, import_web$3.insert)(_el$, (0, import_web$4.createComponent)(For, {
-			get each() {
-				return readCustom();
-			},
-			children: (station) => (() => {
-				const _el$10 = (0, import_web$1.getNextElement)(_tmpl$2), _el$11 = _el$10.firstChild, _el$12 = _el$11.firstChild, _el$13 = _el$12.nextSibling, _el$14 = _el$11.nextSibling, [_el$15, _co$5] = (0, import_web$2.getNextMarker)(_el$14.nextSibling);
-				(0, import_web$3.insert)(_el$12, () => station.name);
-				(0, import_web$3.insert)(_el$13, () => station.url);
-				(0, import_web$3.insert)(_el$10, (0, import_web$4.createComponent)(Button, {
-					get size() {
-						return ButtonSizes.SMALL;
-					},
-					get color() {
-						return ButtonColors.RED;
-					},
-					onClick: () => remove(station.id),
-					children: "Remove"
-				}), _el$15, _co$5);
-				return _el$10;
-			})()
-		}), _el$1, _co$4);
-		(0, import_web$3.insert)(_el$3, (0, import_web$4.createComponent)(TextBox, {
-			placeholder: "Name",
-			get value() {
-				return name();
-			},
-			onInput: setName
-		}), _el$5, _co$);
-		(0, import_web$3.insert)(_el$3, (0, import_web$4.createComponent)(TextBox, {
-			placeholder: "https://…",
-			get value() {
-				return url();
-			},
-			onInput: setUrl
-		}), _el$7, _co$2);
-		(0, import_web$3.insert)(_el$3, (0, import_web$4.createComponent)(Button, {
-			get size() {
-				return ButtonSizes.SMALL;
-			},
-			onClick: add,
-			children: "Add"
-		}), _el$9, _co$3);
-		return _el$;
-	})()];
-}
-function Settings() {
-	const qualities = () => qualitiesFor(currentStation());
-	return [
-		(0, import_web$4.createComponent)(Header, {
-			get tag() {
-				return HeaderTags.H3;
-			},
-			children: "Playback"
-		}),
-		(() => {
-			const _el$16 = (0, import_web$1.getNextElement)(_tmpl$3), _el$17 = _el$16.firstChild, _el$18 = _el$17.nextSibling, [_el$19, _co$6] = (0, import_web$2.getNextMarker)(_el$18.nextSibling);
-			(0, import_web$3.insert)(_el$16, (0, import_web$4.createComponent)(Slider, {
-				min: 0,
-				max: 100,
-				step: 1,
-				get value() {
-					return store.volume;
-				},
-				onInput: setVolume
-			}), _el$19, _co$6);
-			return _el$16;
-		})(),
-		(0, import_web$4.createComponent)(Show, {
-			get when() {
-				return qualities().length > 1;
-			},
-			get children() {
-				const _el$20 = (0, import_web$1.getNextElement)(_tmpl$4), _el$21 = _el$20.firstChild, _el$22 = _el$21.firstChild, _el$23 = _el$22.nextSibling, [_el$24, _co$7] = (0, import_web$2.getNextMarker)(_el$23.nextSibling), _el$25 = _el$21.nextSibling, [_el$26, _co$8] = (0, import_web$2.getNextMarker)(_el$25.nextSibling);
-				(0, import_web$3.insert)(_el$21, () => currentStation().name, _el$24, _co$7);
-				(0, import_web$3.insert)(_el$20, (0, import_web$4.createComponent)(Segmented, {
-					get value() {
-						return store.quality;
-					},
-					onSelect: selectQuality,
-					get options() {
-						return qualities().map((q) => ({
-							value: q,
-							label: QUALITIES[q].label,
-							hint: QUALITIES[q].hint
-						}));
-					}
-				}), _el$26, _co$8);
-				return _el$20;
-			}
-		}),
-		(0, import_web$4.createComponent)(Toggle, {
-			get checked() {
-				return store.romaji;
-			},
-			onChange: (v) => store.romaji = v,
-			note: "Show romanised titles and artist names where the station provides them, instead of the original script.",
-			children: "Prefer romanised names"
-		}),
-		(0, import_web$4.createComponent)(Toggle, {
-			get checked() {
-				return store.mediaSession;
-			},
-			onChange: (v) => store.mediaSession = v,
-			note: "Show what's playing in your system's media controls, so media keys and headset buttons can pause it. Needs a client that forwards media keys to the OS: the desktop app and browsers do, clients built on the system webview (Dorion) generally don't, and there's nothing this plugin can do about that.",
-			hideBorder: true,
-			children: "Use system media controls"
-		}),
-		(0, import_web$4.createComponent)(Divider, {
-			mt: true,
-			mb: true
-		}),
-		(0, import_web$4.createComponent)(CustomStations, {})
-	];
-}
-
-//#endregion
 //#region plugins/radio/index.jsx
 const { plugin: { scoped } } = shelter;
 function onLoad() {
@@ -2179,7 +2264,11 @@ function onLoad() {
 	onTrack(() => sync());
 	onPlaybackChange(() => sync());
 	startInjection();
-	window.__radio = { stats };
+	window.__radio = {
+		stats,
+		media: debug,
+		player: state
+	};
 }
 function onUnload() {
 	shutdown();
