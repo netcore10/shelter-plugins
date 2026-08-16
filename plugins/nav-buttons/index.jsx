@@ -115,19 +115,29 @@ function inject(leading) {
 
   // Measured after a frame, because nothing has been laid out at this point.
   requestAnimationFrame(() => {
-    // The leading group can measure 0x0 in clients that collapse the top bar.
-    // If it gave us no width, sit directly in the bar instead. The bar's own
-    // height is left alone: whatever collapses it also resets it, and fighting
-    // that belongs upstream, not here.
-    if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
+    if (!root.isConnected) return;
 
-    host = bar;
-    bar.insertBefore(root, bar.firstChild);
+    // A collapsed top bar leaves its children hanging above the window and the
+    // leading group with no size. The height itself is restored by CSS — see
+    // styles.js — which only needs to know that it happened. Measured rather
+    // than assumed, so a healthy bar keeps its own value.
+    if (bar.getBoundingClientRect().height < 8) {
+      document.documentElement.dataset.navbtnsTopbar = "1";
+    }
 
-    // Follow the move, or the guard would be watching a container the buttons
-    // no longer live in.
-    guard.disconnect();
-    guard.observe(host, { childList: true });
+    // Re-measure once that has applied: with the bar given a height the leading
+    // group usually sizes correctly and no fallback is needed.
+    requestAnimationFrame(() => {
+      if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
+
+      host = bar;
+      bar.insertBefore(root, bar.firstChild);
+
+      // Follow the move, or the guard would be watching a container the buttons
+      // no longer live in.
+      guard.disconnect();
+      guard.observe(host, { childList: true });
+    });
   });
 
   mounts.add({ root, guard });
@@ -146,6 +156,8 @@ export function onUnload() {
   mounts.clear();
 
   document.querySelectorAll(".nav-btns").forEach((el) => el.remove());
-  // Clear the markers too, or a re-enable would never re-inject.
+  // Clear the markers too, or a re-enable would never re-inject. The height fix
+  // goes with them, so disabling the plugin leaves the bar exactly as found.
   document.querySelectorAll("[data-navbtns]").forEach((el) => delete el.dataset.navbtns);
+  delete document.documentElement.dataset.navbtnsTopbar;
 }

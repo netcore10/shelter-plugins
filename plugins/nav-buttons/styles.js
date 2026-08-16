@@ -45,6 +45,20 @@ export default `
   color: var(--interactive-normal, var(--text-secondary, #b5bac1));
 }
 
-/* The top-bar height fix lives in index.jsx, not here: the 0px is an inline
-   style on <html>, and no stylesheet rule outranks that. */
+/* Some clients leave --custom-app-top-bar-height at 0px, collapsing the top bar
+   so its children centre on a zero-height line and hang above the top of the
+   window. Discord both sizes the bar and reserves its space from this variable,
+   so setting it is what moves the content below down — a min-height on the bar
+   grows the element over the top of everything instead.
+
+   !important is the whole trick. The 0px is an inline style on <html>, and a
+   normal stylesheet declaration loses to that; an important author declaration
+   outranks a normal inline one. It also survives whatever rewrites that inline
+   style a few seconds after load, which a JS-set value did not.
+
+   The attribute is set only when the bar actually measures collapsed, so a
+   healthy client keeps its own value. */
+html[data-navbtns-topbar] {
+  --custom-app-top-bar-height: 32px !important;
+}
 `;
