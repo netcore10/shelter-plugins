@@ -28,7 +28,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 //#endregion
 
 //#region plugins/keybinds/actions.js
-const { flux: { dispatcher, storesFlat } } = shelter;
+const { flux: { dispatcher: dispatcher$1, storesFlat } } = shelter;
 const currentUserId = () => storesFlat.UserStore?.getCurrentUser?.()?.id;
 /**
 * Push to talk is the awkward one: as well as the two dispatches, the media
@@ -37,13 +37,13 @@ const currentUserId = () => storesFlat.UserStore?.getCurrentUser?.()?.id;
 */
 function pushToTalk(active) {
 	const userId = currentUserId();
-	if (userId) dispatcher.dispatch({
+	if (userId) dispatcher$1.dispatch({
 		type: "SPEAKING",
 		context: "default",
 		speakingFlags: active ? 1 : 0,
 		userId
 	});
-	dispatcher.dispatch({
+	dispatcher$1.dispatch({
 		type: "PUSH_TO_TALK_STATE_CHANGE",
 		isActive: active,
 		isPriority: false,
@@ -53,13 +53,13 @@ function pushToTalk(active) {
 		storesFlat.MediaEngineStore?.getMediaEngine?.()?.eachConnection?.((connection) => connection.setForceAudioInput(active, false, false));
 	} catch {}
 }
-const toggle = (type) => () => dispatcher.dispatch({
+const toggle = (type) => () => dispatcher$1.dispatch({
 	type,
 	context: "default",
 	syncRemote: true,
 	playSoundEffect: true
 });
-const ACTIONS = {
+const ACTIONS$1 = {
 	NONE: { label: "None" },
 	TOGGLE_MUTE: {
 		label: "Mute",
@@ -75,7 +75,110 @@ const ACTIONS = {
 		release: () => pushToTalk(false)
 	}
 };
-const ACTION_KEYS = Object.keys(ACTIONS);
+const ACTION_KEYS = Object.keys(ACTIONS$1);
+
+//#endregion
+//#region plugins/keybinds/panel.jsx
+const { flux: { dispatcher }, util: { getFiberOwner, log } } = shelter;
+const ACTIONS = [
+	"UNASSIGNED",
+	"TOGGLE_MUTE",
+	"TOGGLE_DEAFEN",
+	"TOGGLE_STREAMER_MODE",
+	"TOGGLE_VOICE_MODE",
+	"PUSH_TO_TALK",
+	"PUSH_TO_TALK_PRIORITY",
+	"PUSH_TO_MUTE"
+];
+const title = (value) => value.split("_").map((word) => word[0] + word.slice(1).toLowerCase()).join(" ");
+const ACTION_TYPES = ACTIONS.map((value) => ({
+	value,
+	label: title(value)
+}));
+const NOTICE = "[data-nav-anchor-key=\"custom_keybinds_setting\"]";
+const PANE = "system_panel";
+let replaying = false;
+let unsubscribe = null;
+const patched = new Set();
+/** Add our lists to a props object, leaving a good one alone. */
+function fill(props) {
+	if (!props || Array.isArray(props.keybindActionTypes)) return props;
+	try {
+		props.keybindActionTypes = ACTION_TYPES;
+		props.keybindDescriptions ??= {};
+	} catch (err) {
+		log(`keybinds: couldn't supply props: ${err}`, "warn");
+	}
+	return props;
+}
+/**
+* Keep the lists present across re-renders.
+*
+* Filling once isn't enough: the plugin passes these through JSX, which Solid
+* compiles into getters that re-read owner.props on every access. Clicking Add
+* Keybind reads it again, long after React has swapped in a fresh props object
+* and dropped what we put there — which is why it worked once and then threw.
+*/
+function supplyProps() {
+	const notice = document.querySelector(NOTICE);
+	if (!notice) return false;
+	const owner = getFiberOwner(notice);
+	if (!owner?.props) return false;
+	fill(owner.props);
+	if (!patched.has(owner)) {
+		let current = owner.props;
+		try {
+			Object.defineProperty(owner, "props", {
+				configurable: true,
+				enumerable: true,
+				get: () => current,
+				set: (next) => current = fill(next)
+			});
+			patched.add(owner);
+		} catch (err) {
+			log(`keybinds: couldn't hold props across renders: ${err}`, "warn");
+		}
+	}
+	return true;
+}
+/** Give the owners back a plain `props`, exactly as they were. */
+function unpatch() {
+	for (const owner of patched) try {
+		const value = owner.props;
+		delete owner.props;
+		owner.props = value;
+	} catch {}
+	patched.clear();
+}
+function onTrack(payload) {
+	if (replaying) return;
+	if (payload?.event !== "settings_pane_viewed") return;
+	if (payload?.properties?.destination_pane !== PANE) return;
+	setTimeout(() => {
+		if (!supplyProps()) return;
+		replaying = true;
+		try {
+			dispatcher.dispatch({
+				type: "TRACK",
+				event: "settings_pane_viewed",
+				properties: { destination_pane: PANE }
+			});
+		} finally {
+			replaying = false;
+		}
+	}, 0);
+}
+function start() {
+	if (unsubscribe) return;
+	unsubscribe = dispatcher.subscribe("TRACK", onTrack);
+	supplyProps();
+}
+function stop() {
+	if (unsubscribe) if (typeof unsubscribe === "function") unsubscribe();
+else dispatcher.unsubscribe?.("TRACK", onTrack);
+	unsubscribe = null;
+	unpatch();
+}
 
 //#endregion
 //#region plugins/keybinds/styles.js
@@ -163,7 +266,7 @@ function Row(props) {
 			children: (key) => (() => {
 				const _el$5 = (0, import_web$5.getNextElement)(_tmpl$2);
 				_el$5.$$click = () => store$1[props.setting] = key;
-				(0, import_web$7.insert)(_el$5, () => ACTIONS[key].label);
+				(0, import_web$7.insert)(_el$5, () => ACTIONS$1[key].label);
 				(0, import_web$3.effect)(() => (0, import_web$2.setAttribute)(_el$5, "aria-pressed", store$1[props.setting] === key));
 				(0, import_web$4.runHydrationEvents)();
 				return _el$5;
@@ -203,11 +306,11 @@ const BUTTONS = {
 store.mouse4 ??= "NONE";
 store.mouse5 ??= "NONE";
 const held = new Set();
-const actionFor = (button) => ACTIONS[store[BUTTONS[button]]] ?? ACTIONS.NONE;
+const actionFor = (button) => ACTIONS$1[store[BUTTONS[button]]] ?? ACTIONS$1.NONE;
 function onDown(e) {
 	if (!BUTTONS[e.button]) return;
 	const action = actionFor(e.button);
-	if (action === ACTIONS.NONE) return;
+	if (action === ACTIONS$1.NONE) return;
 	e.preventDefault();
 	held.add(e.button);
 	action.press?.();
@@ -219,7 +322,7 @@ function onUp(e) {
 	actionFor(e.button).release?.();
 }
 function onAux(e) {
-	if (BUTTONS[e.button] && actionFor(e.button) !== ACTIONS.NONE) e.preventDefault();
+	if (BUTTONS[e.button] && actionFor(e.button) !== ACTIONS$1.NONE) e.preventDefault();
 }
 /**
 * Release everything still held.
@@ -233,13 +336,30 @@ function releaseAll() {
 }
 function onLoad() {
 	scoped.ui.injectCss(styles_default);
+	window.keybinds = {
+		get: () => ({
+			mouse4: store.mouse4,
+			mouse5: store.mouse5
+		}),
+		actions: () => Object.keys(ACTIONS$1),
+		set(button, action) {
+			const key = String(button).replace(/^mouse/i, "mouse");
+			if (!["mouse4", "mouse5"].includes(key)) return "button must be mouse4 or mouse5";
+			if (!ACTIONS$1[action]) return `action must be one of: ${Object.keys(ACTIONS$1).join(", ")}`;
+			store[key] = action;
+			return `${key} → ${action}`;
+		}
+	};
 	addEventListener("mousedown", onDown, true);
 	addEventListener("mouseup", onUp, true);
 	addEventListener("auxclick", onAux, true);
 	addEventListener("blur", releaseAll);
+	start();
 }
 function onUnload() {
 	releaseAll();
+	stop();
+	delete window.keybinds;
 	removeEventListener("mousedown", onDown, true);
 	removeEventListener("mouseup", onUp, true);
 	removeEventListener("auxclick", onAux, true);
