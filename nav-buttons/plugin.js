@@ -148,22 +148,14 @@ function inject(leading) {
 	const root = document.createElement("div");
 	root.className = "nav-btns";
 	root.append(button("Go back", BACK, -1), button("Go forward", FORWARD, 1));
-	let host = leading;
-	host.prepend(root);
+	leading.prepend(root);
 	const guard = new MutationObserver(() => {
-		if (host.isConnected && !root.isConnected) host.prepend(root);
+		if (leading.isConnected && !root.isConnected) leading.prepend(root);
 	});
-	guard.observe(host, { childList: true });
+	guard.observe(leading, { childList: true });
 	requestAnimationFrame(() => {
 		if (!root.isConnected) return;
 		if (bar.getBoundingClientRect().height < 8) document.documentElement.dataset.navbtnsTopbar = "1";
-		requestAnimationFrame(() => {
-			if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
-			host = bar;
-			bar.insertBefore(root, bar.firstChild);
-			guard.disconnect();
-			guard.observe(host, { childList: true });
-		});
 	});
 	mounts.add({
 		root,
