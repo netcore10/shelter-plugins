@@ -115,12 +115,20 @@ function inject(leading) {
   // A collapsed top bar leaves its children hanging above the top of the window
   // and the leading group with no size. The height itself is restored by CSS —
   // see styles.js — which only needs to know it happened. Measured rather than
-  // assumed, so a healthy bar keeps its own value, and after a frame because
-  // nothing has been laid out at this point.
-  requestAnimationFrame(() => {
-    if (!root.isConnected) return;
+  // assumed, so a healthy bar keeps its own value.
+  //
+  // Checked a few times, not once: the bar can measure fine on the first frame
+  // and collapse a moment later, once the client has finished setting itself
+  // up. Three bounded checks rather than a permanent watcher — the attribute
+  // only ever gets set, so re-running is free.
+  const checkCollapsed = () => {
+    if (!root.isConnected || document.documentElement.dataset.navbtnsTopbar) return;
     if (bar.getBoundingClientRect().height < 8) document.documentElement.dataset.navbtnsTopbar = "1";
-  });
+  };
+
+  requestAnimationFrame(checkCollapsed);
+  setTimeout(checkCollapsed, 1000);
+  setTimeout(checkCollapsed, 4000);
 
   mounts.add({ root, guard });
 }
