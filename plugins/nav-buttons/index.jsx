@@ -101,43 +101,25 @@ function inject(leading) {
   root.className = "nav-btns";
   root.append(button("Go back", BACK, -1), button("Go forward", FORWARD, 1));
 
-  let host = leading;
-  host.prepend(root);
+  leading.prepend(root);
 
   // React owns this container and re-renders it without knowing we're here.
   // observeDom only fires again if the whole group is rebuilt, so when React
   // drops just our node we put it back ourselves. Teardown is sweep()'s job —
   // an observer on a detached node never fires, so it can't clean itself up.
   const guard = new MutationObserver(() => {
-    if (host.isConnected && !root.isConnected) host.prepend(root);
+    if (leading.isConnected && !root.isConnected) leading.prepend(root);
   });
-  guard.observe(host, { childList: true });
+  guard.observe(leading, { childList: true });
 
-  // Measured after a frame, because nothing has been laid out at this point.
+  // A collapsed top bar leaves its children hanging above the top of the window
+  // and the leading group with no size. The height itself is restored by CSS —
+  // see styles.js — which only needs to know it happened. Measured rather than
+  // assumed, so a healthy bar keeps its own value, and after a frame because
+  // nothing has been laid out at this point.
   requestAnimationFrame(() => {
     if (!root.isConnected) return;
-
-    // A collapsed top bar leaves its children hanging above the window and the
-    // leading group with no size. The height itself is restored by CSS — see
-    // styles.js — which only needs to know that it happened. Measured rather
-    // than assumed, so a healthy bar keeps its own value.
-    if (bar.getBoundingClientRect().height < 8) {
-      document.documentElement.dataset.navbtnsTopbar = "1";
-    }
-
-    // Re-measure once that has applied: with the bar given a height the leading
-    // group usually sizes correctly and no fallback is needed.
-    requestAnimationFrame(() => {
-      if (!root.isConnected || root.getBoundingClientRect().width > 0) return;
-
-      host = bar;
-      bar.insertBefore(root, bar.firstChild);
-
-      // Follow the move, or the guard would be watching a container the buttons
-      // no longer live in.
-      guard.disconnect();
-      guard.observe(host, { childList: true });
-    });
+    if (bar.getBoundingClientRect().height < 8) document.documentElement.dataset.navbtnsTopbar = "1";
   });
 
   mounts.add({ root, guard });
