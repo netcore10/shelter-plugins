@@ -60,6 +60,21 @@ export function onLoad() {
   // Note: injectCss lives under scoped.ui, not on scoped directly.
   scoped.ui.injectCss(css);
 
+  // Console control, for when shelter's settings page can't render — which is
+  // the situation this was written in. Same store the settings UI writes to.
+  window.keybinds = {
+    get: () => ({ mouse4: store.mouse4, mouse5: store.mouse5 }),
+    actions: () => Object.keys(ACTIONS),
+    set(button, action) {
+      const key = String(button).replace(/^mouse/i, "mouse");
+      if (!["mouse4", "mouse5"].includes(key)) return "button must be mouse4 or mouse5";
+      if (!ACTIONS[action]) return `action must be one of: ${Object.keys(ACTIONS).join(", ")}`;
+
+      store[key] = action;
+      return `${key} → ${action}`;
+    },
+  };
+
   // Capture, so this runs before Discord's own handlers and preventDefault has
   // a chance to matter.
   addEventListener("mousedown", onDown, true);
@@ -70,6 +85,7 @@ export function onLoad() {
 
 export function onUnload() {
   releaseAll();
+  delete window.keybinds;
 
   removeEventListener("mousedown", onDown, true);
   removeEventListener("mouseup", onUp, true);
