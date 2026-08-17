@@ -1,4 +1,5 @@
 import { ACTIONS } from "./actions";
+import * as panel from "./panel";
 import css from "./styles";
 
 const {
@@ -81,10 +82,14 @@ export function onLoad() {
   addEventListener("mouseup", onUp, true);
   addEventListener("auxclick", onAux, true);
   addEventListener("blur", releaseAll);
+
+  // Repairs Dorion's Custom Keybinds panel so Add Keybind opens again.
+  panel.start();
 }
 
 export function onUnload() {
   releaseAll();
+  panel.stop();
   delete window.keybinds;
 
   removeEventListener("mousedown", onDown, true);
