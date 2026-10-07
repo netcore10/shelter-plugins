@@ -26,6 +26,11 @@ const EMPTY = {
   requester: null,
   dj: null,
   event: null,
+  // Spotify only: where it's playing, and whether it's paused (so the progress
+  // bar holds still at `progress` seconds instead of running on).
+  device: null,
+  paused: false,
+  progress: null,
 };
 
 let disconnect = null;

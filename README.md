@@ -53,6 +53,20 @@ AAC or Ogg URL. Those play fine but show no track info: a bare stream carries
 its metadata inside the audio connection, where an `<audio>` element never
 exposes it to the page.
 
+### Spotify
+
+Spotify is a remote, not a player: its audio is DRM-protected, so it can't play
+through the page. Once you add a Spotify Client ID in Radio's settings, a
+**Spotify** station appears that shows what's playing on your account and lets
+you play, pause, skip and change volume on whichever device is already playing.
+Seeing the track works on a free account; controlling playback needs Premium.
+
+Setup: create an app at developer.spotify.com/dashboard with the Redirect URI
+`http://127.0.0.1:8888/callback`, paste its Client ID in settings, press
+**Connect**, approve in the browser, then paste the address it lands on (the
+page won't load; the code is in the address bar) and press **Finish**.
+`window.__radio.spotify()` reports connection problems.
+
 Other settings: volume, romanised vs original titles, stream quality for
 LISTEN.moe (Opus, Vorbis or MP3), and whether to drive your system's media
 controls.

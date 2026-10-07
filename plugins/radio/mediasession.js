@@ -15,7 +15,8 @@ export function sync() {
   const ms = navigator.mediaSession;
   if (!ms) return;
 
-  if (!store.mediaSession) return clear();
+  // Spotify plays elsewhere, and its own app already owns the media keys.
+  if (!store.mediaSession || currentStation().remote) return clear();
 
   // Paused rather than cleared: keeping the metadata leaves the OS control on
   // screen, which is what lets the play key start us again. Clearing it removes

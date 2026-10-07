@@ -315,6 +315,22 @@ export default `
   transition: transform 100ms ease, filter 100ms ease;
 }
 
+.rad-skip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  color: var(--interactive-normal, #b5bac1);
+  cursor: pointer;
+}
+
+.rad-skip:hover { color: var(--interactive-hover, #fff); background: var(--rad-line, rgba(255, 255, 255, .08)); }
+
 .rad-play:hover { filter: brightness(1.12); }
 .rad-play:active { transform: scale(.93); }
 
