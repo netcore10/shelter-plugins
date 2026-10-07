@@ -13,6 +13,15 @@ store.muted ??= false;
 store.romaji ??= true; // prefer romanised titles where the station provides them
 store.mediaSession ??= true; // publish to the OS media controls
 
+// Spotify. All plain strings, for the same reason as `custom` below. The verifier
+// and state only exist between "Connect" and pasting the redirect back.
+store.spotifyClientId ??= "";
+store.spotifyAccess ??= "";
+store.spotifyRefresh ??= "";
+store.spotifyExpires ??= 0; // epoch ms
+store.spotifyVerifier ??= "";
+store.spotifyState ??= "";
+
 // Custom stations live as a JSON string, not an array.
 //
 // shelter's store hands nested values back as proxies, and reading an array

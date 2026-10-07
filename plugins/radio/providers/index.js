@@ -3,8 +3,9 @@ import * as radio from "./radio";
 import * as plaza from "./plaza";
 import * as somafm from "./somafm";
 import * as nightride from "./nightride";
+import * as spotify from "./spotify";
 
-const PROVIDERS = { listenmoe, radio, plaza, somafm, nightride };
+const PROVIDERS = { listenmoe, radio, plaza, somafm, nightride, spotify };
 
 /**
  * Start following what's playing on `station`.

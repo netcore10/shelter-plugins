@@ -34,6 +34,20 @@ export const PauseIcon = () => (
   </svg>
 );
 
+export const NextIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M6 6.4a1 1 0 0 1 1.55-.83l7.2 5.6a1 1 0 0 1 0 1.66l-7.2 5.6A1 1 0 0 1 6 17.6V6.4Z" fill="currentColor" />
+    <rect x="16.5" y="5" width="2.6" height="14" rx="1.1" fill="currentColor" />
+  </svg>
+);
+
+export const PrevIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: "scaleX(-1)" }}>
+    <path d="M6 6.4a1 1 0 0 1 1.55-.83l7.2 5.6a1 1 0 0 1 0 1.66l-7.2 5.6A1 1 0 0 1 6 17.6V6.4Z" fill="currentColor" />
+    <rect x="16.5" y="5" width="2.6" height="14" rx="1.1" fill="currentColor" />
+  </svg>
+);
+
 export const GearIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path

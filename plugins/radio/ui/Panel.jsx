@@ -1,11 +1,12 @@
 import { store } from "../data";
 import { track, status } from "../nowplaying";
-import { playing, loading, setVolume, setMuted } from "../player";
-import { anchorEl, closePanel, panelOpen, showPlayer, showStations, toggle, view } from "../session";
+import { setVolume, setMuted } from "../player";
+import { anchorEl, closePanel, isLoading, isPlaying, panelOpen, showPlayer, showStations, toggle, view } from "../session";
+import * as spotify from "../spotify";
 import { currentStation } from "../stations";
 import Artwork from "./Artwork";
 import StationList from "./StationList";
-import { Bars, CaretIcon, GearIcon, PauseIcon, PlayIcon, VolumeIcon } from "./icons";
+import { Bars, CaretIcon, GearIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, VolumeIcon } from "./icons";
 import openSettings from "./openSettings";
 
 const {
@@ -85,6 +86,8 @@ function Progress() {
   createEffect(() => {
     if (!hasBar()) return;
 
+    if (track()?.paused) return; // nothing is moving; hold still
+
     const timer = setInterval(() => setNow(Date.now()), 1000);
     onCleanup(() => clearInterval(timer));
   });
@@ -92,6 +95,7 @@ function Progress() {
   const elapsed = createMemo(() => {
     const started = track()?.startedAt;
     if (!started) return 0;
+    if (track().paused && track().progress != null) return track().progress;
 
     return Math.max(0, Math.min(duration(), (now() - started) / 1000));
   });
@@ -117,36 +121,66 @@ function Progress() {
 }
 
 function Controls() {
+  const remote = () => !!currentStation().remote;
+
   return (
     <div class="rad-controls">
+      <Show when={remote()}>
+        <button type="button" class="rad-skip" aria-label="Previous track" onClick={spotify.previous}>
+          <PrevIcon />
+        </button>
+      </Show>
+
       <button
         type="button"
         class="rad-play"
         style={{ background: currentStation().accent }}
-        aria-label={playing() ? "Pause" : "Play"}
+        aria-label={isPlaying() ? "Pause" : "Play"}
         onClick={toggle}
       >
-        <Show when={!loading()} fallback={<div class="rad-spinner" />}>
-          <Show when={playing()} fallback={<PlayIcon />}>
+        <Show when={!isLoading()} fallback={<div class="rad-spinner" />}>
+          <Show when={isPlaying()} fallback={<PlayIcon />}>
             <PauseIcon />
           </Show>
         </Show>
       </button>
 
-      <div class="rad-volume">
-        <button
-          type="button"
-          class="rad-mute"
-          aria-label={store.muted ? "Unmute" : "Mute"}
-          onClick={() => setMuted(!store.muted)}
-        >
-          <VolumeIcon muted={store.muted || store.volume === 0} />
+      <Show when={remote()}>
+        <button type="button" class="rad-skip" aria-label="Next track" onClick={spotify.next}>
+          <NextIcon />
         </button>
+      </Show>
 
-        {/* 0–100 deliberately: Slider clamps a value above 100 to 100 before
-            min/max are applied, which strands the thumb. */}
-        <Slider min={0} max={100} step={1} value={store.volume} onInput={setVolume} />
-      </div>
+      <Show
+        when={!remote()}
+        fallback={
+          // Spotify's volume is the device's, and some devices (phones) won't
+          // let anyone else change it, so the slider only shows where it works.
+          <Show when={spotify.canVolume()}>
+            <div class="rad-volume">
+              <span class="rad-mute">
+                <VolumeIcon muted={spotify.volume() === 0} />
+              </span>
+              <Slider min={0} max={100} step={1} value={spotify.volume() ?? 0} onInput={spotify.setVolume} />
+            </div>
+          </Show>
+        }
+      >
+        <div class="rad-volume">
+          <button
+            type="button"
+            class="rad-mute"
+            aria-label={store.muted ? "Unmute" : "Mute"}
+            onClick={() => setMuted(!store.muted)}
+          >
+            <VolumeIcon muted={store.muted || store.volume === 0} />
+          </button>
+
+          {/* 0–100 deliberately: Slider clamps a value above 100 to 100 before
+              min/max are applied, which strands the thumb. */}
+          <Slider min={0} max={100} step={1} value={store.volume} onInput={setVolume} />
+        </div>
+      </Show>
     </div>
   );
 }
@@ -155,11 +189,18 @@ function Footer() {
   const detail = createMemo(() => {
     const t = track();
 
+    if (currentStation().remote) {
+      if (!spotify.connected()) return "Connect Spotify in Radio settings";
+      if (status() === "error") return "Can't reach Spotify";
+      if (!t) return status() === "connecting" ? "Connecting…" : "Nothing playing. Start Spotify on any device";
+    }
+
     if (status() === "error") return "Can't reach this station's info";
     if (!t) return status() === "connecting" ? "Connecting…" : currentStation().name;
 
     const parts = [];
     if (t.listeners != null) parts.push(`${t.listeners} listening`);
+    if (t.device) parts.push(`on ${t.device}`);
     if (t.dj) parts.push(`DJ ${t.dj}`);
     if (t.requester) parts.push(`requested by ${t.requester}`);
     if (!parts.length && t.album) parts.push(t.album);
@@ -259,7 +300,7 @@ export default function Panel() {
           <CaretIcon up={view() === "stations"} />
         </button>
 
-        <Show when={playing()}>
+        <Show when={isPlaying()}>
           <div style={{ color: currentStation().accent }}>
             <Bars />
           </div>

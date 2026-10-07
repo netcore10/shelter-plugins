@@ -5,6 +5,7 @@ import css from "./styles";
 import { removeInjections, startInjection, stats } from "./inject";
 import * as mediasession from "./mediasession";
 import * as player from "./player";
+import * as spotify from "./spotify";
 import { onTrack } from "./nowplaying";
 import { onPlaybackChange, shutdown } from "./session";
 
@@ -28,7 +29,7 @@ export function onLoad() {
   // without a number, and `mounts` is the one that would climb if this plugin
   // were leaking toolbar buttons. It should sit at 1 no matter how long Discord
   // has been open or how much you've navigated around.
-  window.__radio = { stats, media: mediasession.debug, player: player.state };
+  window.__radio = { stats, media: mediasession.debug, player: player.state, spotify: spotify.debug };
 }
 
 export function onUnload() {

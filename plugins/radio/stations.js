@@ -182,10 +182,26 @@ export function customStations() {
   return cacheStations;
 }
 
+// Spotify isn't a stream: it's a remote for whatever device is already playing
+// (see spotify.js), so `remote` tells session.js not to touch the audio element.
+// It only appears once the user has given us a Client ID to log in with.
+const SPOTIFY = {
+  id: "spotify",
+  name: "Spotify",
+  group: "Spotify",
+  genre: "your account",
+  accent: "#1db954",
+  logo: null,
+  remote: true,
+  streams: {},
+  provider: { type: "spotify" },
+};
+
 export function allStations() {
   const custom = customStations();
+  const spotify = store.spotifyClientId?.trim() ? [SPOTIFY] : [];
   // Avoids copying the built-in list on every station lookup.
-  return custom.length ? [...BUILT_IN, ...custom] : BUILT_IN;
+  return custom.length || spotify.length ? [...BUILT_IN, ...spotify, ...custom] : BUILT_IN;
 }
 
 export function stationById(id) {
