@@ -1,0 +1,10 @@
+{
+  "name": "buddy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.jsx",
+  "devDependencies": {
+    "@echogarden/dectalk-wasm": "^0.2.0"
+  }
+}

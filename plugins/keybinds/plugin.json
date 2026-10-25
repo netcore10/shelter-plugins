@@ -1,5 +1,5 @@
 {
   "name": "Keybinds",
   "author": "netcore",
-  "description": "Bind your mouse's side buttons (mouse4 / mouse5) to mute, deafen or push to talk. Works while Discord has focus."
+  "description": "Unblocks Dorion's Custom Keybinds panel. Discord stopped passing the keybind action list it reads, so Add Keybind threw and the dialog never opened (Dorion #492)."
 }

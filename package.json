@@ -6,7 +6,8 @@
     "plugins/*"
   ],
   "scripts": {
-    "dev": "lune dev plugins/friend-tags",
+    "dev": "lune dev plugins/buddy",
+    "dev:buddy": "lune dev plugins/buddy",
     "build": "lune ci",
     "dev:radio": "lune dev plugins/radio",
     "dev:friend-tags": "lune dev plugins/friend-tags"
