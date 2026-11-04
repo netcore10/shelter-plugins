@@ -18,6 +18,33 @@
     <main>
       <div class="autosize index-main">
         <p>To install these plugins, copy the URL into shelter. Clicking their URLs will copy it to your clipboard.</p>
+        <a class="a-reset" href="buddy">
+        <div class="plugin">
+          <div class="plugin-title">Wumpus</div>
+          <div class="plugin-desc"><p>Wumpus, a little animated buddy that floats over Discord, talks out loud with text-to-speech, and pipes up when you get mentioned.</p>
+      </div>
+          <div class="plugin-link" onclick="navigator.clipboard.writeText(this.innerText.trim()); event.preventDefault()">
+            
+      <span class="plugin-link-placeholder" data-name="buddy">https://example.com/buddy</span>
+       <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        width="16"
+        height="16"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      
+          </div>
+        </div>
+      </a>
         <a class="a-reset" href="friend-tags">
         <div class="plugin">
           <div class="plugin-title">Friend Tags</div>
@@ -45,10 +72,37 @@
           </div>
         </div>
       </a>
+        <a class="a-reset" href="keep-threads">
+        <div class="plugin">
+          <div class="plugin-title">Keep Threads</div>
+          <div class="plugin-desc"><p>Mark threads to keep. When Discord auto-archives one, it gets unarchived so it stays in the channel list.</p>
+      </div>
+          <div class="plugin-link" onclick="navigator.clipboard.writeText(this.innerText.trim()); event.preventDefault()">
+            
+      <span class="plugin-link-placeholder" data-name="keep-threads">https://example.com/keep-threads</span>
+       <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        width="16"
+        height="16"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      
+          </div>
+        </div>
+      </a>
         <a class="a-reset" href="keybinds">
         <div class="plugin">
           <div class="plugin-title">Keybinds</div>
-          <div class="plugin-desc"><p>Bind your mouse's side buttons (mouse4 / mouse5) to mute, deafen or push to talk. Works while Discord has focus.</p>
+          <div class="plugin-desc"><p>Unblocks Dorion's Custom Keybinds panel. Discord stopped passing the keybind action list it reads, so Add Keybind threw and the dialog never opened (Dorion #492).</p>
       </div>
           <div class="plugin-link" onclick="navigator.clipboard.writeText(this.innerText.trim()); event.preventDefault()">
             
@@ -130,7 +184,7 @@
        <div class="footer">
         Site built with
         <a href="https://shelter.uwu.network/guides/lune-ssg">Lune 1.6.3</a>
-        at 2026-10-07 10:36:48  on commit db2d9d4. 
+        at 2026-11-04 19:40:19  on commit bca5b3b. 
       </div>
       <!-- Hello, friend! You found an easter egg! -- Hazel -->
       
