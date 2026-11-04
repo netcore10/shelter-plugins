@@ -1,0 +1,5 @@
+{
+  "name": "Keep Threads",
+  "author": "netcore",
+  "description": "Mark threads to keep. When Discord auto-archives one, it gets unarchived so it stays in the channel list."
+}
