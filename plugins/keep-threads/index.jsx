@@ -151,7 +151,7 @@ const reviveAll = () => new Set([...Object.keys(store.threads), ...favouriteIds(
 const onContextMenuSafe = guard("contextmenu", onContextMenu);
 
 export function onLoad() {
-  log("onLoad: kept threads", JSON.parse(JSON.stringify(store.threads)));
+  log("onLoad: kept threads", { ...store.threads });
   log(
     "onLoad: FavoriteStore",
     FavoriteStore,
