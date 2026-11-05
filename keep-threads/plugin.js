@@ -159,7 +159,7 @@ let timer;
 const reviveAll = () => new Set([...Object.keys(store.threads), ...favouriteIds()]).forEach(revive);
 const onContextMenuSafe = guard("contextmenu", onContextMenu);
 function onLoad() {
-	log("onLoad: kept threads", JSON.parse(JSON.stringify(store.threads)));
+	log("onLoad: kept threads", { ...store.threads });
 	log("onLoad: FavoriteStore", FavoriteStore, "methods", FavoriteStore && Object.getOwnPropertyNames(Object.getPrototypeOf(FavoriteStore)), "favourites", FavoriteStore?.getFavoriteChannels?.(), "favourite threads", favouriteIds());
 	document.addEventListener("contextmenu", onContextMenuSafe, true);
 	scoped.observeDom("[role=\"menu\"]:not([data-kt])", guard("menu", addMenuItem));
